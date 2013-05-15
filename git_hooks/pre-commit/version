@@ -1,0 +1,42 @@
+#!/bin/sh
+
+if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
+  exit 0
+fi
+
+if ! which -s jq 1>/dev/null; then
+  echo "ERROR: required tool 'jq' is missing, try 'brew install jq'"
+  exit 4
+fi
+
+CURRENT_BRANCH=`git rev-parse --abbrev-ref HEAD`
+HOTFIX_PREFIX=`git config gitflow.prefix.hotfix`
+RELEASE_PREFIX=`git config gitflow.prefix.release`
+PACKAGE="package.json"
+
+if [ ! -f $PACKAGE ]; then
+  echo "ERROR: package.json is missing"
+  exit 1
+fi
+
+PACKAGE_VERSION=`jq -r .version $PACKAGE`
+
+function __bail {
+  echo "ERROR: package.json claims version $PACKAGE_VERSION but branch is $CURRENT_BRANCH"
+  exit 2
+}
+
+case $CURRENT_BRANCH in
+  $HOTFIX_PREFIX*)
+    if [[ $CURRENT_BRANCH != ${HOTFIX_PREFIX}${PACKAGE_VERSION} ]]; then
+      __bail
+    fi
+    ;;
+  $RELEASE_PREFIX*)
+    if [[ $CURRENT_BRANCH != ${RELEASE_PREFIX}${PACKAGE_VERSION} ]]; then
+      __bail
+    fi
+    ;;
+esac
+
+exit 0
