@@ -1,3 +1,5 @@
+Protocol = require './protocol'
+
 class Parser
   constructor: (@stream) ->
     @_buffer = new Buffer ''
@@ -18,6 +20,10 @@ class Parser
     else
       @stream.resume()
     return this
+
+  readValue: (callback) ->
+    this.readAscii 4, (length) =>
+      this.readBytes Protocol.decodeLength(length), callback
 
   _bind: ->
     @stream.on 'data', (chunk) =>

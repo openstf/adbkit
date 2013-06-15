@@ -4,7 +4,7 @@ Stream = require 'stream'
 Parser = require '../../src/adb/parser'
 Protocol = require '../../src/adb/protocol'
 
-describe.only 'Parser', ->
+describe 'Parser', ->
 
   it "should read as many bytes as requested", (done) ->
     stream = new Stream.PassThrough
@@ -26,6 +26,16 @@ describe.only 'Parser', ->
       expect(str).to.equal 'OKAY'
       done()
     stream.write 'OKAYFAIL'
+
+  it "should read a protocol value as a Buffer", (done) ->
+    stream = new Stream.PassThrough
+    parser = new Parser stream
+    parser.readValue (value) ->
+      expect(value).to.be.an.instanceOf Buffer
+      expect(value).to.have.length 4
+      expect(value.toString()).to.equal '001f'
+      done()
+    stream.write '0004001f'
 
   it "should wait for enough bytes to appear", (done) ->
     stream = new Stream.PassThrough
