@@ -6,38 +6,54 @@ Protocol = require '../../src/adb/protocol'
 
 describe 'Parser', ->
 
-  it "should read as many bytes as requested", (done) ->
-    stream = new Stream.PassThrough
-    parser = new Parser stream
-    parser.readBytes 4, (buf) ->
-      expect(buf.length).to.equal 4
-      expect(buf.toString()).to.equal 'OKAY'
-      parser.readBytes 2, (buf) ->
-        expect(buf).to.have.length 2
-        expect(buf.toString()).to.equal 'FA'
+  describe 'readBytes(howMany, callback)', ->
+
+    it "should read as many bytes as requested", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readBytes 4, (buf) ->
+        expect(buf.length).to.equal 4
+        expect(buf.toString()).to.equal 'OKAY'
+        parser.readBytes 2, (buf) ->
+          expect(buf).to.have.length 2
+          expect(buf.toString()).to.equal 'FA'
+          done()
+      stream.write 'OKAYFAIL'
+
+
+  describe 'readAscii(howMany, callback)', ->
+
+    it "should read as many ascii characters as requested", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readAscii 4, (str) ->
+        expect(str.length).to.equal 4
+        expect(str).to.equal 'OKAY'
         done()
-    stream.write 'OKAYFAIL'
+      stream.write 'OKAYFAIL'
 
-  it "should read as many ascii characters as requested", (done) ->
-    stream = new Stream.PassThrough
-    parser = new Parser stream
-    parser.readAscii 4, (str) ->
-      expect(str.length).to.equal 4
-      expect(str).to.equal 'OKAY'
-      done()
-    stream.write 'OKAYFAIL'
+  describe 'readValue(callback)', ->
 
-  it "should read a protocol value as a Buffer", (done) ->
-    stream = new Stream.PassThrough
-    parser = new Parser stream
-    parser.readValue (value) ->
-      expect(value).to.be.an.instanceOf Buffer
-      expect(value).to.have.length 4
-      expect(value.toString()).to.equal '001f'
-      done()
-    stream.write '0004001f'
+    it "should read a protocol value as a Buffer", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readValue (value) ->
+        expect(value).to.be.an.instanceOf Buffer
+        expect(value).to.have.length 4
+        expect(value.toString()).to.equal '001f'
+        done()
+      stream.write '0004001f'
 
-  it "should wait for enough bytes to appear", (done) ->
+    it "should return an empty value", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readValue (value) ->
+        expect(value).to.be.an.instanceOf Buffer
+        expect(value).to.have.length 0
+        done()
+      stream.write '0000'
+
+  it "should wait for enough data to appear", (done) ->
     stream = new Stream.PassThrough
     parser = new Parser stream
     parser.readBytes 5, (buf) ->
