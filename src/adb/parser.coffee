@@ -5,6 +5,11 @@ class Parser
     @_callback = null
     this._bind()
 
+  readAscii: (howMany, callback) ->
+    this.readBytes howMany, (buf) ->
+      setImmediate ->
+        callback buf.toString 'ascii'
+
   readBytes: (howMany, callback) ->
     @_needBytes = howMany
     @_callback = callback

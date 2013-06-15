@@ -18,6 +18,15 @@ describe.only 'Parser', ->
         done()
     stream.write 'OKAYFAIL'
 
+  it "should read as many ascii characters as requested", (done) ->
+    stream = new Stream.PassThrough
+    parser = new Parser stream
+    parser.readAscii 4, (str) ->
+      expect(str.length).to.equal 4
+      expect(str).to.equal 'OKAY'
+      done()
+    stream.write 'OKAYFAIL'
+
   it "should wait for enough bytes to appear", (done) ->
     stream = new Stream.PassThrough
     parser = new Parser stream
