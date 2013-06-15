@@ -5,6 +5,7 @@ class Parser
     @_buffer = new Buffer ''
     @_needBytes = 0
     @_callback = null
+    @_dataListener = null
     this._bind()
 
   readAscii: (howMany, callback) ->
@@ -25,8 +26,12 @@ class Parser
     this.readAscii 4, (length) =>
       this.readBytes Protocol.decodeLength(length), callback
 
+  unbind: ->
+    @stream.removeListener 'data', @_dataListener
+    return this
+
   _bind: ->
-    @stream.on 'data', (chunk) =>
+    @stream.on 'data', @_dataListener = (chunk) =>
       this._parse chunk
     @stream.pause()
     return this

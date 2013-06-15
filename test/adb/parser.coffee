@@ -1,4 +1,7 @@
 Stream = require 'stream'
+Sinon = require 'sinon'
+Chai = require 'chai'
+Chai.use require 'sinon-chai'
 {expect} = require 'chai'
 
 Parser = require '../../src/adb/parser'
@@ -52,6 +55,20 @@ describe 'Parser', ->
         expect(value).to.have.length 0
         done()
       stream.write '0000'
+
+  describe 'unbind()', ->
+
+    it "should unbind the parser from the stream", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      spy = Sinon.spy()
+      parser.readValue spy
+      parser.unbind()
+      stream.write 'OKAYFAIL'
+      setTimeout ->
+        expect(spy).to.not.have.been.called
+        done()
+      , 50
 
   it "should wait for enough data to appear", (done) ->
     stream = new Stream.PassThrough
