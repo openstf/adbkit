@@ -26,6 +26,10 @@ class Parser
     this.readAscii 4, (length) =>
       this.readBytes Protocol.decodeLength(length), callback
 
+  readError: (callback) ->
+    this.readValue (value) ->
+      callback new Error value
+
   unbind: ->
     @stream.removeListener 'data', @_dataListener
     return this

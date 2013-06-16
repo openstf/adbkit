@@ -56,6 +56,17 @@ describe 'Parser', ->
         done()
       stream.write '0000'
 
+  describe 'readError(callback)', ->
+
+    it "should read a value as an Error", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readError (err) ->
+        expect(err).to.be.an.instanceOf Error
+        expect(err.message).to.equal 'epic failure'
+        done()
+      stream.write '000cepic failure'
+
   describe 'unbind()', ->
 
     it "should unbind the parser from the stream", (done) ->
