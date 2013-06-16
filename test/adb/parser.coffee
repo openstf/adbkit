@@ -5,7 +5,6 @@ Chai.use require 'sinon-chai'
 {expect} = require 'chai'
 
 Parser = require '../../src/adb/parser'
-Protocol = require '../../src/adb/protocol'
 
 describe 'Parser', ->
 
@@ -22,7 +21,6 @@ describe 'Parser', ->
           expect(buf.toString()).to.equal 'FA'
           done()
       stream.write 'OKAYFAIL'
-
 
   describe 'readAscii(howMany, callback)', ->
 
