@@ -17,7 +17,7 @@ class Command
   _send: (data) ->
     encoded = Protocol.encodeData data
     debug "Send '#{encoded}'"
-    @connection.socket.write encoded
+    @connection.write encoded
     return this
 
 module.exports = Command

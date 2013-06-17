@@ -30,6 +30,10 @@ class Connection extends EventEmitter
     @socket.end()
     return this
 
+  write: (data) ->
+    @socket.write data
+    return this
+
   startServer: (callback) ->
     debug "Starting ADB server via '#{@options.bin} start-server'"
     execFile @options.bin, ['start-server'], {}, callback
