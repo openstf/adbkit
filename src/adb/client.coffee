@@ -1,3 +1,5 @@
+debug = require('debug')('adb:client')
+
 Connection = require './connection'
 HostVersionCommand = require './command/hostversion'
 HostDevicesCommand = require './command/hostdevices'
@@ -14,6 +16,7 @@ RemountCommand = require './command/remount'
 LogCommand = require './command/log'
 TcpCommand = require './command/tcp'
 FrameBufferCommand = require './command/framebuffer'
+MonkeyCommand = require './command/monkey'
 
 class Client
   constructor: (@options = {}) ->
@@ -137,5 +140,24 @@ class Client
       return callback err if err
       new TcpCommand(transport)
         .execute port, host, callback
+
+  openMonkey: (serial, port, callback) ->
+    if arguments.length is 2
+      callback = port
+      port = 1080
+    this.transport serial, (err, transport) =>
+      return callback err if err
+      new MonkeyCommand(transport)
+        .execute port, (err) =>
+          return callback err if err
+          retries = 10
+          connect = =>
+            this.openTcp serial, port, (err) =>
+              if err and retries -= 1
+                debug "Monkey can't be reached, trying #{retries} more times"
+                setTimeout connect, 100
+              else
+                callback.apply null, arguments
+          connect()
 
 module.exports = Client
