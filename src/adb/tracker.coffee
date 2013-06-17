@@ -30,7 +30,7 @@ class Tracker extends EventEmitter
     @_oldMap = newMap
     return this
 
-  stop: ->
+  end: ->
     @connection.end()
     return this
 

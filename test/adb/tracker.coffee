@@ -88,12 +88,12 @@ describe 'Tracker', ->
       removed: [device2]
     done()
 
-  describe 'stop()', ->
+  describe 'end()', ->
 
     it "should close the connection", (done) ->
       conn =
         end: Sinon.spy()
       tracker = new Tracker conn
-      tracker.stop()
+      tracker.end()
       expect(conn.end).to.have.been.calledOnce
       done()
