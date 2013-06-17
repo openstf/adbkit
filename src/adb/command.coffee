@@ -1,3 +1,5 @@
+debug = require('debug')('adb:command')
+
 Parser = require './parser'
 Protocol = require './protocol'
 
@@ -13,7 +15,9 @@ class Command
     new Error "Unexpected response data: '#{data}'"
 
   _send: (data) ->
-    @connection.socket.write Protocol.encodeData data
+    encoded = Protocol.encodeData data
+    debug "Send '#{encoded}'"
+    @connection.socket.write encoded
     return this
 
 module.exports = Command
