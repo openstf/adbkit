@@ -2,6 +2,7 @@ Connection = require './connection'
 HostVersionCommand = require './command/hostversion'
 HostDevicesCommand = require './command/hostdevices'
 HostDevicesWithPathsCommand = require './command/hostdeviceswithpaths'
+HostKillCommand = require './command/hostkill'
 
 class Client
   constructor: (@options = {}) ->
@@ -32,6 +33,14 @@ class Client
     this.connection()
       .on 'connect', ->
         new HostDevicesWithPathsCommand(this)
+          .execute callback
+      .on 'error', callback
+    return this
+
+  kill: (callback) ->
+    this.connection()
+      .on 'connect', ->
+        new HostKillCommand(this)
           .execute callback
       .on 'error', callback
     return this
