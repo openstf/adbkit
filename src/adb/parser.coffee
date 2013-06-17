@@ -6,6 +6,7 @@ class Parser
     @_needBytes = 0
     @_callback = null
     @_dataListener = null
+    @_endListener = null
     this._bind()
 
   readAscii: (howMany, callback) ->
@@ -30,8 +31,14 @@ class Parser
     this.readValue (value) ->
       callback new Error value
 
+  readAll: (callback) ->
+    this.readBytes Infinity, ->
+    @stream.on 'end', @_endListener = =>
+      callback @_buffer
+
   unbind: ->
-    @stream.removeListener 'data', @_dataListener
+    @stream.removeListener 'data', @_dataListener if @_dataListener
+    @stream.removeListener 'end', @_endListener if @_endListener
     return this
 
   raw: ->
