@@ -4,6 +4,7 @@ HostDevicesCommand = require './command/hostdevices'
 HostDevicesWithPathsCommand = require './command/hostdeviceswithpaths'
 HostTrackDevicesCommand = require './command/hosttrackdevices'
 HostKillCommand = require './command/hostkill'
+GetSerialNoCommand = require './command/getserialno'
 
 class Client
   constructor: (@options = {}) ->
@@ -51,6 +52,14 @@ class Client
       .on 'connect', ->
         new HostKillCommand(this)
           .execute callback
+      .on 'error', callback
+    return this
+
+  getSerialNo: (serial, callback) ->
+    this.connection()
+      .on 'connect', ->
+        new GetSerialNoCommand(this)
+          .execute serial, callback
       .on 'error', callback
     return this
 
