@@ -7,6 +7,7 @@ HostKillCommand = require './command/hostkill'
 GetSerialNoCommand = require './command/getserialno'
 GetDevicePathCommand = require './command/getdevicepath'
 GetStateCommand = require './command/getstate'
+ForwardCommand = require './command/forward'
 
 class Client
   constructor: (@options = {}) ->
@@ -78,6 +79,14 @@ class Client
       .on 'connect', ->
         new GetStateCommand(this)
           .execute serial, callback
+      .on 'error', callback
+    return this
+
+  forward: (serial, local, remote, callback) ->
+    this.connection()
+      .on 'connect', ->
+        new ForwardCommand(this)
+          .execute serial, local, remote, callback
       .on 'error', callback
     return this
 
