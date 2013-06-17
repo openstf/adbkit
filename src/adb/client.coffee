@@ -10,6 +10,7 @@ GetStateCommand = require './command/getstate'
 ForwardCommand = require './command/forward'
 HostTransportCommand = require './command/hosttransport'
 ShellCommand = require './command/shell'
+FrameBufferCommand = require './command/framebuffer'
 
 class Client
   constructor: (@options = {}) ->
@@ -100,6 +101,17 @@ class Client
             return callback err if err
             new ShellCommand(this)
               .execute command, callback
+      .on 'error', callback
+    return this
+
+  framebuffer: (serial, callback) ->
+    this.connection()
+      .on 'connect', ->
+        new HostTransportCommand(this)
+          .execute serial, (err) =>
+            return callback err if err
+            new FrameBufferCommand(this)
+              .execute callback
       .on 'error', callback
     return this
 
