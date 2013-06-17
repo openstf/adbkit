@@ -65,6 +65,17 @@ describe 'Parser', ->
         done()
       stream.write '000cepic failure'
 
+  describe 'raw()', ->
+
+    it "should return the resumed raw stream", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      raw = parser.raw()
+      expect(raw).to.equal stream
+      raw.on 'data', ->
+        done()
+      raw.write 'foo'
+
   describe 'unbind()', ->
 
     it "should unbind the parser from the stream", (done) ->

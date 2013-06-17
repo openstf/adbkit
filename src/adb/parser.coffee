@@ -34,6 +34,11 @@ class Parser
     @stream.removeListener 'data', @_dataListener
     return this
 
+  raw: ->
+    this.unbind()
+    @stream.resume()
+    return @stream
+
   _bind: ->
     @stream.on 'data', @_dataListener = (chunk) =>
       this._parse chunk
