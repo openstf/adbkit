@@ -10,6 +10,7 @@ GetStateCommand = require './command/getstate'
 ForwardCommand = require './command/forward'
 HostTransportCommand = require './command/hosttransport'
 ShellCommand = require './command/shell'
+RemountCommand = require './command/remount'
 FrameBufferCommand = require './command/framebuffer'
 
 class Client
@@ -101,6 +102,17 @@ class Client
             return callback err if err
             new ShellCommand(this)
               .execute command, callback
+      .on 'error', callback
+    return this
+
+  remount: (serial, callback) ->
+    this.connection()
+      .on 'connect', ->
+        new HostTransportCommand(this)
+          .execute serial, (err) =>
+            return callback err if err
+            new RemountCommand(this)
+              .execute callback
       .on 'error', callback
     return this
 
