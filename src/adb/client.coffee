@@ -94,37 +94,31 @@ class Client
       .on 'error', callback
     return this
 
-  shell: (serial, command, callback) ->
+  transport: (serial, callback) ->
     this.connection()
       .on 'connect', ->
         new HostTransportCommand(this)
           .execute serial, (err) =>
-            return callback err if err
-            new ShellCommand(this)
-              .execute command, callback
+            callback err, this
       .on 'error', callback
     return this
+
+  shell: (serial, command, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new ShellCommand(transport)
+        .execute command, callback
 
   remount: (serial, callback) ->
-    this.connection()
-      .on 'connect', ->
-        new HostTransportCommand(this)
-          .execute serial, (err) =>
-            return callback err if err
-            new RemountCommand(this)
-              .execute callback
-      .on 'error', callback
-    return this
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new RemountCommand(transport)
+        .execute callback
 
   framebuffer: (serial, callback) ->
-    this.connection()
-      .on 'connect', ->
-        new HostTransportCommand(this)
-          .execute serial, (err) =>
-            return callback err if err
-            new FrameBufferCommand(this)
-              .execute callback
-      .on 'error', callback
-    return this
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new FrameBufferCommand(transport)
+        .execute callback
 
 module.exports = Client
