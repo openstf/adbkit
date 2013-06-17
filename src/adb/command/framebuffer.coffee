@@ -7,7 +7,7 @@ class FrameBufferCommand extends Command
       switch reply
         when Protocol.OKAY
           @parser.readBytes 52, (header) =>
-            parsed = this._parseHeaderheader
+            parsed = this._parseHeader header
             callback null, parsed, @parser.raw()
         when Protocol.FAIL
           @parser.readError callback
@@ -16,6 +16,7 @@ class FrameBufferCommand extends Command
     this._send 'framebuffer:'
 
   _parseHeader: (header) ->
+    info = {}
     offset = 0
     info.version = header.readUInt32LE offset
     offset += 4
@@ -43,7 +44,7 @@ class FrameBufferCommand extends Command
     offset += 4
     info.alpha_length = header.readUInt32LE offset
     info.format = if info.blue_offset is 0 then 'bgr' else 'rgb'
-    info.format += 'a' if info.alpha_offset
+    info.format += 'a' if info.bpp is 32 or info.alpha_length
     return info
 
 module.exports = FrameBufferCommand
