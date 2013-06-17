@@ -11,6 +11,7 @@ ForwardCommand = require './command/forward'
 HostTransportCommand = require './command/hosttransport'
 ShellCommand = require './command/shell'
 RemountCommand = require './command/remount'
+LogCommand = require './command/log'
 FrameBufferCommand = require './command/framebuffer'
 
 class Client
@@ -120,5 +121,11 @@ class Client
       return callback err if err
       new FrameBufferCommand(transport)
         .execute callback
+
+  openLog: (serial, name, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new LogCommand(transport)
+        .execute name, callback
 
 module.exports = Client
