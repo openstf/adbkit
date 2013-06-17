@@ -87,3 +87,13 @@ describe 'Tracker', ->
       changed: [device3New]
       removed: [device2]
     done()
+
+  describe 'stop()', ->
+
+    it "should close the connection", (done) ->
+      conn =
+        end: Sinon.spy()
+      tracker = new Tracker conn
+      tracker.stop()
+      expect(conn.end).to.have.been.calledOnce
+      done()

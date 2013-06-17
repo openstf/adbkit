@@ -2,6 +2,7 @@ Connection = require './connection'
 HostVersionCommand = require './command/hostversion'
 HostDevicesCommand = require './command/hostdevices'
 HostDevicesWithPathsCommand = require './command/hostdeviceswithpaths'
+HostTrackDevicesCommand = require './command/hosttrackdevices'
 HostKillCommand = require './command/hostkill'
 
 class Client
@@ -33,6 +34,14 @@ class Client
     this.connection()
       .on 'connect', ->
         new HostDevicesWithPathsCommand(this)
+          .execute callback
+      .on 'error', callback
+    return this
+
+  trackDevices: (callback) ->
+    this.connection()
+      .on 'connect', ->
+        new HostTrackDevicesCommand(this)
           .execute callback
       .on 'error', callback
     return this

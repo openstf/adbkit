@@ -1,7 +1,7 @@
 {EventEmitter} = require 'events'
 
 class Tracker extends EventEmitter
-  constructor: ->
+  constructor: (@connection) ->
     @_oldList = []
     @_oldMap = {}
 
@@ -28,6 +28,10 @@ class Tracker extends EventEmitter
     this.emit 'changeSet', changeSet
     @_oldList = devices
     @_oldMap = newMap
+    return this
+
+  stop: ->
+    @connection.end()
     return this
 
 module.exports = Tracker
