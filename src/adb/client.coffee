@@ -12,6 +12,7 @@ HostTransportCommand = require './command/hosttransport'
 ShellCommand = require './command/shell'
 RemountCommand = require './command/remount'
 LogCommand = require './command/log'
+TcpCommand = require './command/tcp'
 FrameBufferCommand = require './command/framebuffer'
 
 class Client
@@ -127,5 +128,14 @@ class Client
       return callback err if err
       new LogCommand(transport)
         .execute name, callback
+
+  openTcp: (serial, port, host, callback) ->
+    if arguments.length is 3
+      callback = host
+      host = undefined
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new TcpCommand(transport)
+        .execute port, host, callback
 
 module.exports = Client
