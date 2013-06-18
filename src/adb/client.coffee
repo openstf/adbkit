@@ -21,6 +21,7 @@ FrameBufferCommand = require './command/framebuffer'
 ScreencapCommand = require './command/screencap'
 MonkeyCommand = require './command/monkey'
 UninstallCommand = require './command/uninstall'
+IsInstalledCommand = require './command/isinstalled'
 
 class Client
   constructor: (@options = {}) ->
@@ -182,6 +183,12 @@ class Client
     this.transport serial, (err, transport) ->
       return callback err if err
       new UninstallCommand(transport)
+        .execute pkg, callback
+
+  isInstalled: (serial, pkg, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new IsInstalledCommand(transport)
         .execute pkg, callback
 
 module.exports = Client
