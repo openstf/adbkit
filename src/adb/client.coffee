@@ -17,6 +17,7 @@ RemountCommand = require './command/remount'
 LogCommand = require './command/log'
 TcpCommand = require './command/tcp'
 FrameBufferCommand = require './command/framebuffer'
+ScreencapCommand = require './command/screencap'
 MonkeyCommand = require './command/monkey'
 
 class Client
@@ -125,6 +126,12 @@ class Client
     this.transport serial, (err, transport) ->
       return callback err if err
       new FrameBufferCommand(transport)
+        .execute callback
+
+  screencap: (serial, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new ScreencapCommand(transport)
         .execute callback
 
   openLog: (serial, name, callback) ->
