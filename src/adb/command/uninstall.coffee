@@ -8,7 +8,8 @@ class UninstallCommand extends Command
         when Protocol.OKAY
           @parser.readAscii 7, (reply) =>
             switch reply
-              when 'Success'
+              # Either way, the package was uninstalled
+              when 'Success', 'Failure'
                 callback null
               else
                 callback this._unexpected reply
