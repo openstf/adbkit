@@ -19,6 +19,8 @@ module.exports = (grunt) ->
         src: '<%= coffee.index.src %>'
       test:
         src: 'test/**/*.coffee'
+      tasks:
+        src: 'tasks/**/*.coffee'
       gruntfile:
         src: 'Gruntfile.coffee'
     jsonlint:
@@ -49,6 +51,9 @@ module.exports = (grunt) ->
           '--recursive'
         ],
         cmd: './node_modules/.bin/mocha <%= exec.mocha.options.join(" ") %>'
+    keycode:
+      generate:
+        dest: 'src/adb/keycode.coffee'
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-coffeelint'
@@ -56,6 +61,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-watch'
   grunt.loadNpmTasks 'grunt-notify'
   grunt.loadNpmTasks 'grunt-exec'
+  grunt.loadTasks './tasks'
 
   grunt.registerTask 'test', ['jsonlint', 'coffeelint', 'exec:mocha']
   grunt.registerTask 'build', ['coffee']
