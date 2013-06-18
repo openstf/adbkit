@@ -10,8 +10,7 @@ class GetPropertiesCommand extends Command
       switch reply
         when Protocol.OKAY
           data = new Buffer ''
-          transform = new LineTransform
-          @parser.raw().pipe transform
+          transform = @parser.raw().pipe new LineTransform
           transform.on 'data', (chunk) ->
             data = Buffer.concat [data, chunk]
           transform.on 'end', =>
