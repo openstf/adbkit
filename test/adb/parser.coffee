@@ -65,19 +65,6 @@ describe 'Parser', ->
         done()
       stream.write '000cepic failure'
 
-  describe 'readAll(callback)', ->
-
-    it "should read all content and return it as a Buffer", (done) ->
-      stream = new Stream.PassThrough
-      parser = new Parser stream
-      parser.readAll (data) ->
-        expect(data).to.be.an.instanceOf Buffer
-        expect(data.toString()).to.equal 'foobar'
-        done()
-      stream.write 'foo'
-      stream.write 'bar'
-      stream.end()
-
   describe 'raw()', ->
 
     it "should return the resumed raw stream", (done) ->

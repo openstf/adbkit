@@ -2,10 +2,9 @@ Protocol = require './protocol'
 
 class Parser
   constructor: (@stream) ->
-    @_buffer = new Buffer ''
     @_needBytes = 0
     @_callback = null
-    @_dataListener = null
+    @_readableListener = null
     @_endListener = null
     this._bind()
 
@@ -15,29 +14,26 @@ class Parser
         callback buf.toString 'ascii'
 
   readBytes: (howMany, callback) ->
-    @_needBytes = howMany
-    @_callback = callback
-    if @_buffer.length >= @_needBytes
-      this._read()
+    if howMany is 0
+      setImmediate ->
+        callback new Buffer ''
     else
-      @stream.resume()
+      @_needBytes = howMany
+      @_callback = callback
+      this._read()
     return this
 
   readValue: (callback) ->
-    this.readAscii 4, (length) =>
-      this.readBytes Protocol.decodeLength(length), callback
+    this.readAscii 4, (value) =>
+      length = Protocol.decodeLength value
+      this.readBytes length, callback
 
   readError: (callback) ->
     this.readValue (value) ->
       callback new Error value
 
-  readAll: (callback) ->
-    this.readBytes Infinity, ->
-    @stream.on 'end', @_endListener = =>
-      callback @_buffer
-
   unbind: ->
-    @stream.removeListener 'data', @_dataListener if @_dataListener
+    @stream.removeListener 'readable', @_readableListener if @_readableListener
     @stream.removeListener 'end', @_endListener if @_endListener
     return this
 
@@ -47,23 +43,23 @@ class Parser
     return @stream
 
   _bind: ->
-    @stream.on 'data', @_dataListener = (chunk) =>
-      this._parse chunk
+    @stream.on 'readable', @_readableListener = =>
+      this._read()
     @stream.pause()
     return this
 
-  _parse: (chunk) ->
-    @_buffer = Buffer.concat [@_buffer, chunk]
-    this._read()
-    return this
-
   _read: ->
-    if @_buffer.length >= @_needBytes
-      data = @_buffer.slice 0, @_needBytes
-      @_buffer = @_buffer.slice @_needBytes
-      setImmediate =>
-        @_callback data
-      @stream.pause()
+    if @_needBytes
+      data = @stream.read @_needBytes
+      if data is null
+        @stream.resume()
+      else
+        @_needBytes = 0
+        setImmediate =>
+          callback = @_callback
+          @_callback = null
+          callback data
+        @stream.pause()
     return this
 
 module.exports = Parser
