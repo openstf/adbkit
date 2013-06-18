@@ -1,3 +1,4 @@
+Monkey = require 'stf-monkey'
 debug = require('debug')('adb:client')
 
 Connection = require './connection'
@@ -152,12 +153,14 @@ class Client
           return callback err if err
           retries = 10
           connect = =>
-            this.openTcp serial, port, (err) =>
+            this.openTcp serial, port, (err, stream) =>
               if err and retries -= 1
                 debug "Monkey can't be reached, trying #{retries} more times"
                 setTimeout connect, 100
+              else if err
+                callback err
               else
-                callback.apply null, arguments
+                callback null, Monkey.connectStream stream
           connect()
 
 module.exports = Client
