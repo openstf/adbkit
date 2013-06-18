@@ -24,7 +24,7 @@ class Client
     @options.port ||= 5037
     @options.bin ||= 'adb'
 
-  connection: (callback) ->
+  connection: ->
     new Connection(@options)
       .connect()
 
