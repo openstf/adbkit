@@ -10,6 +10,7 @@ HostKillCommand = require './command/hostkill'
 GetSerialNoCommand = require './command/getserialno'
 GetDevicePathCommand = require './command/getdevicepath'
 GetStateCommand = require './command/getstate'
+GetPropertiesCommand = require './command/getproperties'
 ForwardCommand = require './command/forward'
 HostTransportCommand = require './command/hosttransport'
 ShellCommand = require './command/shell'
@@ -92,6 +93,12 @@ class Client
           .execute serial, callback
       .on 'error', callback
     return this
+
+  getProperties: (serial, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new GetPropertiesCommand(transport)
+        .execute callback
 
   forward: (serial, local, remote, callback) ->
     this.connection()
