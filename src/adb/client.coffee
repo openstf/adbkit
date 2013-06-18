@@ -11,6 +11,7 @@ GetSerialNoCommand = require './command/getserialno'
 GetDevicePathCommand = require './command/getdevicepath'
 GetStateCommand = require './command/getstate'
 GetPropertiesCommand = require './command/getproperties'
+GetFeaturesCommand = require './command/getfeatures'
 ForwardCommand = require './command/forward'
 HostTransportCommand = require './command/hosttransport'
 ShellCommand = require './command/shell'
@@ -100,6 +101,12 @@ class Client
     this.transport serial, (err, transport) ->
       return callback err if err
       new GetPropertiesCommand(transport)
+        .execute callback
+
+  getFeatures: (serial, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new GetFeaturesCommand(transport)
         .execute callback
 
   forward: (serial, local, remote, callback) ->
