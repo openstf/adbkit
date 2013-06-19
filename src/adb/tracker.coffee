@@ -2,17 +2,17 @@
 
 class Tracker extends EventEmitter
   constructor: (@connection) ->
-    @_oldList = []
-    @_oldMap = {}
+    @deviceList = []
+    @deviceMap = {}
 
-  update: (devices) ->
+  update: (newList) ->
     changeSet =
       removed: []
       changed: []
       added: []
     newMap = {}
-    for device in devices
-      oldDevice = @_oldMap[device.id]
+    for device in newList
+      oldDevice = @deviceMap[device.id]
       if oldDevice
         unless oldDevice.type is device.type
           changeSet.changed.push device
@@ -21,13 +21,13 @@ class Tracker extends EventEmitter
         changeSet.added.push device
         this.emit 'add', device
       newMap[device.id] = device
-    for device in @_oldList
+    for device in @deviceList
       unless newMap[device.id]
         changeSet.removed.push device
         this.emit 'remove', device
     this.emit 'changeSet', changeSet
-    @_oldList = devices
-    @_oldMap = newMap
+    @deviceList = newList
+    @deviceMap = newMap
     return this
 
   end: ->
