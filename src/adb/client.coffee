@@ -26,6 +26,7 @@ LogcatCommand = require './command/logcat'
 InstallCommand = require './command/install'
 UninstallCommand = require './command/uninstall'
 IsInstalledCommand = require './command/isinstalled'
+StartActivityCommand = require './command/startactivity'
 
 class Client
   constructor: (@options = {}) ->
@@ -214,5 +215,11 @@ class Client
       return callback err if err
       new IsInstalledCommand(transport)
         .execute pkg, callback
+
+  startActivity: (serial, options, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new StartActivityCommand(transport)
+        .execute options, callback
 
 module.exports = Client
