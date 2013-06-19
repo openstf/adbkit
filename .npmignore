@@ -1,0 +1,5 @@
+/.editorconfig
+/.npmignore
+/Gruntfile.coffee
+/test/
+/git_hooks/
