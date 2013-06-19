@@ -36,7 +36,11 @@ class Connection extends EventEmitter
 
   startServer: (callback) ->
     debug "Starting ADB server via '#{@options.bin} start-server'"
-    execFile @options.bin, ['start-server'], {}, callback
+    return this._exec ['start-server'], {}, callback
+
+  _exec: (args, options, callback) ->
+    debug "CLI: #{@options.bin} #{args.join ' '}"
+    execFile @options.bin, args, options, callback
     return this
 
   _handleError: (err) ->

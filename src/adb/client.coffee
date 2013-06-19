@@ -23,6 +23,7 @@ FrameBufferCommand = require './command/framebuffer'
 ScreencapCommand = require './command/screencap'
 MonkeyCommand = require './command/monkey'
 LogcatCommand = require './command/logcat'
+InstallCommand = require './command/install'
 UninstallCommand = require './command/uninstall'
 IsInstalledCommand = require './command/isinstalled'
 
@@ -195,6 +196,12 @@ class Client
         .execute (err, stream) =>
           return callback err if err
           callback null, Logcat.readStream stream, fixLineFeeds: false
+
+  install: (serial, apk, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new InstallCommand(transport)
+        .execute apk, callback
 
   uninstall: (serial, pkg, callback) ->
     this.transport serial, (err, transport) ->
