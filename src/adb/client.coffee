@@ -1,4 +1,5 @@
 Monkey = require 'stf-monkey'
+Logcat = require 'stf-logcat'
 debug = require('debug')('adb:client')
 
 Connection = require './connection'
@@ -21,6 +22,7 @@ TcpCommand = require './command/tcp'
 FrameBufferCommand = require './command/framebuffer'
 ScreencapCommand = require './command/screencap'
 MonkeyCommand = require './command/monkey'
+LogcatCommand = require './command/logcat'
 UninstallCommand = require './command/uninstall'
 IsInstalledCommand = require './command/isinstalled'
 
@@ -185,6 +187,14 @@ class Client
               else
                 callback null, Monkey.connectStream stream
           connect()
+
+  openLogcat: (serial, callback) ->
+    this.transport serial, (err, transport) =>
+      return callback err if err
+      new LogcatCommand(transport)
+        .execute (err, stream) =>
+          return callback err if err
+          callback null, Logcat.readStream stream, fixLineFeeds: false
 
   uninstall: (serial, pkg, callback) ->
     this.transport serial, (err, transport) ->
