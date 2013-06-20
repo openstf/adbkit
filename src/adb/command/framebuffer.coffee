@@ -1,5 +1,9 @@
+Assert = require 'assert'
+debug = require('debug')('adb:command:framebuffer')
+
 Command = require '../command'
 Protocol = require '../protocol'
+RgbaTransform = require '../framebuffer/rgbatransform'
 
 class FrameBufferCommand extends Command
   execute: (callback) ->
@@ -7,8 +11,16 @@ class FrameBufferCommand extends Command
       switch reply
         when Protocol.OKAY
           @parser.readBytes 52, (header) =>
-            parsed = this._parseHeader header
-            callback null, parsed, @parser.raw()
+            info = this._parseHeader header
+            switch info.format
+              when 'rgba'
+                debug "Passing 'rgba' stream as-is"
+                callback null, info, @parser.raw()
+              else
+                debug "Silently transforming '#{info.format}' into 'rgba'"
+                transform = new RgbaTransform info
+                info.format = 'rgba'
+                callback null, info, @parser.raw().pipe transform
         when Protocol.FAIL
           @parser.readError callback
         else
@@ -19,6 +31,7 @@ class FrameBufferCommand extends Command
     info = {}
     offset = 0
     info.version = header.readUInt32LE offset
+    Assert.ok info.version isnt 16, 'Old-style raw images are not supported'
     offset += 4
     info.bpp = header.readUInt32LE offset
     offset += 4
