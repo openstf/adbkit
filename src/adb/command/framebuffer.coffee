@@ -3,7 +3,7 @@ debug = require('debug')('adb:command:framebuffer')
 
 Command = require '../command'
 Protocol = require '../protocol'
-RgbaTransform = require '../framebuffer/rgbatransform'
+RgbTransform = require '../framebuffer/rgbtransform'
 
 class FrameBufferCommand extends Command
   execute: (callback) ->
@@ -13,13 +13,13 @@ class FrameBufferCommand extends Command
           @parser.readBytes 52, (header) =>
             info = this._parseHeader header
             switch info.format
-              when 'rgba'
-                debug "Passing 'rgba' stream as-is"
+              when 'rgb'
+                debug "Passing 'rgb' stream as-is"
                 callback null, info, @parser.raw()
               else
-                debug "Silently transforming '#{info.format}' into 'rgba'"
-                transform = new RgbaTransform info
-                info.format = 'rgba'
+                debug "Silently transforming '#{info.format}' into 'rgb'"
+                transform = new RgbTransform info
+                info.format = 'rgb'
                 callback null, info, @parser.raw().pipe transform
         when Protocol.FAIL
           @parser.readError callback
