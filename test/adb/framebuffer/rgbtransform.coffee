@@ -4,11 +4,11 @@ Chai = require 'chai'
 Chai.use require 'sinon-chai'
 {expect} = Chai
 
-RgbaTransform = require '../../../src/adb/framebuffer/rgbatransform'
+RgbTransform = require '../../../src/adb/framebuffer/rgbtransform'
 
-describe 'RgbaTransform', ->
+describe 'RgbTransform', ->
 
-  it "should transform BGRA into RGBA", (done) ->
+  it "should transform BGRA into RGB", (done) ->
     meta =
       bpp: 32
       red_offset: 16
@@ -25,18 +25,18 @@ describe 'RgbaTransform', ->
     pixel.writeUInt8 150, 2
     pixel.writeUInt8 200, 3
     stream = new Stream.PassThrough
-    transform = new RgbaTransform meta
+    transform = new RgbTransform meta
     stream.pipe transform
     transform.on 'data', (chunk) ->
+      expect(chunk).to.have.length 3
       expect(chunk.readUInt8 0).to.equal 150
       expect(chunk.readUInt8 1).to.equal 100
       expect(chunk.readUInt8 2).to.equal 50
-      expect(chunk.readUInt8 3).to.equal 200
       done()
     stream.write pixel
     stream.end()
 
-  it "should transform BGR into RGBA", (done) ->
+  it "should transform BGR into RGB", (done) ->
     meta =
       bpp: 32
       red_offset: 16
@@ -52,18 +52,18 @@ describe 'RgbaTransform', ->
     pixel.writeUInt8 100, 1
     pixel.writeUInt8 150, 2
     stream = new Stream.PassThrough
-    transform = new RgbaTransform meta
+    transform = new RgbTransform meta
     stream.pipe transform
     transform.on 'data', (chunk) ->
+      expect(chunk).to.have.length 3
       expect(chunk.readUInt8 0).to.equal 150
       expect(chunk.readUInt8 1).to.equal 100
       expect(chunk.readUInt8 2).to.equal 50
-      expect(chunk.readUInt8 3).to.equal 255
       done()
     stream.write pixel
     stream.end()
 
-  it "should transform RGB into RGBA", (done) ->
+  it "should transform RGB into RGB", (done) ->
     meta =
       bpp: 24
       red_offset: 0
@@ -79,18 +79,18 @@ describe 'RgbaTransform', ->
     pixel.writeUInt8 100, 1
     pixel.writeUInt8 150, 2
     stream = new Stream.PassThrough
-    transform = new RgbaTransform meta
+    transform = new RgbTransform meta
     stream.pipe transform
     transform.on 'data', (chunk) ->
+      expect(chunk).to.have.length 3
       expect(chunk.readUInt8 0).to.equal 50
       expect(chunk.readUInt8 1).to.equal 100
       expect(chunk.readUInt8 2).to.equal 150
-      expect(chunk.readUInt8 3).to.equal 255
       done()
     stream.write pixel
     stream.end()
 
-  it "should transform RGBA into RGBA", (done) ->
+  it "should transform RGBA into RGB", (done) ->
     meta =
       bpp: 32
       red_offset: 0
@@ -107,13 +107,13 @@ describe 'RgbaTransform', ->
     pixel.writeUInt8 150, 2
     pixel.writeUInt8 200, 3
     stream = new Stream.PassThrough
-    transform = new RgbaTransform meta
+    transform = new RgbTransform meta
     stream.pipe transform
     transform.on 'data', (chunk) ->
+      expect(chunk).to.have.length 3
       expect(chunk.readUInt8 0).to.equal 50
       expect(chunk.readUInt8 1).to.equal 100
       expect(chunk.readUInt8 2).to.equal 150
-      expect(chunk.readUInt8 3).to.equal 200
       done()
     stream.write pixel
     stream.end()
@@ -135,13 +135,13 @@ describe 'RgbaTransform', ->
     pixel.writeUInt8 150, 2
     pixel.writeUInt8 200, 3
     stream = new Stream.PassThrough
-    transform = new RgbaTransform meta
+    transform = new RgbTransform meta
     stream.pipe transform
     transform.on 'data', (chunk) ->
+      expect(chunk).to.have.length 3
       expect(chunk.readUInt8 0).to.equal 50
       expect(chunk.readUInt8 1).to.equal 100
       expect(chunk.readUInt8 2).to.equal 150
-      expect(chunk.readUInt8 3).to.equal 200
       done()
     stream.write pixel.slice 0, 2
     stream.write pixel.slice 2, 3
@@ -170,21 +170,19 @@ describe 'RgbaTransform', ->
     pixel2.writeUInt8 151, 2
     pixel2.writeUInt8 201, 3
     stream = new Stream.PassThrough
-    transform = new RgbaTransform meta
+    transform = new RgbTransform meta
     stream.pipe transform
     all = new Buffer ''
     transform.on 'data', (chunk) ->
       all = Buffer.concat [all, chunk]
     transform.on 'end', ->
+      expect(all).to.have.length 15
       expect(all.readUInt8 0).to.equal 150
       expect(all.readUInt8 1).to.equal 100
       expect(all.readUInt8 2).to.equal 50
-      expect(all.readUInt8 3).to.equal 200
-      expect(all.readUInt8 4).to.equal 151
-      expect(all.readUInt8 5).to.equal 101
-      expect(all.readUInt8 6).to.equal 51
-      expect(all.readUInt8 7).to.equal 201
-      expect(all.length).to.equal 20
+      expect(all.readUInt8 3).to.equal 151
+      expect(all.readUInt8 4).to.equal 101
+      expect(all.readUInt8 5).to.equal 51
       done()
     stream.write pixel1
     stream.write pixel2
