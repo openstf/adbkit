@@ -1,4 +1,5 @@
 Assert = require 'assert'
+{spawn} = require 'child_process'
 debug = require('debug')('adb:command:framebuffer')
 
 Command = require '../command'
@@ -15,17 +16,30 @@ class FrameBufferCommand extends Command
             switch info.format
               when 'rgb'
                 debug "Passing 'rgb' stream as-is"
-                callback null, info, @parser.raw()
+                raw = @parser.raw()
               else
                 debug "Silently transforming '#{info.format}' into 'rgb'"
                 transform = new RgbTransform info
                 info.format = 'rgb'
-                callback null, info, @parser.raw().pipe transform
+                raw = @parser.raw().pipe transform
+            callback null, info, this._png info, raw
         when Protocol.FAIL
           @parser.readError callback
         else
           callback this._unexpected reply
     this._send 'framebuffer:'
+
+  _png: (info, raw) ->
+    debug "Converting RGB stream into PNG"
+    proc = spawn 'gm', [
+      'convert'
+      '-size'
+      "#{info.width}x#{info.height}"
+      'rgb:-'
+      'png:-'
+    ]
+    raw.pipe proc.stdin
+    return proc.stdout
 
   _parseHeader: (header) ->
     info = {}
