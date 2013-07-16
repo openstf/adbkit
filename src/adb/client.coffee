@@ -190,14 +190,11 @@ class Client
                 callback null, Monkey.connectStream stream
           connect()
 
-  openLogcat: (serial, options, callback) ->
-    if arguments.length is 2
-      callback = options
-      options = {}
+  openLogcat: (serial, callback) ->
     this.transport serial, (err, transport) =>
       return callback err if err
       new LogcatCommand(transport)
-        .execute options, (err, stream) =>
+        .execute (err, stream) =>
           return callback err if err
           callback null, Logcat.readStream stream, fixLineFeeds: false
 
