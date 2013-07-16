@@ -4,7 +4,7 @@ LineTransform = require '../linetransform'
 
 class LogcatCommand extends Command
   execute: (options, callback) ->
-    filters = ("'#{tag}':#{level.charAt 0}" for {tag, level} in options.filters)
+    filters = "'#{tag}':#{level.charAt 0}" for {tag, level} in options.filters
     @parser.readAscii 4, (reply) =>
       switch reply
         when Protocol.OKAY
