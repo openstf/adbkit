@@ -3,8 +3,7 @@ Protocol = require '../protocol'
 LineTransform = require '../linetransform'
 
 class LogcatCommand extends Command
-  execute: (options, callback) ->
-    filters = ("'#{tag}':#{level.charAt 0}" for {tag, level} in options.filters)
+  execute: (callback) ->
     @parser.readAscii 4, (reply) =>
       switch reply
         when Protocol.OKAY
@@ -13,6 +12,6 @@ class LogcatCommand extends Command
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send "shell:logcat -B #{filters.join ' '}"
+    this._send 'shell:logcat -B'
 
 module.exports = LogcatCommand
