@@ -202,7 +202,7 @@ class Client
     this.transport serial, (err, transport) ->
       return callback err if err
       new InstallCommand(transport)
-        .execute apk, callback
+        .execute serial, apk, callback
 
   uninstall: (serial, pkg, callback) ->
     this.transport serial, (err, transport) ->
