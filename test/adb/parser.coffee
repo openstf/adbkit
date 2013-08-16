@@ -76,20 +76,6 @@ describe 'Parser', ->
         done()
       raw.write 'foo'
 
-  describe 'unbind()', ->
-
-    it "should unbind the parser from the stream", (done) ->
-      stream = new Stream.PassThrough
-      parser = new Parser stream
-      spy = Sinon.spy()
-      parser.readValue spy
-      parser.unbind()
-      stream.write 'OKAYFAIL'
-      setTimeout ->
-        expect(spy).to.not.have.been.called
-        done()
-      , 50
-
   it "should wait for enough data to appear", (done) ->
     stream = new Stream.PassThrough
     parser = new Parser stream
@@ -100,7 +86,7 @@ describe 'Parser', ->
       stream.write 'BYTES'
     , 50
 
-  it "should pause stream when nothing has been requested", (done) ->
+  it "should keep data waiting even when nothing has been requested", (done) ->
     stream = new Stream.PassThrough
     parser = new Parser stream
     stream.write 'FOO'
