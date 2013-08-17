@@ -3,6 +3,7 @@ Stream = require 'stream'
 debug = require('debug')('adb:sync')
 
 Protocol = require './protocol'
+Stats = require './sync/stats'
 
 class Sync extends EventEmitter
   MODES =
@@ -17,10 +18,13 @@ class Sync extends EventEmitter
       switch reply
         when Protocol.STAT
           @parser.readBytes 12, (stat) =>
-            callback null,
-              mode: stat.readUInt32LE 0
-              size: stat.readUInt32LE 4
-              time: stat.readUInt32LE 8
+            mode = stat.readUInt32LE 0
+            size = stat.readUInt32LE 4
+            mtime = stat.readUInt32LE 8
+            if mode is 0
+              callback this._enoent path
+            else
+              callback null, new Stats mode, size, mtime
         when Protocol.FAIL
           @parser.readError callback
         else
@@ -102,5 +106,12 @@ class Sync extends EventEmitter
     pos += 4
     payload.write arg, pos
     @connection.write payload
+
+  _enoent: (path) ->
+    err = new Error "ENOENT, no such file or directory '#{path}'"
+    err.errno = 34
+    err.code = 'ENOENT'
+    err.path = path
+    return err
 
 module.exports = Sync
