@@ -11,6 +11,9 @@ class Parser
   readBytes: (howMany, callback) ->
     this._read howMany, callback
 
+  readByteFlow: (howManyMax, callback) ->
+    this._readFlow howManyMax, callback
+
   readValue: (callback) ->
     this.readAscii 4, (value) =>
       length = Protocol.decodeLength value
@@ -23,6 +26,10 @@ class Parser
   raw: ->
     return @stream
 
+  unexpected: (reply, callback) ->
+    callback new Error "Unexpected reply: '#{reply}'"
+    return this
+
   _read: (howMany, callback) ->
     if howMany
       if chunk = @stream.read howMany
@@ -33,6 +40,25 @@ class Parser
           this._read howMany, callback
     else
       callback new Buffer 0
+    return this
+
+  _readFlow: (howMany, callback) ->
+    if howMany
+      while chunk = @stream.read()
+        if chunk.length > howMany
+          @stream.push chunk.slice howMany
+          chunk = chunk.slice 0, howMany
+        howMany -= chunk.length
+        if howMany is 0
+          setImmediate =>
+            callback chunk, true
+          break
+        callback chunk, false
+      if howMany
+        @stream.once 'readable', =>
+          this._readFlow howMany, callback
+    else
+      callback new Buffer(0), true
     return this
 
 module.exports = Parser

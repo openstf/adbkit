@@ -27,6 +27,7 @@ InstallCommand = require './command/install'
 UninstallCommand = require './command/uninstall'
 IsInstalledCommand = require './command/isinstalled'
 StartActivityCommand = require './command/startactivity'
+SyncCommand = require './command/sync'
 
 class Client
   constructor: (@options = {}) ->
@@ -221,5 +222,11 @@ class Client
       return callback err if err
       new StartActivityCommand(transport)
         .execute options, callback
+
+  syncService: (serial, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new SyncCommand(transport)
+        .execute callback
 
 module.exports = Client
