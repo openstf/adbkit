@@ -1,4 +1,5 @@
 Fs = require 'fs'
+Stream = require 'stream'
 Async = require 'async'
 {expect, assert} = require 'chai'
 
@@ -12,6 +13,7 @@ describe 'Sync', ->
   SURELY_EXISTING_FILE = '/system/build.prop'
   SURELY_EXISTING_PATH = '/'
   SURELY_NONEXISTING_PATH = '/non-existing-path'
+  SURELY_WRITABLE_FILE = '/data/local/tmp/_sync.test'
 
   client = null
   deviceList = null
@@ -39,6 +41,30 @@ describe 'Sync', ->
         sync.connection.on 'end', ->
           done()
         sync.end()
+      , done
+
+  describe 'pullFileStream(path, callback)', ->
+
+    it "should retrieve the same content pushFileStream() pushed", (done) ->
+      forEachSyncDevice (sync, callback) ->
+        stream = new Stream.PassThrough
+        content = 'ABCDEFGHI'
+        sync.pushFileStream SURELY_WRITABLE_FILE, stream, (err) ->
+          expect(err).to.be.null
+          sync.pullFileStream SURELY_WRITABLE_FILE, (err, out) ->
+            expect(err).to.be.null
+            out.on 'readable', ->
+              expect(out.read().toString()).to.equal content
+              callback()
+        stream.write content
+        stream.end()
+      , done
+
+    it "should return the Sync instance for chaining", (done) ->
+      forEachSyncDevice (sync, callback) ->
+        rval = sync.pullFileStream SURELY_EXISTING_FILE, ->
+        expect(rval).to.be.an.instanceof Sync
+        callback()
       , done
 
   describe 'stat(path, callback)', ->
