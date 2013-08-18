@@ -25,7 +25,9 @@ describe 'Sync', ->
       client.syncService device.id, (err, sync) ->
         expect(err).to.be.null
         expect(sync).to.be.an.instanceof Sync
-        iterator sync, callback
+        iterator sync, (err) ->
+          sync.end()
+          callback err
     , done
 
   before (done) ->
