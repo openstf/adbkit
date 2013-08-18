@@ -41,7 +41,7 @@ describe 'Sync', ->
     it "should end the sync connection", (done) ->
       forEachSyncDevice (sync, callback) ->
         sync.connection.on 'end', ->
-          done()
+          callback()
         sync.end()
       , done
 
