@@ -45,6 +45,16 @@ describe 'Sync', ->
         sync.end()
       , done
 
+  describe 'pushFileStream(path, inStream[, mode], callback)', ->
+
+    it "should return the Sync instance for chaining", (done) ->
+      forEachSyncDevice (sync, callback) ->
+        stream = new Stream.PassThrough
+        rval = sync.pushFileStream SURELY_WRITABLE_FILE, stream, ->
+        expect(rval).to.be.an.instanceof Sync
+        callback()
+      , done
+
   describe 'pullFileStream(path, callback)', ->
 
     it "should retrieve the same content pushFileStream() pushed", (done) ->
