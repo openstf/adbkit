@@ -32,6 +32,15 @@ describe 'Sync', ->
       deviceList = devices
       done err
 
+  describe 'end()', ->
+
+    it "should end the sync connection", (done) ->
+      forEachSyncDevice (sync, callback) ->
+        sync.connection.on 'end', ->
+          done()
+        sync.end()
+      , done
+
   describe 'stat(path, callback)', ->
 
     it "should return an ENOENT error if the path does not exist", (done) ->
