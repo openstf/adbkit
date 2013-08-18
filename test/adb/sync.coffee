@@ -91,7 +91,14 @@ describe 'Sync', ->
 
   describe 'stat(path, callback)', ->
 
-    it "should return an ENOENT error if the path does not exist", (done) ->
+    it "should return the Sync instance for chaining", (done) ->
+      forEachSyncDevice (sync, callback) ->
+        rval = sync.stat SURELY_EXISTING_PATH, ->
+        expect(rval).to.be.an.instanceof Sync
+        callback()
+      , done
+
+    it "should call with an ENOENT error if the path does not exist", (done) ->
       forEachSyncDevice (sync, callback) ->
         sync.stat SURELY_NONEXISTING_PATH, (err, stats) ->
           expect(err).to.be.an.instanceof Error
@@ -102,7 +109,7 @@ describe 'Sync', ->
           callback()
       , done
 
-    it "should return an fs.Stats instance for an existing path", (done) ->
+    it "should call with an fs.Stats instance for an existing path", (done) ->
       forEachSyncDevice (sync, callback) ->
         sync.stat SURELY_EXISTING_PATH, (err, stats) ->
           expect(err).to.be.null
