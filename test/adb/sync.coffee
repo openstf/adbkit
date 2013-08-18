@@ -47,6 +47,16 @@ describe 'Sync', ->
 
   describe 'pushFileStream(path, inStream[, mode], callback)', ->
 
+    it "should call the callback when done pushing", (done) ->
+      forEachSyncDevice (sync, callback) ->
+        stream = new Stream.PassThrough
+        sync.pushFileStream SURELY_WRITABLE_FILE, stream, (err) ->
+          expect(err).to.be.null
+          callback()
+        stream.write 'FOO'
+        stream.end()
+      , done
+
     it "should return the Sync instance for chaining", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
