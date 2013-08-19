@@ -8,10 +8,6 @@ Protocol = require './protocol'
 Stats = require './sync/stats'
 
 class Sync extends EventEmitter
-  MODES =
-    dir: parseInt '0100', 2
-    file: parseInt '1000', 2
-    symlink: parseInt '1010', 2
   TEMP = '/data/local/tmp'
   DEFAULT_CHMOD = 0o644
 
@@ -50,7 +46,7 @@ class Sync extends EventEmitter
     if typeof mode is 'function'
       callback = mode
       mode = DEFAULT_CHMOD
-    mode += MODES.file << 24
+    mode |= Stats.S_IFREG
     this._sendCommandWithArg Protocol.SEND, "#{path},#{mode}"
     this._writeData inStream, Math.floor(Date.now() / 1000), callback
     return this
