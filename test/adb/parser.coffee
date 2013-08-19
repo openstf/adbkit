@@ -65,6 +65,17 @@ describe 'Parser', ->
         done()
       stream.write '000cepic failure'
 
+  describe 'skipLine(callback)', ->
+
+    it "should skip a line terminated by \\n", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.skipLine ->
+        parser.readBytes 7, (buf) ->
+          expect(buf.toString()).to.equal 'zip zap'
+          done()
+      stream.write 'foo bar\nzip zap\npip pop'
+
   describe 'raw()', ->
 
     it "should return the resumed raw stream", (done) ->
