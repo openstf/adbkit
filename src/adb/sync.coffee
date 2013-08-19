@@ -1,4 +1,6 @@
 Stream = require 'stream'
+Fs = require 'fs'
+Path = require 'path'
 {EventEmitter} = require 'events'
 debug = require('debug')('adb:sync')
 
@@ -10,6 +12,8 @@ class Sync extends EventEmitter
     dir: parseInt '0100', 2
     file: parseInt '1000', 2
     symlink: parseInt '1010', 2
+  TEMP = '/data/local/tmp'
+  DEFAULT_CHMOD = 0o644
 
   constructor: (@connection, @parser) ->
 
@@ -32,10 +36,20 @@ class Sync extends EventEmitter
     this._sendCommandWithArg Protocol.STAT, path
     return this
 
+  pushFile: (path, inFile, mode, callback) ->
+    if typeof mode is 'function'
+      callback = mode
+      mode = DEFAULT_CHMOD
+    reader = Fs.createReadStream inFile
+    reader.on 'open', =>
+      this.pushFileStream path, reader, mode, callback
+    reader.on 'error', callback
+    return this
+
   pushFileStream: (path, inStream, mode, callback) ->
     if typeof mode is 'function'
       callback = mode
-      mode = 0o664
+      mode = DEFAULT_CHMOD
     mode += MODES.file << 24
     this._sendCommandWithArg Protocol.SEND, "#{path},#{mode}"
     this._writeData inStream, Math.floor(Date.now() / 1000), callback
@@ -49,6 +63,9 @@ class Sync extends EventEmitter
   end: ->
     @connection.end()
     return this
+
+  tempFile: (path) ->
+    "#{TEMP}/#{Path.basename path}"
 
   _writeData: (inStream, timeStamp, callback) ->
     @parser.readAscii 4, (reply) =>
