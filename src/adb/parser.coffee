@@ -2,11 +2,6 @@ Protocol = require './protocol'
 
 class Parser
   constructor: (@stream) ->
-    @_needBytes = 0
-    @_callback = null
-    @_readableListener = null
-    @_endListener = null
-    this._bind()
 
   readAscii: (howMany, callback) ->
     this.readBytes howMany, (buf) ->
@@ -14,14 +9,10 @@ class Parser
         callback buf.toString 'ascii'
 
   readBytes: (howMany, callback) ->
-    if howMany is 0
-      setImmediate ->
-        callback new Buffer ''
-    else
-      @_needBytes = howMany
-      @_callback = callback
-      this._read()
-    return this
+    this._read howMany, callback
+
+  readByteFlow: (howManyMax, callback) ->
+    this._readFlow howManyMax, callback
 
   readValue: (callback) ->
     this.readAscii 4, (value) =>
@@ -32,34 +23,50 @@ class Parser
     this.readValue (value) ->
       callback new Error value
 
-  unbind: ->
-    @stream.removeListener 'readable', @_readableListener if @_readableListener
-    @stream.removeListener 'end', @_endListener if @_endListener
+  skipLine: (callback) ->
+    consume = =>
+      this.readBytes 1, (buf) ->
+        if buf[0] is 0x0a
+          callback()
+        else
+          consume()
+    consume()
     return this
 
   raw: ->
-    this.unbind()
-    @stream.resume()
     return @stream
 
-  _bind: ->
-    @stream.on 'readable', @_readableListener = =>
-      this._read()
-    @stream.pause()
+  unexpected: (reply, callback) ->
+    callback new Error "Unexpected reply: '#{reply}'"
     return this
 
-  _read: ->
-    if @_needBytes
-      data = @stream.read @_needBytes
-      if data is null
-        @stream.resume()
+  _read: (howMany, callback) ->
+    if howMany
+      if chunk = @stream.read howMany
+        callback chunk
       else
-        @_needBytes = 0
-        setImmediate =>
-          callback = @_callback
-          @_callback = null
-          callback data
-        @stream.pause()
+        @stream.once 'readable', =>
+          this._read howMany, callback
+    else
+      callback new Buffer 0
+    return this
+
+  _readFlow: (howMany, callback) ->
+    if howMany
+      while chunk = @stream.read()
+        if chunk.length > howMany
+          @stream.push chunk.slice howMany
+          chunk = chunk.slice 0, howMany
+        howMany -= chunk.length
+        if howMany is 0
+          callback chunk, true
+          break
+        callback chunk, false
+      if howMany
+        @stream.once 'readable', =>
+          this._readFlow howMany, callback
+    else
+      callback new Buffer(0), true
     return this
 
 module.exports = Parser

@@ -1,6 +1,12 @@
 class Protocol
   @OKAY = 'OKAY'
   @FAIL = 'FAIL'
+  @STAT = 'STAT'
+  @RECV = 'RECV'
+  @DATA = 'DATA'
+  @DONE = 'DONE'
+  @SEND = 'SEND'
+  @QUIT = 'QUIT'
 
   @decodeLength: (length) ->
     parseInt length, 16

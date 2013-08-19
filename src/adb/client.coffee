@@ -27,6 +27,7 @@ InstallCommand = require './command/install'
 UninstallCommand = require './command/uninstall'
 IsInstalledCommand = require './command/isinstalled'
 StartActivityCommand = require './command/startactivity'
+SyncCommand = require './command/sync'
 
 class Client
   constructor: (@options = {}) ->
@@ -199,10 +200,19 @@ class Client
           callback null, Logcat.readStream stream, fixLineFeeds: false
 
   install: (serial, apk, callback) ->
-    this.transport serial, (err, transport) ->
+    this.syncService serial, (err, sync) =>
       return callback err if err
-      new InstallCommand(transport)
-        .execute serial, apk, callback
+      path = sync.tempFile apk
+      sync.pushFile path, apk, (err) =>
+        sync.end()
+        return callback err if err
+        this.transport serial, (err, transport) =>
+          return callback err if err
+          new InstallCommand(transport)
+            .execute path, (err) =>
+              return callback err if err
+              this.shell serial, "rm -f #{path}", (err, out) ->
+                callback err
 
   uninstall: (serial, pkg, callback) ->
     this.transport serial, (err, transport) ->
@@ -221,5 +231,11 @@ class Client
       return callback err if err
       new StartActivityCommand(transport)
         .execute options, callback
+
+  syncService: (serial, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new SyncCommand(transport)
+        .execute callback
 
 module.exports = Client
