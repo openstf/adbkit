@@ -23,6 +23,16 @@ class Parser
     this.readValue (value) ->
       callback new Error value
 
+  skipLine: (callback) ->
+    consume = =>
+      this.readBytes 1, (buf) ->
+        if buf[0] is 0x0a
+          callback()
+        else
+          consume()
+    consume()
+    return this
+
   raw: ->
     return @stream
 
