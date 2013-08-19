@@ -22,6 +22,58 @@ describe 'Parser', ->
           done()
       stream.write 'OKAYFAIL'
 
+  describe 'readByteFlow(maxHowMany, callback)', ->
+
+    it "should read as many bytes as requested", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readByteFlow 4, (buf) ->
+        expect(buf.length).to.equal 4
+        expect(buf.toString()).to.equal 'OKAY'
+        parser.readByteFlow 2, (buf) ->
+          expect(buf).to.have.length 2
+          expect(buf.toString()).to.equal 'FA'
+          done()
+      stream.write 'OKAYFAIL'
+
+    it "should call callback with new/partial chunk until maxHowMany", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      spy = Sinon.spy()
+      parser.readByteFlow 3, spy
+      b1 = new Buffer 'P'
+      b2 = new Buffer 'I'
+      b3 = new Buffer 'ES'
+      b4 = new Buffer 'R'
+      stream.write b1
+      stream.write b2
+      stream.write b3
+      stream.write b4
+      expect(spy).to.have.been.calledThrice
+      expect(spy).to.have.been.calledWith b1, false
+      expect(spy).to.have.been.calledWith b2, false
+      expect(spy.thirdCall.args).to.eql [new Buffer('E'), true]
+      done()
+
+    it "should give callback a 2nd parameter to indicate last chunk", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      spy = Sinon.spy()
+      parser.readByteFlow 3, spy
+      b1 = new Buffer 'P'
+      b2 = new Buffer 'I'
+      b3 = new Buffer 'E'
+      b4 = new Buffer 'S'
+      stream.write b1
+      stream.write b2
+      stream.write b3
+      stream.write b4
+      expect(spy).to.have.been.calledThrice
+      expect(spy).to.have.been.calledWith b1, false
+      expect(spy).to.have.been.calledWith b2, false
+      expect(spy).to.have.been.calledWith b3, true
+      done()
+
   describe 'readAscii(howMany, callback)', ->
 
     it "should read as many ascii characters as requested", (done) ->

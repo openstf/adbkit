@@ -43,8 +43,7 @@ class Parser
   _read: (howMany, callback) ->
     if howMany
       if chunk = @stream.read howMany
-        setImmediate =>
-          callback chunk
+        callback chunk
       else
         @stream.once 'readable', =>
           this._read howMany, callback
@@ -60,8 +59,7 @@ class Parser
           chunk = chunk.slice 0, howMany
         howMany -= chunk.length
         if howMany is 0
-          setImmediate =>
-            callback chunk, true
+          callback chunk, true
           break
         callback chunk, false
       if howMany
