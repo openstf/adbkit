@@ -89,6 +89,16 @@ describe 'Sync', ->
         callback()
       , done
 
+    describe 'Stream', ->
+
+      it "should emit 'end' when pull is done", (done) ->
+        forEachSyncDevice (sync, callback) ->
+          sync.pullFileStream SURELY_EXISTING_FILE, (err, out) ->
+            expect(err).to.be.null
+            out.on 'end', callback
+            out.resume()
+        , done
+
   describe 'stat(path, callback)', ->
 
     it "should return the Sync instance for chaining", (done) ->
