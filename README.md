@@ -12,12 +12,72 @@ When targeting a remote host, starting the server is entirely your responsibilit
 
 Alternatively, you may want to consider using the Chrome [ADB][chrome-adb] extension, as it includes the ADB server and can be started/stopped quite easily.
 
+## API
+
+### adb.createClient([options])
+
+Creates a client instance with the provided options. Note that this will not automatically establish a connection, it will only be done when necessary.
+
+* **options** An object compatible with [Net.connect][net-connect]'s options:
+    - **port** The port where the ADB server is listening. Defaults to `5037`.
+    - **host** The host of the ADB server. Defaults to `'localhost'`.
+    - **bin** As the sole exception, this option provides the path to the `adb` binary, used for starting the server locally if initial connection fails. Defaults to `'adb'`.
+* Returns: The client instance.
+
+### client.version(callback)
+
+Queries the ADB server for its version. This is mainly useful for backwards-compatibility purposes.
+
+* **callback(err, version)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **version** The version of the ADB server.
+* Returns: The client instance.
+
+### client.listDevices(callback)
+
+Get the list of currently connected devices and emulators.
+
+* **callback(err, devices)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **devices** An array of device objects. The device objects are plain JavaScript objects with two properties: `id` and `type`.
+        * **id** The ID of the device. For real devices, this is usually the USB identifier.
+        * **type** The device type. Values include `'emulator'` for emulators, `'device'` for devices, and `'offline'` for offline devices. `'offline'` can occur for example during boot, in low-battery conditions or when the ADB connection has not yet been approved on the device.
+* Returns: The client instance.
+
+### client.listDevicesWithPaths(callback)
+
+Like `client.listDevices(callback)`, but includes the "path" of every device.
+
+* **callback(err, devices)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **devices** An array of device objects. The device objects are plain JavaScript objects with the following properties:
+        * **id** See `client.listDevices()`.
+        * **type** See `client.listDevices()`.
+        * **path** The device path. This can be something like `usb:FD120000` for real devices.
+* Returns: The client instance.
+
+### client.trackDevices(callback)
+
+Gets a device tracker. Events will be emitted when devices are added, removed, or their type changes (i.e. to/from `offline`). Note that the same events will be emitted for the initially connected devices also, so that you don't need to use both `client.listDevices()` and `client.trackDevices()`.
+
+Note that as the tracker will keep a connection open, you must call `tracker.end()` if you wish to stop tracking devices.
+
+* **callback(err, tracker)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **tracker** The device tracker, which is an [`EventEmitter`][node-events]. The following events are available:
+        * **add_(device)_** Emitted when a new device is connected, once per device. See `client.listDevices()` for details on the device object.
+        * **remove_(device)_** Emitted when a device is unplugged, once per device. This does not include `offline` devices, those devices are connected but unavailable to ADB. See `client.listDevices()` for details on the device object.
+        * **change_(device)_** Emitted when the `type` property of a device changes, once per device. The current value of `type` is the new value. This event usually occurs the type changes from `'device'` to `'offline'` or the other way around. See `client.listDevices()` for details on the device object and the `'offline'` type.
+        * **changeSet_(changes)_** Emitted once for all changes reported by ADB in a single run. Multiple changes can occur when, for example, a USB hub is connected/unplugged and the device list changes quickly. If you wish to process all changes at once, use this event instead of the once-per-device ones. Keep in mind that the other events will still be emitted, though.
+            - **changes** An object with the following properties always present:
+                * **added** An array of added device objects, each one as in the `add` event. Empty if none.
+                * **removed** An array of removed device objects, each one as in the `remove` event. Empty if none.
+                * **changed** An array of changed device objects, each one as in the `change` event. Empty if none.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
-
-## Contributing
-
 
 ## Links
 
@@ -39,3 +99,5 @@ Restricted until further notice.
 [file_sync_service.h]: <https://github.com/android/platform_system_core/blob/master/adb/file_sync_service.h>
 [chrome-adb]: <https://chrome.google.com/webstore/detail/adb/dpngiggdglpdnjdoaefidgiigpemgage>
 [node-debug]: <https://npmjs.org/package/debug>
+[net-connect]: <http://nodejs.org/api/net.html#net_net_connect_options_connectionlistener>
+[node-events]: <http://nodejs.org/api/events.html>
