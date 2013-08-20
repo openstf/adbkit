@@ -113,6 +113,16 @@ Get the state of the device identified by the given serial number.
     - **state** The device state. This corresponds to the device type in `client.listDevices()`.
 * Returns: The client instance.
 
+### client.getProperties(serial, callback)
+
+Retrieves the properties of the device identified by the given serial number. This is analogous to `adb shell getprop`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, properties)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **properties** An object of device properties. Each key corresponds to a device property. Convenient for accessing things like `'ro.product.model'`.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
