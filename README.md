@@ -83,6 +83,16 @@ This kills the ADB server. Note that the next connection will attempt to start t
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
+### client.getSerialNo(serial, callback)
+
+Get the serial number of the device identified by the given serial number. With our API this doesn't really make much sense, but it has been implemented for completeness. _FYI: in the raw ADB protocol you can specify a device in other ways, too._
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, serial)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **serial** The serial number of the device.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
