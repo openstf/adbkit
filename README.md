@@ -75,6 +75,14 @@ Note that as the tracker will keep a connection open, you must call `tracker.end
                 * **changed** An array of changed device objects, each one as in the `change` event. Empty if none.
 * Returns: The client instance.
 
+### client.kill(callback)
+
+This kills the ADB server. Note that the next connection will attempt to start the server again when it's unable to connect.
+
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
