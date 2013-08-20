@@ -103,6 +103,16 @@ Get the device path of the device identified by the given serial number.
     - **path** The device path. This corresponds to the device path in `client.listDevicesWithPaths()`.
 * Returns: The client instance.
 
+### client.getState(serial, callback)
+
+Get the state of the device identified by the given serial number.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, state)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **state** The device state. This corresponds to the device type in `client.listDevices()`.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
