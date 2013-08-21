@@ -12,13 +12,10 @@ module.exports =
       proc = spawn 'adb',
         ['-s', deviceId, 'pull', '/dev/graphics/fb0', '/dev/null']
       proc.stdout.on 'end', done
-    "pull /dev/graphics/fb0 using pullFileStream()": (done) ->
+    "pull /dev/graphics/fb0 using client.pull()": (done) ->
       client = Adb.createClient()
-      client.syncService deviceId, (err, sync) ->
-        sync.pullFileStream '/dev/graphics/fb0', (err, stream) ->
-          stream.on 'end', ->
-            sync.end()
-            done()
-          stream.resume()
+      client.pull deviceId, '/dev/graphics/fb0', (err, stream) ->
+        stream.resume()
+        stream.on 'end', done
 
 Bench.runMain()

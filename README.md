@@ -74,13 +74,8 @@ var client = adb.createClient();
 
 client.listDevices(function(err, devices) {
   devices.forEach(function(device) {
-    client.syncService(device.id, function(err, sync) {
-      sync.pullFileStream('/system/build.prop', function(err, stream) {
-        stream.pipe(fs.createWriteStream(device.id + '.build.prop'));
-        stream.on('end', function() {
-          sync.end();
-        });
-      });
+    client.pull(device.id, '/system/build.prop', function(err, stream) {
+      stream.pipe(fs.createWriteStream(device.id + '.build.prop'));
     });
   });
 });
@@ -382,12 +377,41 @@ Starts the configured activity on the device. Roughly analogous to `adb shell am
 
 #### client.syncService(serial, callback)
 
-Establishes a new Sync connection that can be used to push and pull files.
+Establishes a new Sync connection that can be used to push and pull files. This method provides the most freedom and the best performance for repeated use, but can be a bit cumbersome to use. For simple use cases, consider using `client.stat()`, `client.push()` and `client.pull()`.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err, sync)**
     - **err** `null` when successful, `Error` otherwise.
     - **sync** The Sync client. See below for details. Call `sync.end()` when done.
+* Returns: The client instance.
+
+#### client.stat(serial, path, callback)
+
+A convenience shortcut for `sync.stat()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **path** See `sync.stat()` for details.
+* **callback(err, stats)** See `sync.stat()` for details.
+* Returns: The client instance.
+
+#### client.push(serial, path, contents[, mode], callback)
+
+A convenience shortcut for `sync.push()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **path** See `sync.push()` for details.
+* **contents** See `sync.push()` for details.
+* **mode** See `sync.push()` for details.
+* **callback(err)** See `sync.push()` for details.
+* Returns: The client instance.
+
+#### client.pull(serial, path, callback)
+
+A convenience shortcut for `sync.pull()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **path** See `sync.pull()` for details.
+* **callback(err, stream)** See `sync.pull()` for details.
 * Returns: The client instance.
 
 ### Sync
@@ -405,6 +429,17 @@ Retrieves information about the given path.
         * **mtime** The time of last modification as a `Date`.
 * Returns: The sync instance.
 
+#### sync.push(path, contents[, mode], callback)
+
+Attempts to identify `contents` and calls the appropriate `push*` method for it.
+
+* **path** The path to push to.
+* **contents** When `String`, treated as a local file path and forwarded to `sync.pushFile()`. Otherwise, treated as a [`Stream`][node-stream] and forwarded to `sync.pushStream()`.
+* **mode** Optional. The mode of the file. Defaults to `0644`.
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The sync instance.
+
 #### sync.pushFile(path, file[, mode], callback)
 
 Pushes a local file to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `/data/local/tmp`.
@@ -416,7 +451,7 @@ Pushes a local file to the given path. Note that the path must be writable by th
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The sync instance.
 
-#### sync.pushFileStream(path, stream[, mode], callback)
+#### sync.pushStream(path, stream[, mode], callback)
 
 Pushes a [`Stream`][node-stream] to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `'/data/local/tmp'` with an appropriate filename.
 
@@ -427,7 +462,7 @@ Pushes a [`Stream`][node-stream] to the given path. Note that the path must be w
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The sync instance.
 
-#### sync.pullFileStream(path, callback)
+#### sync.pull(path, callback)
 
 Pulls a file from the device as a [`Stream`][node-stream].
 
