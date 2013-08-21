@@ -290,6 +290,18 @@ Uninstalls the package from the device. This is analogous to `adb shell pm path 
     - **installed** `true` if the package is installed, `false` otherwise.
 * Returns: The client instance.
 
+### client.startActivity(serial, options, callback)
+
+Starts the configured activity on the device. Roughly analogous to `adb shell am start <options>`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **options** The activity configuration. The following options are available:
+    - **action** The action.
+    - **component** The component.
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
