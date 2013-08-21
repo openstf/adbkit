@@ -162,6 +162,15 @@ Runs a shell command on the device. Note that you'll be limited to the permissio
     - **output** An output [`Stream`][node-stream] in non-flowing mode. Unfortunately it is not possible to separate stdin and stdout, you'll get both of them in one stream. It is also not possible to access the exit code of the command. If access to any of these individual properties is needed, the command must be constructed in a way that allows you to parse the information from the output.
 * Returns: The client instance.
 
+### client.remount(serial, callback)
+
+Attempts to remount the `/system` partition in read-write mode. This will usually only work on emulators and developer devices.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
