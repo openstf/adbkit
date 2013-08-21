@@ -279,6 +279,17 @@ Uninstalls the package from the device. This is roughly analogous to `adb uninst
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
+### client.isInstalled(serial, pkg, callback)
+
+Uninstalls the package from the device. This is analogous to `adb shell pm path <pkg>` and some output parsing.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **pkg** The package name. This is NOT the APK.
+* **callback(err, installed)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **installed** `true` if the package is installed, `false` otherwise.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
