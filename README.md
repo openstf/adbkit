@@ -259,6 +259,16 @@ For more information, check out the stf-logcat documentation.
     - **logcat** The Logcat client. Please see the stf-logcat documentation for details.
 * Returns: The client instance.
 
+### client.install(serial, apk, callback)
+
+Installs the APK on the device, replacing any previously installed version. This is roughly analogous to `adb install -r <apk>`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **apk** The path to the APK file.
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
