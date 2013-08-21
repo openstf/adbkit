@@ -171,6 +171,34 @@ Attempts to remount the `/system` partition in read-write mode. This will usuall
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
+### client.framebuffer(serial, callback)
+
+Fetches the current framebuffer (i.e. what is visible on the screen) from the device and converts it into PNG using [gm][node-gm], which requires either [GraphicsMagick][graphicsmagick] or [ImageMagick][imagemagick] to be installed and available in `$PATH`. Note that we don't bother supporting really old framebuffer formats such as RGB_565. If for some mysterious reason you happen to run into a `>=2.3` device that uses RGB_565, let us know.
+
+Note that high-resolution devices can have quite massive framebuffers. For example, a device with a resolution of 1920x1080 and 32 bit colors would have a roughly 8MB (`1920*1080*4` byte) RGBA framebuffer. Empirical tests point to about 5MB/s bandwidth limit for the ADB USB connection, which means that even excluding all other processing such as the PNG conversion, it can take ~1.6 seconds for the raw data to arrive, or even more if the USB connection is already congested.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, info, png, raw)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **info** Meta information about the framebuffer. Includes the following properties:
+        * **version** The framebuffer version. Useful for patching possible backwards-compatibility issues.
+        * **bpp** Bits per pixel (i.e. color depth).
+        * **size** The raw byte size of the framebuffer.
+        * **width** The horizontal resolution of the framebuffer. This SHOULD always be the same as screen width. We have not encountered any device with incorrect framebuffer metadata, but according to rumors there might be some.
+        * **height** The vertical resolution of the framebuffer. This SHOULD always be the same as screen height.
+        * **red_offset** The bit offset of the red color in a pixel.
+        * **red_length** The bit length of the red color in a pixel.
+        * **blue_offset** The bit offset of the blue color in a pixel.
+        * **blue_length** The bit length of the blue color in a pixel.
+        * **green_offset** The bit offset of the green color in a pixel.
+        * **green_length** The bit length of the green color in a pixel.
+        * **alpha_offset** The bit offset of alpha in a pixel.
+        * **alpha_length** The bit length of alpha in a pixel. `0` when not available.
+        * **format** The framebuffer format for convenience. This can be one of `'bgr'`,  `'bgra'`, `'rgb'`, `'rgba'`.
+    - **png** The converted PNG stream.
+    - **raw** The raw framebuffer stream.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
@@ -198,3 +226,6 @@ Restricted until further notice.
 [net-connect]: <http://nodejs.org/api/net.html#net_net_connect_options_connectionlistener>
 [node-events]: <http://nodejs.org/api/events.html>
 [node-stream]: <http://nodejs.org/api/stream.html>
+[node-gm]: <https://github.com/aheckmann/gm>
+[graphicsmagick]: <http://www.graphicsmagick.org/>
+[imagemagick]: <http://www.imagemagick.org/>
