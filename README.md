@@ -39,7 +39,7 @@ Queries the ADB server for its version. This is mainly useful for backwards-comp
 
 #### client.listDevices(callback)
 
-Get the list of currently connected devices and emulators.
+Gets the list of currently connected devices and emulators.
 
 * **callback(err, devices)**
     - **err** `null` when successful, `Error` otherwise.
@@ -89,7 +89,7 @@ This kills the ADB server. Note that the next connection will attempt to start t
 
 #### client.getSerialNo(serial, callback)
 
-Get the serial number of the device identified by the given serial number. With our API this doesn't really make much sense, but it has been implemented for completeness. _FYI: in the raw ADB protocol you can specify a device in other ways, too._
+Gets the serial number of the device identified by the given serial number. With our API this doesn't really make much sense, but it has been implemented for completeness. _FYI: in the raw ADB protocol you can specify a device in other ways, too._
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err, serial)**
@@ -99,7 +99,7 @@ Get the serial number of the device identified by the given serial number. With 
 
 #### client.getDevicePath(serial, callback)
 
-Get the device path of the device identified by the given serial number.
+Gets the device path of the device identified by the given serial number.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err, path)**
@@ -109,7 +109,7 @@ Get the device path of the device identified by the given serial number.
 
 #### client.getState(serial, callback)
 
-Get the state of the device identified by the given serial number.
+Gets the state of the device identified by the given serial number.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err, state)**
