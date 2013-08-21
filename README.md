@@ -133,6 +133,24 @@ Retrieves the features of the device identified by the given serial number. This
     - **features** An object of device features. Each key corresponds to a device feature, with the value being either `true` for a boolean feature, or the feature value as a string (e.g. `'0x20000'` for `reqGlEsVersion`).
 * Returns: The client instance.
 
+### client.forward(serial, local, remote, callback)
+
+Forwards socket connections from the ADB server host (local) to the device (remote). This is analogous to `adb forward <local> <remote>`. It's important to note that if you are connected to a remote ADB server, the forward will be created on that host.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **local** A string representing the local endpoint on the ADB host. At time of writing, can be one of:
+    - `tcp:<port>`
+    - `localabstract:<unix domain socket name>`
+    - `localreserved:<unix domain socket name>`
+    - `localfilesystem:<unix domain socket name>`
+    - `dev:<character device name>`
+* **remote** A string representing the remote endpoint on the device. At time of writing, can be one of:
+    - Any value accepted by the `local` argument
+    - `jdwp:<process pid>`
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
