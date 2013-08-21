@@ -32,23 +32,23 @@ class Sync extends EventEmitter
     this._sendCommandWithArg Protocol.STAT, path
     return this
 
-  pushFile: (path, inFile, mode, callback) ->
+  pushFile: (path, file, mode, callback) ->
     if typeof mode is 'function'
       callback = mode
       mode = DEFAULT_CHMOD
-    reader = Fs.createReadStream inFile
+    reader = Fs.createReadStream file
     reader.on 'open', =>
       this.pushFileStream path, reader, mode, callback
     reader.on 'error', callback
     return this
 
-  pushFileStream: (path, inStream, mode, callback) ->
+  pushFileStream: (path, stream, mode, callback) ->
     if typeof mode is 'function'
       callback = mode
       mode = DEFAULT_CHMOD
     mode |= Stats.S_IFREG
     this._sendCommandWithArg Protocol.SEND, "#{path},#{mode}"
-    this._writeData inStream, Math.floor(Date.now() / 1000), callback
+    this._writeData stream, Math.floor(Date.now() / 1000), callback
     return this
 
   pullFileStream: (path, callback) ->
@@ -63,7 +63,7 @@ class Sync extends EventEmitter
   tempFile: (path) ->
     "#{TEMP}/#{Path.basename path}"
 
-  _writeData: (inStream, timeStamp, callback) ->
+  _writeData: (stream, timeStamp, callback) ->
     @parser.readAscii 4, (reply) =>
       switch reply
         when Protocol.OKAY
@@ -73,11 +73,11 @@ class Sync extends EventEmitter
           @parser.readError callback
         else
           @parser.unexpected reply, callback
-    inStream.on 'readable', =>
-      while chunk = inStream.read()
+    stream.on 'readable', =>
+      while chunk = stream.read()
         this._sendCommandWithLength Protocol.DATA, chunk.length
         @connection.write chunk
-    inStream.on 'end', =>
+    stream.on 'end', =>
       this._sendCommandWithLength Protocol.DONE, timeStamp
     return this
 
