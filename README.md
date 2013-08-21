@@ -12,6 +12,80 @@ When targeting a remote host, starting the server is entirely your responsibilit
 
 Alternatively, you may want to consider using the Chrome [ADB][chrome-adb] extension, as it includes the ADB server and can be started/stopped quite easily.
 
+## Examples
+
+### Checking for NFC support
+
+```js
+var adb = require('stf-adb');
+var client = adb.createClient();
+
+client.listDevices(function(err, devices) {
+  devices.forEach(function(device) {
+    client.getFeatures(device.id, function(err, features) {
+      if (features['android.hardware.nfc']) {
+        console.log('Device %s supports NFC', device.id);
+      }
+    });
+  });
+});
+```
+
+### Installing an APK
+
+```js
+var adb = require('stf-adb');
+var client = adb.createClient();
+var apk = 'vendor/app.apk';
+
+client.listDevices(function(err, devices) {
+  devices.forEach(function(device) {
+    client.install(device.id, apk, function(err) {
+      if (!err) {
+        console.log('Installed %s on device %s', apk, device.id);
+      }
+    });
+  });
+});
+```
+
+### Tracking devices
+
+```js
+var adb = require('stf-adb');
+var client = adb.createClient();
+
+client.trackDevices(function(err, tracker) {
+  tracker.on('add', function(device) {
+    console.log('Device %s was plugged in', device.id);
+  });
+  tracker.on('remove', function(device) {
+    console.log('Device %s was unplugged', device.id);
+  });
+});
+```
+
+### Pulling a file from the device
+
+```js
+var fs = require('fs');
+var adb = require('stf-adb');
+var client = adb.createClient();
+
+client.listDevices(function(err, devices) {
+  devices.forEach(function(device) {
+    client.syncService(device.id, function(err, sync) {
+      sync.pullFileStream('/system/build.prop', function(err, stream) {
+        stream.pipe(fs.createWriteStream(device.id + '.build.prop'));
+        stream.on('end', function() {
+          sync.end();
+        });
+      });
+    });
+  });
+});
+```
+
 ## API
 
 ### ADB
