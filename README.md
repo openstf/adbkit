@@ -211,6 +211,17 @@ Generating the PNG on the device naturally requires considerably more processing
     - **screencap** The PNG stream.
 * Returns: The client instance.
 
+### client.openLog(serial, name, callback)
+
+Opens a direct connection to a binary log file, providing access to the raw log data. Note that it is usually much more convenient to use the `client.openLogcat()` method, described separately.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **name** The name of the log. Available logs include `'main'`, `'system'`, `'radio'` and `'events'`.
+* **callback(err, log)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **log** The binary log stream. Call `log.end()` when you wish to stop receiving data.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
