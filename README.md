@@ -222,6 +222,18 @@ Opens a direct connection to a binary log file, providing access to the raw log 
     - **log** The binary log stream. Call `log.end()` when you wish to stop receiving data.
 * Returns: The client instance.
 
+### client.openTcp(serial, port[, host], callback)
+
+Opens a direct TCP connection to a port on the device, without any port forwarding required.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **port** The port number to connect to.
+* **host** Optional. The host to connect to. Allegedly this is supposed to establish a connection to the given host from the device, but we have not been able to get it to work at all. Skip the host and everything works great.
+* **callback(err, conn)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **conn** The TCP connection (i.e. [`net.Socket`][node-net]). Read and write as you please. Call `conn.end()` to end the connection.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
@@ -249,6 +261,7 @@ Restricted until further notice.
 [net-connect]: <http://nodejs.org/api/net.html#net_net_connect_options_connectionlistener>
 [node-events]: <http://nodejs.org/api/events.html>
 [node-stream]: <http://nodejs.org/api/stream.html>
+[node-net]: <http://nodejs.org/api/net.html>
 [node-gm]: <https://github.com/aheckmann/gm>
 [graphicsmagick]: <http://www.graphicsmagick.org/>
 [imagemagick]: <http://www.imagemagick.org/>
