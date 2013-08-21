@@ -234,6 +234,19 @@ Opens a direct TCP connection to a port on the device, without any port forwardi
     - **conn** The TCP connection (i.e. [`net.Socket`][node-net]). Read and write as you please. Call `conn.end()` to end the connection.
 * Returns: The client instance.
 
+### client.openMonkey(serial[, port], callback)
+
+Starts the built-in `monkey` utility on the device, connects to it using `client.openTcp()` and hands the connection to **stf-monkey**, a pure Node.js Monkey client. This allows you to create touch and key events, among other things.
+
+For more information, check out the stf-monkey documentation.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **port** Optional. The device port where you'd like Monkey to run at. Defaults to `1080`.
+* **callback(err, monkey)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **monkey** The Monkey client. Please see the stf-monkey documentation for details.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
