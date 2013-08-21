@@ -306,6 +306,76 @@ Starts the configured activity on the device. Roughly analogous to `adb shell am
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
+#### client.syncService(serial, callback)
+
+Establishes a new Sync connection that can be used to push and pull files.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, sync)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **sync** The Sync client. See below for details. Call `sync.end()` when done.
+* Returns: The client instance.
+
+### Sync
+
+#### sync.stat(path, callback)
+
+Retrieves information about the given path.
+
+* **path** The path.
+* **callback(err, stats)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **stats** An [`fs.Stats`][node-fs-stats] instance. While the `stats.is*` methods are available, only the following properties are supported:
+        * **mode** The raw mode.
+        * **size** The file size.
+        * **mtime** The time of last modification as a `Date`.
+* Returns: The sync instance.
+
+#### sync.pushFile(path, file[, mode], callback)
+
+Pushes a local file to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `/data/local/tmp`.
+
+* **path** The path to push to.
+* **file** The local file path.
+* **mode** Optional. The mode of the file. Defaults to `0644`.
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The sync instance.
+
+#### sync.pushFileStream(path, stream[, mode], callback)
+
+Pushes a [`Stream`][node-stream] to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `'/data/local/tmp'` with an appropriate filename.
+
+* **path** The path to push to.
+* **stream** The readable stream.
+* **mode** Optional. The mode of the file. Defaults to `0644`.
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The sync instance.
+
+#### sync.pullFileStream(path, callback)
+
+Pulls a file from the device as a [`Stream`][node-stream].
+
+* **path** The path to push to.
+* **callback(err, stream)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **stream** The file [`Stream`][node-stream]. Use [`fs.createWriteStream()`][node-fs] to pipe the stream to a file if necessary.
+* Returns: The sync instance.
+
+#### sync.tempFile(path)
+
+A simple helper method for creating appropriate temporary filenames for pushing files. This is essentially the same as taking the basename of the file and appending it to `'/data/local/tmp/'`.
+
+* **path** The path of the file.
+* Returns: An appropriate temporary file path.
+
+#### sync.end()
+
+Closes the Sync connection, allowing Node to quit (assuming nothing else is keeping it alive, of course).
+
+* Returns: The sync instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
@@ -334,6 +404,8 @@ Restricted until further notice.
 [node-events]: <http://nodejs.org/api/events.html>
 [node-stream]: <http://nodejs.org/api/stream.html>
 [node-net]: <http://nodejs.org/api/net.html>
+[node-fs]: <http://nodejs.org/api/fs.html>
+[node-fs-stats]: <http://nodejs.org/api/fs.html#fs_class_fs_stats>
 [node-gm]: <https://github.com/aheckmann/gm>
 [graphicsmagick]: <http://www.graphicsmagick.org/>
 [imagemagick]: <http://www.imagemagick.org/>
