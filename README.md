@@ -14,7 +14,9 @@ Alternatively, you may want to consider using the Chrome [ADB][chrome-adb] exten
 
 ## API
 
-### adb.createClient([options])
+### ADB
+
+#### adb.createClient([options])
 
 Creates a client instance with the provided options. Note that this will not automatically establish a connection, it will only be done when necessary.
 
@@ -24,7 +26,9 @@ Creates a client instance with the provided options. Note that this will not aut
     - **bin** As the sole exception, this option provides the path to the `adb` binary, used for starting the server locally if initial connection fails. Defaults to `'adb'`.
 * Returns: The client instance.
 
-### client.version(callback)
+### Client
+
+##### client.version(callback)
 
 Queries the ADB server for its version. This is mainly useful for backwards-compatibility purposes.
 
@@ -33,7 +37,7 @@ Queries the ADB server for its version. This is mainly useful for backwards-comp
     - **version** The version of the ADB server.
 * Returns: The client instance.
 
-### client.listDevices(callback)
+#### client.listDevices(callback)
 
 Get the list of currently connected devices and emulators.
 
@@ -44,7 +48,7 @@ Get the list of currently connected devices and emulators.
         * **type** The device type. Values include `'emulator'` for emulators, `'device'` for devices, and `'offline'` for offline devices. `'offline'` can occur for example during boot, in low-battery conditions or when the ADB connection has not yet been approved on the device.
 * Returns: The client instance.
 
-### client.listDevicesWithPaths(callback)
+#### client.listDevicesWithPaths(callback)
 
 Like `client.listDevices(callback)`, but includes the "path" of every device.
 
@@ -56,7 +60,7 @@ Like `client.listDevices(callback)`, but includes the "path" of every device.
         * **path** The device path. This can be something like `usb:FD120000` for real devices.
 * Returns: The client instance.
 
-### client.trackDevices(callback)
+#### client.trackDevices(callback)
 
 Gets a device tracker. Events will be emitted when devices are added, removed, or their type changes (i.e. to/from `offline`). Note that the same events will be emitted for the initially connected devices also, so that you don't need to use both `client.listDevices()` and `client.trackDevices()`.
 
@@ -75,7 +79,7 @@ Note that as the tracker will keep a connection open, you must call `tracker.end
                 * **changed** An array of changed device objects, each one as in the `change` event. Empty if none.
 * Returns: The client instance.
 
-### client.kill(callback)
+#### client.kill(callback)
 
 This kills the ADB server. Note that the next connection will attempt to start the server again when it's unable to connect.
 
@@ -83,7 +87,7 @@ This kills the ADB server. Note that the next connection will attempt to start t
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
-### client.getSerialNo(serial, callback)
+#### client.getSerialNo(serial, callback)
 
 Get the serial number of the device identified by the given serial number. With our API this doesn't really make much sense, but it has been implemented for completeness. _FYI: in the raw ADB protocol you can specify a device in other ways, too._
 
@@ -93,7 +97,7 @@ Get the serial number of the device identified by the given serial number. With 
     - **serial** The serial number of the device.
 * Returns: The client instance.
 
-### client.getDevicePath(serial, callback)
+#### client.getDevicePath(serial, callback)
 
 Get the device path of the device identified by the given serial number.
 
@@ -103,7 +107,7 @@ Get the device path of the device identified by the given serial number.
     - **path** The device path. This corresponds to the device path in `client.listDevicesWithPaths()`.
 * Returns: The client instance.
 
-### client.getState(serial, callback)
+#### client.getState(serial, callback)
 
 Get the state of the device identified by the given serial number.
 
@@ -113,7 +117,7 @@ Get the state of the device identified by the given serial number.
     - **state** The device state. This corresponds to the device type in `client.listDevices()`.
 * Returns: The client instance.
 
-### client.getProperties(serial, callback)
+#### client.getProperties(serial, callback)
 
 Retrieves the properties of the device identified by the given serial number. This is analogous to `adb shell getprop`.
 
@@ -123,7 +127,7 @@ Retrieves the properties of the device identified by the given serial number. Th
     - **properties** An object of device properties. Each key corresponds to a device property. Convenient for accessing things like `'ro.product.model'`.
 * Returns: The client instance.
 
-### client.getFeatures(serial, callback)
+#### client.getFeatures(serial, callback)
 
 Retrieves the features of the device identified by the given serial number. This is analogous to `adb shell pm list features`. Useful for checking whether hardware features such as NFC are available (you'd check for `'android.hardware.nfc'`).
 
@@ -133,7 +137,7 @@ Retrieves the features of the device identified by the given serial number. This
     - **features** An object of device features. Each key corresponds to a device feature, with the value being either `true` for a boolean feature, or the feature value as a string (e.g. `'0x20000'` for `reqGlEsVersion`).
 * Returns: The client instance.
 
-### client.forward(serial, local, remote, callback)
+#### client.forward(serial, local, remote, callback)
 
 Forwards socket connections from the ADB server host (local) to the device (remote). This is analogous to `adb forward <local> <remote>`. It's important to note that if you are connected to a remote ADB server, the forward will be created on that host.
 
@@ -151,7 +155,7 @@ Forwards socket connections from the ADB server host (local) to the device (remo
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
-### client.shell(serial, command, callback)
+#### client.shell(serial, command, callback)
 
 Runs a shell command on the device. Note that you'll be limited to the permissions of the `shell` user, which ADB uses.
 
@@ -162,7 +166,7 @@ Runs a shell command on the device. Note that you'll be limited to the permissio
     - **output** An output [`Stream`][node-stream] in non-flowing mode. Unfortunately it is not possible to separate stdin and stdout, you'll get both of them in one stream. It is also not possible to access the exit code of the command. If access to any of these individual properties is needed, the command must be constructed in a way that allows you to parse the information from the output.
 * Returns: The client instance.
 
-### client.remount(serial, callback)
+#### client.remount(serial, callback)
 
 Attempts to remount the `/system` partition in read-write mode. This will usually only work on emulators and developer devices.
 
@@ -171,7 +175,7 @@ Attempts to remount the `/system` partition in read-write mode. This will usuall
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
-### client.framebuffer(serial, callback)
+#### client.framebuffer(serial, callback)
 
 Fetches the current framebuffer (i.e. what is visible on the screen) from the device and converts it into PNG using [gm][node-gm], which requires either [GraphicsMagick][graphicsmagick] or [ImageMagick][imagemagick] to be installed and available in `$PATH`. Note that we don't bother supporting really old framebuffer formats such as RGB_565. If for some mysterious reason you happen to run into a `>=2.3` device that uses RGB_565, let us know.
 
@@ -199,7 +203,7 @@ Note that high-resolution devices can have quite massive framebuffers. For examp
     - **raw** The raw framebuffer stream.
 * Returns: The client instance.
 
-### client.screencap(serial, callback)
+#### client.screencap(serial, callback)
 
 Takes a screenshot in PNG format using the built-in `screencap` utility. This is analogous to `adb shell screencap -p`. Sadly, the utility is not available on most Android `<=2.3` devices, and the current implementation does not provide a shim for older devices.
 
@@ -211,7 +215,7 @@ Generating the PNG on the device naturally requires considerably more processing
     - **screencap** The PNG stream.
 * Returns: The client instance.
 
-### client.openLog(serial, name, callback)
+#### client.openLog(serial, name, callback)
 
 Opens a direct connection to a binary log file, providing access to the raw log data. Note that it is usually much more convenient to use the `client.openLogcat()` method, described separately.
 
@@ -222,7 +226,7 @@ Opens a direct connection to a binary log file, providing access to the raw log 
     - **log** The binary log stream. Call `log.end()` when you wish to stop receiving data.
 * Returns: The client instance.
 
-### client.openTcp(serial, port[, host], callback)
+#### client.openTcp(serial, port[, host], callback)
 
 Opens a direct TCP connection to a port on the device, without any port forwarding required.
 
@@ -234,7 +238,7 @@ Opens a direct TCP connection to a port on the device, without any port forwardi
     - **conn** The TCP connection (i.e. [`net.Socket`][node-net]). Read and write as you please. Call `conn.end()` to end the connection.
 * Returns: The client instance.
 
-### client.openMonkey(serial[, port], callback)
+#### client.openMonkey(serial[, port], callback)
 
 Starts the built-in `monkey` utility on the device, connects to it using `client.openTcp()` and hands the connection to **stf-monkey**, a pure Node.js Monkey client. This allows you to create touch and key events, among other things.
 
@@ -247,7 +251,7 @@ For more information, check out the stf-monkey documentation.
     - **monkey** The Monkey client. Please see the stf-monkey documentation for details.
 * Returns: The client instance.
 
-### client.openLogcat(serial, callback)
+#### client.openLogcat(serial, callback)
 
 Calls the `logcat` utility on the device and hands off the connection to **stf-logcat**, a pure Node.js Logcat client. This is analogous to `adb logcat -B`, but the event stream will be parsed for you and a separate event will be emitted for every log entry, allowing for easy processing.
 
@@ -259,7 +263,7 @@ For more information, check out the stf-logcat documentation.
     - **logcat** The Logcat client. Please see the stf-logcat documentation for details.
 * Returns: The client instance.
 
-### client.install(serial, apk, callback)
+#### client.install(serial, apk, callback)
 
 Installs the APK on the device, replacing any previously installed version. This is roughly analogous to `adb install -r <apk>`.
 
@@ -269,7 +273,7 @@ Installs the APK on the device, replacing any previously installed version. This
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
-### client.uninstall(serial, pkg, callback)
+#### client.uninstall(serial, pkg, callback)
 
 Uninstalls the package from the device. This is roughly analogous to `adb uninstall <pkg>`.
 
@@ -279,7 +283,7 @@ Uninstalls the package from the device. This is roughly analogous to `adb uninst
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
-### client.isInstalled(serial, pkg, callback)
+#### client.isInstalled(serial, pkg, callback)
 
 Uninstalls the package from the device. This is analogous to `adb shell pm path <pkg>` and some output parsing.
 
@@ -290,7 +294,7 @@ Uninstalls the package from the device. This is analogous to `adb shell pm path 
     - **installed** `true` if the package is installed, `false` otherwise.
 * Returns: The client instance.
 
-### client.startActivity(serial, options, callback)
+#### client.startActivity(serial, options, callback)
 
 Starts the configured activity on the device. Roughly analogous to `adb shell am start <options>`.
 
