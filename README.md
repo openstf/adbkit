@@ -247,6 +247,18 @@ For more information, check out the stf-monkey documentation.
     - **monkey** The Monkey client. Please see the stf-monkey documentation for details.
 * Returns: The client instance.
 
+### client.openLogcat(serial, callback)
+
+Calls the `logcat` utility on the device and hands off the connection to **stf-logcat**, a pure Node.js Logcat client. This is analogous to `adb logcat -B`, but the event stream will be parsed for you and a separate event will be emitted for every log entry, allowing for easy processing.
+
+For more information, check out the stf-logcat documentation.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, logcat)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **logcat** The Logcat client. Please see the stf-logcat documentation for details.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
