@@ -128,7 +128,7 @@ Retrieves the properties of the device identified by the given serial number. Th
 Retrieves the features of the device identified by the given serial number. This is analogous to `adb shell pm list features`. Useful for checking whether hardware features such as NFC are available (you'd check for `'android.hardware.nfc'`).
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **callback(err, properties)**
+* **callback(err, features)**
     - **err** `null` when successful, `Error` otherwise.
     - **features** An object of device features. Each key corresponds to a device feature, with the value being either `true` for a boolean feature, or the feature value as a string (e.g. `'0x20000'` for `reqGlEsVersion`).
 * Returns: The client instance.
