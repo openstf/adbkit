@@ -269,6 +269,16 @@ Installs the APK on the device, replacing any previously installed version. This
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
+### client.uninstall(serial, pkg, callback)
+
+Uninstalls the package from the device. This is roughly analogous to `adb uninstall <pkg>`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **pkg** The package name. This is NOT the APK.
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
