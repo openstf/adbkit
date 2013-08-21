@@ -199,6 +199,18 @@ Note that high-resolution devices can have quite massive framebuffers. For examp
     - **raw** The raw framebuffer stream.
 * Returns: The client instance.
 
+### client.screencap(serial, callback)
+
+Takes a screenshot in PNG format using the built-in `screencap` utility. This is analogous to `adb shell screencap -p`. Sadly, the utility is not available on most Android `<=2.3` devices, and the current implementation does not provide a shim for older devices.
+
+Generating the PNG on the device naturally requires considerably more processing time on that side. However, as the data transferred over USB easily decreases by ~95%, and no conversion being required on the host, this method is usually several times faster than using the framebuffer.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, screencap)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **screencap** The PNG stream.
+* Returns: The client instance.
+
 ## Debugging
 
 We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
