@@ -1,7 +1,10 @@
 Fs = require 'fs'
 Stream = require 'stream'
 Async = require 'async'
-{expect, assert} = require 'chai'
+Sinon = require 'sinon'
+Chai = require 'chai'
+Chai.use require 'sinon-chai'
+{expect, assert} = Chai
 
 Adb = require '../../'
 Sync = require '../../src/adb/sync'
@@ -45,12 +48,33 @@ describe 'Sync', ->
         sync.end()
       , done
 
-  describe 'pushFileStream(path, inStream[, mode], callback)', ->
+  describe 'push(path, contents[, mode], callback)', ->
+
+    it "should call pushStream when contents is a Stream", (done) ->
+      forEachSyncDevice (sync, callback) ->
+        stream = new Stream.PassThrough
+        spy = Sinon.spy sync, 'pushStream'
+        sync.push SURELY_WRITABLE_FILE, stream, ->
+        expect(spy).to.have.been.called
+        sync.end()
+        done()
+      , done
+
+    it "should call pushFile when contents is a String", (done) ->
+      forEachSyncDevice (sync, callback) ->
+        spy = Sinon.spy sync, 'pushFile'
+        sync.push SURELY_WRITABLE_FILE, 'foo.bar', ->
+        expect(spy).to.have.been.called
+        sync.end()
+        done()
+      , done
+
+  describe 'pushStream(path, stream[, mode], callback)', ->
 
     it "should call the callback when done pushing", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
-        sync.pushFileStream SURELY_WRITABLE_FILE, stream, (err) ->
+        sync.pushStream SURELY_WRITABLE_FILE, stream, (err) ->
           expect(err).to.be.null
           callback()
         stream.write 'FOO'
@@ -60,20 +84,20 @@ describe 'Sync', ->
     it "should return the Sync instance for chaining", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
-        rval = sync.pushFileStream SURELY_WRITABLE_FILE, stream, ->
+        rval = sync.pushStream SURELY_WRITABLE_FILE, stream, ->
         expect(rval).to.be.an.instanceof Sync
         callback()
       , done
 
-  describe 'pullFileStream(path, callback)', ->
+  describe 'pull(path, callback)', ->
 
-    it "should retrieve the same content pushFileStream() pushed", (done) ->
+    it "should retrieve the same content pushStream() pushed", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
         content = 'ABCDEFGHI'
-        sync.pushFileStream SURELY_WRITABLE_FILE, stream, (err) ->
+        sync.pushStream SURELY_WRITABLE_FILE, stream, (err) ->
           expect(err).to.be.null
-          sync.pullFileStream SURELY_WRITABLE_FILE, (err, out) ->
+          sync.pull SURELY_WRITABLE_FILE, (err, out) ->
             expect(err).to.be.null
             out.on 'readable', ->
               expect(out.read().toString()).to.equal content
@@ -84,10 +108,20 @@ describe 'Sync', ->
 
     it "should return the Sync instance for chaining", (done) ->
       forEachSyncDevice (sync, callback) ->
-        rval = sync.pullFileStream SURELY_EXISTING_FILE, ->
+        rval = sync.pull SURELY_EXISTING_FILE, ->
         expect(rval).to.be.an.instanceof Sync
         callback()
       , done
+
+    describe 'Stream', ->
+
+      it "should emit 'end' when pull is done", (done) ->
+        forEachSyncDevice (sync, callback) ->
+          sync.pull SURELY_EXISTING_FILE, (err, out) ->
+            expect(err).to.be.null
+            out.on 'end', callback
+            out.resume()
+        , done
 
   describe 'stat(path, callback)', ->
 

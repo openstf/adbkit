@@ -238,4 +238,34 @@ class Client
       new SyncCommand(transport)
         .execute callback
 
+  stat: (serial, path, callback) ->
+    this.syncService serial, (err, sync) ->
+      return callback err if err
+      sync.stat path, (err, stats) ->
+        sync.end()
+        return callback err if err
+        callback null, stats
+
+  pull: (serial, path, callback) ->
+    this.syncService serial, (err, sync) ->
+      return callback err if err
+      sync.pull path, (err, stream) ->
+        if err
+          sync.end()
+          callback err
+        else
+          stream.on 'end', ->
+            sync.end()
+          callback null, stream
+
+  push: (serial, path, contents, mode, callback) ->
+    if typeof mode is 'function'
+      callback = mode
+      mode = undefined
+    this.syncService serial, (err, sync) ->
+      return callback err if err
+      sync.push path, contents, mode, (err) ->
+        sync.end()
+        callback err
+
 module.exports = Client
