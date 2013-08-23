@@ -57,7 +57,7 @@ describe 'Sync', ->
         sync.push SURELY_WRITABLE_FILE, stream, ->
         expect(spy).to.have.been.called
         sync.end()
-        done()
+        callback()
       , done
 
     it "should call pushFile when contents is a String", (done) ->
@@ -66,7 +66,7 @@ describe 'Sync', ->
         sync.push SURELY_WRITABLE_FILE, 'foo.bar', ->
         expect(spy).to.have.been.called
         sync.end()
-        done()
+        callback()
       , done
 
   describe 'pushStream(path, stream[, mode], callback)', ->
