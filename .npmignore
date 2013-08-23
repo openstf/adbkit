@@ -1,5 +1,10 @@
-/.editorconfig
-/.npmignore
-/Gruntfile.coffee
+/src/
 /test/
+/tasks/
+/bench/
 /git_hooks/
+/index.coffee
+/Gruntfile.coffee
+/.npmignore
+/.editorconfig
+/*.tgz

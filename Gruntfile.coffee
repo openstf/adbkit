@@ -12,6 +12,11 @@ module.exports = (grunt) ->
       index:
         src: 'index.coffee'
         dest: 'index.js'
+    clean:
+      lib:
+        src: 'lib'
+      index:
+        src: 'index.js'
     coffeelint:
       src:
         src: '<%= coffee.src.cwd %>/<%= coffee.src.src %>'
@@ -55,6 +60,7 @@ module.exports = (grunt) ->
       generate:
         dest: 'src/adb/keycode.coffee'
 
+  grunt.loadNpmTasks 'grunt-contrib-clean'
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-coffeelint'
   grunt.loadNpmTasks 'grunt-jsonlint'
