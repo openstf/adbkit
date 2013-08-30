@@ -6,7 +6,7 @@ Most of the `adb` command line tool's functionality is supported (including push
 
 ## Requirements
 
-Please note that although it may happen at some point, currently **this project is NOT an implementation of the ADB _server_**. The target host (where the devices are connected) must still have ADB installed and either already running (e.g. via `adb start-server`) or available in `$PATH`. An attempt will be made to start the server locally via the aforementioned command if the initial connection fails. This is the only case where we fall back to the `adb` binary.
+Please note that although it may happen at some point, **this project is NOT an implementation of the ADB _server_**. The target host (where the devices are connected) must still have ADB installed and either already running (e.g. via `adb start-server`) or available in `$PATH`. An attempt will be made to start the server locally via the aforementioned command if the initial connection fails. This is the only case where we fall back to the `adb` binary.
 
 When targeting a remote host, starting the server is entirely your responsibility.
 
@@ -65,7 +65,7 @@ client.trackDevices(function(err, tracker) {
 });
 ```
 
-### Pulling a file from the device
+### Pulling a file from a device
 
 ```js
 var fs = require('fs');
