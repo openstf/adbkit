@@ -232,7 +232,7 @@ Runs a shell command on the device. Note that you'll be limited to the permissio
 * **command** The shell command to execute.
 * **callback(err, output)**
     - **err** `null` when successful, `Error` otherwise.
-    - **output** An output [`Stream`][node-stream] in non-flowing mode. Unfortunately it is not possible to separate stdin and stdout, you'll get both of them in one stream. It is also not possible to access the exit code of the command. If access to any of these individual properties is needed, the command must be constructed in a way that allows you to parse the information from the output.
+    - **output** An output [`Stream`][node-stream] in non-flowing mode. Unfortunately it is not possible to separate stdout and stderr, you'll get both of them in one stream. It is also not possible to access the exit code of the command. If access to any of these individual properties is needed, the command must be constructed in a way that allows you to parse the information from the output.
 * Returns: The client instance.
 
 #### client.remount(serial, callback)
