@@ -138,10 +138,10 @@ Note that as the tracker will keep a connection open, you must call `tracker.end
 * **callback(err, tracker)**
     - **err** `null` when successful, `Error` otherwise.
     - **tracker** The device tracker, which is an [`EventEmitter`][node-events]. The following events are available:
-        * **add_(device)_** Emitted when a new device is connected, once per device. See `client.listDevices()` for details on the device object.
-        * **remove_(device)_** Emitted when a device is unplugged, once per device. This does not include `offline` devices, those devices are connected but unavailable to ADB. See `client.listDevices()` for details on the device object.
-        * **change_(device)_** Emitted when the `type` property of a device changes, once per device. The current value of `type` is the new value. This event usually occurs the type changes from `'device'` to `'offline'` or the other way around. See `client.listDevices()` for details on the device object and the `'offline'` type.
-        * **changeSet_(changes)_** Emitted once for all changes reported by ADB in a single run. Multiple changes can occur when, for example, a USB hub is connected/unplugged and the device list changes quickly. If you wish to process all changes at once, use this event instead of the once-per-device ones. Keep in mind that the other events will still be emitted, though.
+        * **add** **(device)** Emitted when a new device is connected, once per device. See `client.listDevices()` for details on the device object.
+        * **remove** **(device)** Emitted when a device is unplugged, once per device. This does not include `offline` devices, those devices are connected but unavailable to ADB. See `client.listDevices()` for details on the device object.
+        * **change** **(device)** Emitted when the `type` property of a device changes, once per device. The current value of `type` is the new value. This event usually occurs the type changes from `'device'` to `'offline'` or the other way around. See `client.listDevices()` for details on the device object and the `'offline'` type.
+        * **changeSet** **(changes)** Emitted once for all changes reported by ADB in a single run. Multiple changes can occur when, for example, a USB hub is connected/unplugged and the device list changes quickly. If you wish to process all changes at once, use this event instead of the once-per-device ones. Keep in mind that the other events will still be emitted, though.
             - **changes** An object with the following properties always present:
                 * **added** An array of added device objects, each one as in the `add` event. Empty if none.
                 * **removed** An array of removed device objects, each one as in the `remove` event. Empty if none.
