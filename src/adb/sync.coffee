@@ -80,10 +80,17 @@ class Sync extends EventEmitter
           @parser.readError callback
         else
           @parser.unexpected reply, callback
-    stream.on 'readable', =>
-      while chunk = stream.read()
-        this._sendCommandWithLength Protocol.DATA, chunk.length
-        @connection.write chunk
+    saturated = false
+    write = =>
+      unless saturated
+        while chunk = stream.read()
+          this._sendCommandWithLength Protocol.DATA, chunk.length
+          unless @connection.write chunk
+            saturated = true
+            stream.once 'drain', ->
+              saturated = false
+              write()
+    stream.on 'readable', write
     stream.on 'end', =>
       this._sendCommandWithLength Protocol.DONE, timeStamp
     return this
