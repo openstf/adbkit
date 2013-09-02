@@ -27,7 +27,7 @@ class Sync extends EventEmitter
             else
               callback null, new Stats mode, size, mtime
         when Protocol.FAIL
-          @parser.readError callback
+          this._readError callback
         else
           @parser.unexpected reply, callback
     this._sendCommandWithArg Protocol.STAT, path
@@ -78,7 +78,7 @@ class Sync extends EventEmitter
           @parser.readBytes 4, (zero) =>
             callback null
         when Protocol.FAIL
-          @parser.readError callback
+          this._readError callback
         else
           @parser.unexpected reply, callback
     saturated = false
@@ -115,9 +115,14 @@ class Sync extends EventEmitter
             outStream.end()
             callback null
         when Protocol.FAIL
-          @parser.readError callback
+          this._readError callback
         else
           @parser.unexpected reply, callback
+
+  _readError: (callback) ->
+    @parser.readBytes 4, (zero) =>
+      @parser.readAll (buf) =>
+        callback new Error buf.toString()
 
   _sendCommandWithLength: (cmd, length) ->
     debug cmd unless cmd is Protocol.DATA
