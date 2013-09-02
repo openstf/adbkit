@@ -10,6 +10,7 @@ Stats = require './sync/stats'
 class Sync extends EventEmitter
   TEMP = '/data/local/tmp'
   DEFAULT_CHMOD = 0o644
+  DATA_MAX_LENGTH = 65536
 
   constructor: (@connection, @parser) ->
 
@@ -83,7 +84,9 @@ class Sync extends EventEmitter
     saturated = false
     write = =>
       unless saturated
-        while chunk = stream.read()
+        # Try to read the maximum supported amount first. If not available,
+        # just use whatever we have.
+        while chunk = stream.read(DATA_MAX_LENGTH) or stream.read()
           this._sendCommandWithLength Protocol.DATA, chunk.length
           unless @connection.write chunk
             saturated = true

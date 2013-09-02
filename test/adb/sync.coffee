@@ -89,6 +89,17 @@ describe 'Sync', ->
         callback()
       , done
 
+    it "should be able to push >65536 byte chunks without error", (done) ->
+      forEachSyncDevice (sync, callback) ->
+        stream = new Stream.PassThrough
+        content = new Buffer 1000000
+        sync.pushStream SURELY_WRITABLE_FILE, stream, (err) ->
+          throw err if err
+          callback()
+        stream.write content
+        stream.end()
+      , done
+
   describe 'pull(path, callback)', ->
 
     it "should retrieve the same content pushStream() pushed", (done) ->
