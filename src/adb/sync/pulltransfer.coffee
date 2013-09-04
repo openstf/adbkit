@@ -9,7 +9,7 @@ class PullTransfer extends Stream.PassThrough
   cancel: ->
     this.emit 'cancel'
 
-  _write: (chunk, encoding, callback) ->
+  write: (chunk, encoding, callback) ->
     @stats.bytesTransferred += chunk.length
     this.emit 'progress', @stats
     super chunk, encoding, callback

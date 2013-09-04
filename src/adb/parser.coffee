@@ -60,10 +60,9 @@ class Parser
 
   _readFlow: (howMany, callback) ->
     if howMany
-      while chunk = @stream.read()
-        if chunk.length > howMany
-          @stream.push chunk.slice howMany
-          chunk = chunk.slice 0, howMany
+      # Try to get the exact amount we need first. If unsuccessful, take
+      # whatever is available.
+      while chunk = @stream.read(howMany) or @stream.read()
         howMany -= chunk.length
         if howMany is 0
           callback chunk, true

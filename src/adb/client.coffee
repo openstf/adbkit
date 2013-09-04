@@ -3,6 +3,7 @@ Logcat = require 'stf-logcat'
 debug = require('debug')('adb:client')
 
 Connection = require './connection'
+Sync = require './sync'
 HostVersionCommand = require './command/hostversion'
 HostDevicesCommand = require './command/hostdevices'
 HostDevicesWithPathsCommand = require './command/hostdeviceswithpaths'
@@ -200,22 +201,16 @@ class Client
           callback null, Logcat.readStream stream, fixLineFeeds: false
 
   install: (serial, apk, callback) ->
-    this.syncService serial, (err, sync) =>
-      return callback err if err
-      path = sync.tempFile apk
-      sync.pushFile apk, path, (err, transfer) =>
-        if err
-          sync.end()
-          return callback err
-        transfer.on 'end', ->
-          sync.end()
-          this.transport serial, (err, transport) =>
-            return callback err if err
-            new InstallCommand(transport)
-              .execute path, (err) =>
-                return callback err if err
-                this.shell serial, "rm -f #{path}", (err, out) ->
-                  callback err
+    temp = Sync.temp apk
+    this.push serial, apk, temp, (err, transfer) =>
+      transfer.on 'end', =>
+        this.transport serial, (err, transport) =>
+          return callback err if err
+          new InstallCommand(transport)
+            .execute temp, (err) =>
+              return callback err if err
+              this.shell serial, "rm -f #{temp}", (err, out) ->
+                callback err
 
   uninstall: (serial, pkg, callback) ->
     this.transport serial, (err, transport) ->
