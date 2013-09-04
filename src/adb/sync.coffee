@@ -1,11 +1,13 @@
-Stream = require 'stream'
 Fs = require 'fs'
 Path = require 'path'
 {EventEmitter} = require 'events'
 debug = require('debug')('adb:sync')
+once = require 'once'
 
 Protocol = require './protocol'
 Stats = require './sync/stats'
+PushTransfer = require './sync/pushtransfer'
+PullTransfer = require './sync/pulltransfer'
 
 class Sync extends EventEmitter
   TEMP = '/data/local/tmp'
@@ -43,11 +45,7 @@ class Sync extends EventEmitter
       callback = mode
       mode = undefined
     mode or= DEFAULT_CHMOD
-    reader = Fs.createReadStream file
-    reader.on 'open', =>
-      this.pushStream path, reader, mode, callback
-    reader.on 'error', callback
-    return this
+    this.pushStream path, Fs.createReadStream(file), mode, callback
 
   pushStream: (path, stream, mode, callback) ->
     if typeof mode is 'function'
@@ -57,12 +55,10 @@ class Sync extends EventEmitter
     mode |= Stats.S_IFREG
     this._sendCommandWithArg Protocol.SEND, "#{path},#{mode}"
     this._writeData stream, Math.floor(Date.now() / 1000), callback
-    return this
 
   pull: (path, callback) ->
     this._sendCommandWithArg Protocol.RECV, "#{path}"
-    this._readData new Stream.PassThrough(), callback
-    return this
+    this._readData callback
 
   end: ->
     @connection.end()
@@ -72,23 +68,35 @@ class Sync extends EventEmitter
     "#{TEMP}/#{Path.basename path}"
 
   _writeData: (stream, timeStamp, callback) ->
+    callback = once callback if callback
+    transfer = new PushTransfer
+    transfer.on 'cancel', =>
+      stream.end()
+      @connection.end()
     @parser.readAscii 4, (reply) =>
       switch reply
         when Protocol.OKAY
-          @parser.readBytes 4, (zero) =>
-            callback null
+          @parser.readBytes 4, (zero) ->
+            transfer.end()
         when Protocol.FAIL
-          this._readError callback
+          this._readError (err) ->
+            transfer.emit 'error', err
+            callback err if callback
         else
-          @parser.unexpected reply, callback
+          @parser.unexpected reply, (err) ->
+            transfer.emit 'error', err
+            callback err if callback
     saturated = false
+    track = ->
+      transfer.pop()
     write = =>
       unless saturated
         # Try to read the maximum supported amount first. If not available,
         # just use whatever we have.
         while chunk = stream.read(DATA_MAX_LENGTH) or stream.read()
           this._sendCommandWithLength Protocol.DATA, chunk.length
-          unless @connection.write chunk
+          transfer.push chunk.length
+          unless @connection.write(chunk, track)
             saturated = true
             stream.once 'drain', ->
               saturated = false
@@ -96,28 +104,42 @@ class Sync extends EventEmitter
     stream.on 'readable', write
     stream.on 'end', =>
       this._sendCommandWithLength Protocol.DONE, timeStamp
-    return this
+    stream.on 'error', (err) ->
+      transfer.emit 'error', err
+      callback err if callback
+    if callback
+      setImmediate ->
+        callback null, transfer
+    return transfer
 
-  _readData: (outStream, callback) ->
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.DATA
-          callback null, outStream
-          @parser.readBytes 4, (lengthData) =>
-            length = lengthData.readUInt32LE 0
-            @parser.readByteFlow length, (chunk, final) =>
-              outStream.write chunk
-              if final
-                setImmediate =>
-                  this._readData outStream, ->
-        when Protocol.DONE
-          @parser.readBytes 4, (zero) =>
-            outStream.end()
-            callback null
-        when Protocol.FAIL
-          this._readError callback
-        else
-          @parser.unexpected reply, callback
+  _readData: (callback) ->
+    callback = once callback if callback
+    transfer = new PullTransfer
+    transfer.on 'cancel', =>
+      @connection.end()
+    readBlock = =>
+      @parser.readAscii 4, (reply) =>
+        switch reply
+          when Protocol.DATA
+            callback null, transfer if callback
+            @parser.readBytes 4, (lengthData) =>
+              length = lengthData.readUInt32LE 0
+              @parser.readByteFlow length, (chunk, final) =>
+                transfer.write chunk
+                setImmediate readBlock if final
+          when Protocol.DONE
+            @parser.readBytes 4, (zero) =>
+              transfer.end()
+          when Protocol.FAIL
+            this._readError (err) ->
+              transfer.emit 'error', err
+              callback err if callback
+          else
+            @parser.unexpected reply, (err) ->
+              transfer.emit 'error', err
+              callback err if callback
+    readBlock()
+    return transfer
 
   _readError: (callback) ->
     @parser.readBytes 4, (zero) =>

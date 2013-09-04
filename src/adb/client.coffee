@@ -249,14 +249,9 @@ class Client
   pull: (serial, path, callback) ->
     this.syncService serial, (err, sync) ->
       return callback err if err
-      sync.pull path, (err, stream) ->
-        if err
-          sync.end()
-          callback err
-        else
-          stream.on 'end', ->
-            sync.end()
-          callback null, stream
+      transfer = sync.pull path, callback
+      transfer.on 'end', ->
+        sync.end()
 
   push: (serial, path, contents, mode, callback) ->
     if typeof mode is 'function'
@@ -264,8 +259,8 @@ class Client
       mode = undefined
     this.syncService serial, (err, sync) ->
       return callback err if err
-      sync.push path, contents, mode, (err) ->
+      transfer = sync.push path, contents, mode, callback
+      transfer.on 'end', ->
         sync.end()
-        callback err
 
 module.exports = Client

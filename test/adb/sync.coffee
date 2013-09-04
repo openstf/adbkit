@@ -8,6 +8,8 @@ Chai.use require 'sinon-chai'
 
 Adb = require '../../'
 Sync = require '../../src/adb/sync'
+PushTransfer= require '../../src/adb/sync/pushtransfer'
+PullTransfer = require '../../src/adb/sync/pulltransfer'
 
 # This test suite is a bit special in that it requires a connected Android
 # device (or many devices). All will be tested.
@@ -48,7 +50,7 @@ describe 'Sync', ->
         sync.end()
       , done
 
-  describe 'push(path, contents[, mode], callback)', ->
+  describe 'push(path, contents[, mode][, callback])', ->
 
     it "should call pushStream when contents is a Stream", (done) ->
       forEachSyncDevice (sync, callback) ->
@@ -63,13 +65,22 @@ describe 'Sync', ->
     it "should call pushFile when contents is a String", (done) ->
       forEachSyncDevice (sync, callback) ->
         spy = Sinon.spy sync, 'pushFile'
-        sync.push SURELY_WRITABLE_FILE, 'foo.bar', ->
+        transfer = sync.push SURELY_WRITABLE_FILE, 'foo.bar', ->
+        transfer.on 'error', ->
         expect(spy).to.have.been.called
         sync.end()
         callback()
       , done
 
-  describe 'pushStream(path, stream[, mode], callback)', ->
+    it "should return a PushTransfer instance", (done) ->
+      forEachSyncDevice (sync, callback) ->
+        stream = new Stream.PassThrough
+        rval = sync.push SURELY_WRITABLE_FILE, stream, ->
+        expect(rval).to.be.an.instanceof PushTransfer
+        callback()
+      , done
+
+  describe 'pushStream(path, stream[, mode][, callback])', ->
 
     it "should call the callback when done pushing", (done) ->
       forEachSyncDevice (sync, callback) ->
@@ -81,11 +92,11 @@ describe 'Sync', ->
         stream.end()
       , done
 
-    it "should return the Sync instance for chaining", (done) ->
+    it "should return a PushTransfer instance", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
         rval = sync.pushStream SURELY_WRITABLE_FILE, stream, ->
-        expect(rval).to.be.an.instanceof Sync
+        expect(rval).to.be.an.instanceof PushTransfer
         callback()
       , done
 
@@ -106,21 +117,24 @@ describe 'Sync', ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
         content = 'ABCDEFGHI'
-        sync.pushStream SURELY_WRITABLE_FILE, stream, (err) ->
+        sync.pushStream SURELY_WRITABLE_FILE, stream, (err, transfer) ->
           expect(err).to.be.null
-          sync.pull SURELY_WRITABLE_FILE, (err, out) ->
-            expect(err).to.be.null
-            out.on 'readable', ->
-              expect(out.read().toString()).to.equal content
-              callback()
+          expect(transfer).to.be.an.instanceof PushTransfer
+          transfer.on 'end', ->
+            sync.pull SURELY_WRITABLE_FILE, (err, transfer) ->
+              expect(err).to.be.null
+              expect(transfer).to.be.an.instanceof PullTransfer
+              transfer.on 'readable', ->
+                expect(transfer.read().toString()).to.equal content
+                callback()
         stream.write content
         stream.end()
       , done
 
-    it "should return the Sync instance for chaining", (done) ->
+    it "should return a PullTransfer instance", (done) ->
       forEachSyncDevice (sync, callback) ->
         rval = sync.pull SURELY_EXISTING_FILE, ->
-        expect(rval).to.be.an.instanceof Sync
+        expect(rval).to.be.an.instanceof PullTransfer
         callback()
       , done
 
