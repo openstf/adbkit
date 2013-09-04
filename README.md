@@ -96,7 +96,7 @@ var client = adb.createClient();
 
 client.listDevices(function(err, devices) {
   devices.forEach(function(device) {
-    client.push(device.id, '/data/local/tmp/foo.txt', 'foo.txt', function(err, transfer) {
+    client.push(device.id, 'foo.txt', '/data/local/tmp/foo.txt', function(err, transfer) {
       transfer.on('progress', function(stats) {
         console.log('Pushed %d bytes so far', stats.bytesTransferred);
       });
@@ -421,13 +421,13 @@ A convenience shortcut for `sync.stat()`, mainly for one-off use cases. The conn
 * **callback(err, stats)** See `sync.stat()` for details.
 * Returns: The client instance.
 
-#### client.push(serial, path, contents[, mode], callback)
+#### client.push(serial, contents, path[, mode], callback)
 
 A convenience shortcut for `sync.push()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **path** See `sync.push()` for details.
 * **contents** See `sync.push()` for details.
+* **path** See `sync.push()` for details.
 * **mode** See `sync.push()` for details.
 * **callback(err, transfer)** See `sync.push()` for details.
 * Returns: The client instance.
@@ -456,34 +456,34 @@ Retrieves information about the given path.
         * **mtime** The time of last modification as a `Date`.
 * Returns: The sync instance.
 
-#### sync.push(path, contents[, mode]&#91;, callback])
+#### sync.push(contents, path[, mode]&#91;, callback])
 
 Attempts to identify `contents` and calls the appropriate `push*` method for it.
 
-* **path** The path to push to.
 * **contents** When `String`, treated as a local file path and forwarded to `sync.pushFile()`. Otherwise, treated as a [`Stream`][node-stream] and forwarded to `sync.pushStream()`.
+* **path** The path to push to.
 * **mode** Optional. The mode of the file. Defaults to `0644`.
 * **callback(err, transfer)** Optional. Called when the push has completed.
     - **err** `null` when successfully initialized, `Error` otherwise. Note that `transfer` may still emit errors that occur during the transfer.
     - **transfer** The same `PushTransfer` instance returned by the `sync.push()` call.
 * Returns: A `PushTransfer` instance. See below for details.
 
-#### sync.pushFile(path, file[, mode]&#91;, callback])
+#### sync.pushFile(file, path[, mode]&#91;, callback])
 
 Pushes a local file to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `'/data/local/tmp'` with an appropriate filename.
 
-* **path** See `sync.push()` for details.
 * **file** The local file path.
+* **path** See `sync.push()` for details.
 * **mode** See `sync.push()` for details.
 * **callback(err)** See `sync.push()` for details.
 * Returns: See `sync.push()` for details.
 
-#### sync.pushStream(path, stream[, mode]&#91;, callback])
+#### sync.pushStream(stream, path[, mode]&#91;, callback])
 
 Pushes a [`Stream`][node-stream] to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `'/data/local/tmp'` with an appropriate filename.
 
-* **path** See `sync.push()` for details.
 * **stream** The readable stream.
+* **path** See `sync.push()` for details.
 * **mode** See `sync.push()` for details.
 * **callback(err)** See `sync.push()` for details.
 * Returns: See `sync.push()` for details.

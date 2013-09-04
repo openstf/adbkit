@@ -253,13 +253,13 @@ class Client
       transfer.on 'end', ->
         sync.end()
 
-  push: (serial, path, contents, mode, callback) ->
+  push: (serial, contents, path, mode, callback) ->
     if typeof mode is 'function'
       callback = mode
       mode = undefined
     this.syncService serial, (err, sync) ->
       return callback err if err
-      transfer = sync.push path, contents, mode, callback
+      transfer = sync.push contents, path, mode, callback
       transfer.on 'end', ->
         sync.end()
 

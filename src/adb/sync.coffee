@@ -35,19 +35,19 @@ class Sync extends EventEmitter
     this._sendCommandWithArg Protocol.STAT, path
     return this
 
-  push: (path, contents, mode, callback) ->
+  push: (contents, path, mode, callback) ->
     if typeof contents is 'string'
-      return this.pushFile path, contents, mode, callback
-    this.pushStream path, contents, mode, callback
+      return this.pushFile contents, path, mode, callback
+    this.pushStream contents, path, mode, callback
 
-  pushFile: (path, file, mode, callback) ->
+  pushFile: (file, path, mode, callback) ->
     if typeof mode is 'function'
       callback = mode
       mode = undefined
     mode or= DEFAULT_CHMOD
-    this.pushStream path, Fs.createReadStream(file), mode, callback
+    this.pushStream Fs.createReadStream(file), path, mode, callback
 
-  pushStream: (path, stream, mode, callback) ->
+  pushStream: (stream, path, mode, callback) ->
     if typeof mode is 'function'
       callback = mode
       mode = undefined

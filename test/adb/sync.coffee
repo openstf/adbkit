@@ -50,13 +50,13 @@ describe 'Sync', ->
         sync.end()
       , done
 
-  describe 'push(path, contents[, mode][, callback])', ->
+  describe 'push(contents, path[, mode][, callback])', ->
 
     it "should call pushStream when contents is a Stream", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
         spy = Sinon.spy sync, 'pushStream'
-        sync.push SURELY_WRITABLE_FILE, stream, ->
+        sync.push stream, SURELY_WRITABLE_FILE, ->
         expect(spy).to.have.been.called
         sync.end()
         callback()
@@ -65,7 +65,7 @@ describe 'Sync', ->
     it "should call pushFile when contents is a String", (done) ->
       forEachSyncDevice (sync, callback) ->
         spy = Sinon.spy sync, 'pushFile'
-        transfer = sync.push SURELY_WRITABLE_FILE, 'foo.bar', ->
+        transfer = sync.push 'foo.bar', SURELY_WRITABLE_FILE, ->
         transfer.on 'error', ->
         expect(spy).to.have.been.called
         sync.end()
@@ -75,17 +75,17 @@ describe 'Sync', ->
     it "should return a PushTransfer instance", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
-        rval = sync.push SURELY_WRITABLE_FILE, stream, ->
+        rval = sync.push stream, SURELY_WRITABLE_FILE, ->
         expect(rval).to.be.an.instanceof PushTransfer
         callback()
       , done
 
-  describe 'pushStream(path, stream[, mode][, callback])', ->
+  describe 'pushStream(stream, path[, mode][, callback])', ->
 
     it "should call the callback when done pushing", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
-        sync.pushStream SURELY_WRITABLE_FILE, stream, (err) ->
+        sync.pushStream stream, SURELY_WRITABLE_FILE, (err) ->
           expect(err).to.be.null
           callback()
         stream.write 'FOO'
@@ -95,7 +95,7 @@ describe 'Sync', ->
     it "should return a PushTransfer instance", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
-        rval = sync.pushStream SURELY_WRITABLE_FILE, stream, ->
+        rval = sync.pushStream stream, SURELY_WRITABLE_FILE, ->
         expect(rval).to.be.an.instanceof PushTransfer
         callback()
       , done
@@ -104,7 +104,7 @@ describe 'Sync', ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
         content = new Buffer 1000000
-        sync.pushStream SURELY_WRITABLE_FILE, stream, (err) ->
+        sync.pushStream stream, SURELY_WRITABLE_FILE, (err) ->
           throw err if err
           callback()
         stream.write content
@@ -117,7 +117,7 @@ describe 'Sync', ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
         content = 'ABCDEFGHI'
-        sync.pushStream SURELY_WRITABLE_FILE, stream, (err, transfer) ->
+        sync.pushStream stream, SURELY_WRITABLE_FILE, (err, transfer) ->
           expect(err).to.be.null
           expect(transfer).to.be.an.instanceof PushTransfer
           transfer.on 'end', ->
