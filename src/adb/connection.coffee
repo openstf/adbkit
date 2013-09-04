@@ -30,8 +30,8 @@ class Connection extends EventEmitter
     @socket.end()
     return this
 
-  write: (data) ->
-    @socket.write data
+  write: (data, callback) ->
+    @socket.write data, callback
     return this
 
   startServer: (callback) ->

@@ -3,6 +3,13 @@ Protocol = require './protocol'
 class Parser
   constructor: (@stream) ->
 
+  readAll: (callback) ->
+    buf = new Buffer 0
+    @stream.on 'data', (chunk) ->
+      buf = Buffer.concat [buf, chunk]
+    @stream.on 'end', ->
+      callback buf
+
   readAscii: (howMany, callback) ->
     this.readBytes howMany, (buf) ->
       setImmediate ->

@@ -74,8 +74,35 @@ var client = adb.createClient();
 
 client.listDevices(function(err, devices) {
   devices.forEach(function(device) {
-    client.pull(device.id, '/system/build.prop', function(err, stream) {
-      stream.pipe(fs.createWriteStream(device.id + '.build.prop'));
+    client.pull(device.id, '/system/build.prop', function(err, transfer) {
+      transfer.on('progress', function(stats) {
+        console.log('Pulled %d bytes so far', stats.bytesTransferred);
+      });
+      transfer.on('end', function() {
+        console.log('Pull complete');
+      });
+      transfer.pipe(fs.createWriteStream(device.id + '.build.prop'));
+    });
+  });
+});
+```
+
+### Pushing a file to a device
+
+```js
+var fs = require('fs');
+var adb = require('stf-adb');
+var client = adb.createClient();
+
+client.listDevices(function(err, devices) {
+  devices.forEach(function(device) {
+    client.push(device.id, 'foo.txt', '/data/local/tmp/foo.txt', function(err, transfer) {
+      transfer.on('progress', function(stats) {
+        console.log('Pushed %d bytes so far', stats.bytesTransferred);
+      });
+      transfer.on('end', function() {
+        console.log('Push complete');
+      });
     });
   });
 });
@@ -394,15 +421,15 @@ A convenience shortcut for `sync.stat()`, mainly for one-off use cases. The conn
 * **callback(err, stats)** See `sync.stat()` for details.
 * Returns: The client instance.
 
-#### client.push(serial, path, contents[, mode], callback)
+#### client.push(serial, contents, path[, mode], callback)
 
 A convenience shortcut for `sync.push()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **path** See `sync.push()` for details.
 * **contents** See `sync.push()` for details.
+* **path** See `sync.push()` for details.
 * **mode** See `sync.push()` for details.
-* **callback(err)** See `sync.push()` for details.
+* **callback(err, transfer)** See `sync.push()` for details.
 * Returns: The client instance.
 
 #### client.pull(serial, path, callback)
@@ -411,7 +438,7 @@ A convenience shortcut for `sync.pull()`, mainly for one-off use cases. The conn
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **path** See `sync.pull()` for details.
-* **callback(err, stream)** See `sync.pull()` for details.
+* **callback(err, transfer)** See `sync.pull()` for details.
 * Returns: The client instance.
 
 ### Sync
@@ -429,48 +456,47 @@ Retrieves information about the given path.
         * **mtime** The time of last modification as a `Date`.
 * Returns: The sync instance.
 
-#### sync.push(path, contents[, mode], callback)
+#### sync.push(contents, path[, mode]&#91;, callback])
 
 Attempts to identify `contents` and calls the appropriate `push*` method for it.
 
-* **path** The path to push to.
 * **contents** When `String`, treated as a local file path and forwarded to `sync.pushFile()`. Otherwise, treated as a [`Stream`][node-stream] and forwarded to `sync.pushStream()`.
-* **mode** Optional. The mode of the file. Defaults to `0644`.
-* **callback(err)**
-    - **err** `null` when successful, `Error` otherwise.
-* Returns: The sync instance.
-
-#### sync.pushFile(path, file[, mode], callback)
-
-Pushes a local file to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `/data/local/tmp`.
-
 * **path** The path to push to.
-* **file** The local file path.
 * **mode** Optional. The mode of the file. Defaults to `0644`.
-* **callback(err)**
-    - **err** `null` when successful, `Error` otherwise.
-* Returns: The sync instance.
+* **callback(err, transfer)** Optional. Called when the push has completed.
+    - **err** `null` when successfully initialized, `Error` otherwise. Note that `transfer` may still emit errors that occur during the transfer.
+    - **transfer** The same `PushTransfer` instance returned by the `sync.push()` call.
+* Returns: A `PushTransfer` instance. See below for details.
 
-#### sync.pushStream(path, stream[, mode], callback)
+#### sync.pushFile(file, path[, mode]&#91;, callback])
+
+Pushes a local file to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `'/data/local/tmp'` with an appropriate filename.
+
+* **file** The local file path.
+* **path** See `sync.push()` for details.
+* **mode** See `sync.push()` for details.
+* **callback(err)** See `sync.push()` for details.
+* Returns: See `sync.push()` for details.
+
+#### sync.pushStream(stream, path[, mode]&#91;, callback])
 
 Pushes a [`Stream`][node-stream] to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `'/data/local/tmp'` with an appropriate filename.
 
-* **path** The path to push to.
 * **stream** The readable stream.
-* **mode** Optional. The mode of the file. Defaults to `0644`.
-* **callback(err)**
-    - **err** `null` when successful, `Error` otherwise.
-* Returns: The sync instance.
+* **path** See `sync.push()` for details.
+* **mode** See `sync.push()` for details.
+* **callback(err)** See `sync.push()` for details.
+* Returns: See `sync.push()` for details.
 
-#### sync.pull(path, callback)
+#### sync.pull(path[, callback])
 
-Pulls a file from the device as a [`Stream`][node-stream].
+Pulls a file from the device as a `PullTransfer` [`Stream`][node-stream].
 
-* **path** The path to push to.
-* **callback(err, stream)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **stream** The file [`Stream`][node-stream]. Use [`fs.createWriteStream()`][node-fs] to pipe the stream to a file if necessary.
-* Returns: The sync instance.
+* **path** The path to pull from.
+* **callback(err, transfer)** Optional. Called when data is ready to be received or an error occured during initialization.
+    - **err** `null` when successfully initialized, `Error` otherwise. Note that `transfer` may still emit errors that occur during the transfer.
+    - **transfer** The same `PullTransfer` instance returned by the `sync.pull()` call.
+* Returns: A `PullTransfer` instance. See below for details.
 
 #### sync.tempFile(path)
 
@@ -484,6 +510,44 @@ A simple helper method for creating appropriate temporary filenames for pushing 
 Closes the Sync connection, allowing Node to quit (assuming nothing else is keeping it alive, of course).
 
 * Returns: The sync instance.
+
+### PushTransfer
+
+A simple EventEmitter, mainly for keeping track of the progress.
+
+List of events:
+
+* **progress** **(stats)** Emitted when a chunk has been flushed to the ADB connection.
+    - **stats** An object with the following stats about the transfer:
+        * **bytesTransferred** The number of bytes transferred so far.
+* **error** **(err)** Emitted on error.
+    - **err** An `Error`.
+* **end** Emitted when the transfer has successfully completed.
+
+#### pushTransfer.cancel()
+
+Cancels the transfer by ending both the stream that is being pushed and the sync connection. This will most likely end up creating a broken file on your device. **Use at your own risk.** Also note that you must create a new sync connection if you wish to continue using the sync service.
+
+* Returns: The pushTransfer instance.
+
+### PullTransfer
+
+`PullTransfer` is a [`Stream`][node-stream]. Use [`fs.createWriteStream()`][node-fs] to pipe the stream to a file if necessary.
+
+List of events:
+
+* **progress** **(stats)** Emitted when a new chunk is received.
+    - **stats** An object with the following stats about the transfer:
+        * **bytesTransferred** The number of bytes transferred so far.
+* **error** **(err)** Emitted on error.
+    - **err** An `Error`.
+* **end** Emitted when the transfer has successfully completed.
+
+#### pullTransfer.cancel()
+
+Cancels the transfer by ending the connection. Can be useful for reading endless streams of data, such as `/dev/urandom` or `/dev/zero`, perhaps for benchmarking use. Note that you must create a new sync connection if you wish to continue using the sync service.
+
+* Returns: The pullTransfer instance.
 
 ## Debugging
 
