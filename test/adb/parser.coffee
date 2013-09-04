@@ -8,6 +8,20 @@ Parser = require '../../src/adb/parser'
 
 describe 'Parser', ->
 
+  describe 'readAll(callback)', ->
+
+    it "should read all remaining content until the stream ends", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readAll (buf) ->
+        expect(buf.length).to.equal 3
+        expect(buf.toString()).to.equal 'FOO'
+        done()
+      stream.write 'F'
+      stream.write 'O'
+      stream.write 'O'
+      stream.end()
+
   describe 'readBytes(howMany, callback)', ->
 
     it "should read as many bytes as requested", (done) ->

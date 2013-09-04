@@ -6,7 +6,7 @@ Most of the `adb` command line tool's functionality is supported (including push
 
 ## Requirements
 
-Please note that although it may happen at some point, currently **this project is NOT an implementation of the ADB _server_**. The target host (where the devices are connected) must still have ADB installed and either already running (e.g. via `adb start-server`) or available in `$PATH`. An attempt will be made to start the server locally via the aforementioned command if the initial connection fails. This is the only case where we fall back to the `adb` binary.
+Please note that although it may happen at some point, **this project is NOT an implementation of the ADB _server_**. The target host (where the devices are connected) must still have ADB installed and either already running (e.g. via `adb start-server`) or available in `$PATH`. An attempt will be made to start the server locally via the aforementioned command if the initial connection fails. This is the only case where we fall back to the `adb` binary.
 
 When targeting a remote host, starting the server is entirely your responsibility.
 
@@ -65,7 +65,7 @@ client.trackDevices(function(err, tracker) {
 });
 ```
 
-### Pulling a file from the device
+### Pulling a file from a device
 
 ```js
 var fs = require('fs');
@@ -74,8 +74,35 @@ var client = adb.createClient();
 
 client.listDevices(function(err, devices) {
   devices.forEach(function(device) {
-    client.pull(device.id, '/system/build.prop', function(err, stream) {
-      stream.pipe(fs.createWriteStream(device.id + '.build.prop'));
+    client.pull(device.id, '/system/build.prop', function(err, transfer) {
+      transfer.on('progress', function(stats) {
+        console.log('Pulled %d bytes so far', stats.bytesTransferred);
+      });
+      transfer.on('end', function() {
+        console.log('Pull complete');
+      });
+      transfer.pipe(fs.createWriteStream(device.id + '.build.prop'));
+    });
+  });
+});
+```
+
+### Pushing a file to a device
+
+```js
+var fs = require('fs');
+var adb = require('stf-adb');
+var client = adb.createClient();
+
+client.listDevices(function(err, devices) {
+  devices.forEach(function(device) {
+    client.push(device.id, 'foo.txt', '/data/local/tmp/foo.txt', function(err, transfer) {
+      transfer.on('progress', function(stats) {
+        console.log('Pushed %d bytes so far', stats.bytesTransferred);
+      });
+      transfer.on('end', function() {
+        console.log('Push complete');
+      });
     });
   });
 });
@@ -138,10 +165,10 @@ Note that as the tracker will keep a connection open, you must call `tracker.end
 * **callback(err, tracker)**
     - **err** `null` when successful, `Error` otherwise.
     - **tracker** The device tracker, which is an [`EventEmitter`][node-events]. The following events are available:
-        * **add_(device)_** Emitted when a new device is connected, once per device. See `client.listDevices()` for details on the device object.
-        * **remove_(device)_** Emitted when a device is unplugged, once per device. This does not include `offline` devices, those devices are connected but unavailable to ADB. See `client.listDevices()` for details on the device object.
-        * **change_(device)_** Emitted when the `type` property of a device changes, once per device. The current value of `type` is the new value. This event usually occurs the type changes from `'device'` to `'offline'` or the other way around. See `client.listDevices()` for details on the device object and the `'offline'` type.
-        * **changeSet_(changes)_** Emitted once for all changes reported by ADB in a single run. Multiple changes can occur when, for example, a USB hub is connected/unplugged and the device list changes quickly. If you wish to process all changes at once, use this event instead of the once-per-device ones. Keep in mind that the other events will still be emitted, though.
+        * **add** **(device)** Emitted when a new device is connected, once per device. See `client.listDevices()` for details on the device object.
+        * **remove** **(device)** Emitted when a device is unplugged, once per device. This does not include `offline` devices, those devices are connected but unavailable to ADB. See `client.listDevices()` for details on the device object.
+        * **change** **(device)** Emitted when the `type` property of a device changes, once per device. The current value of `type` is the new value. This event usually occurs the type changes from `'device'` to `'offline'` or the other way around. See `client.listDevices()` for details on the device object and the `'offline'` type.
+        * **changeSet** **(changes)** Emitted once for all changes reported by ADB in a single run. Multiple changes can occur when, for example, a USB hub is connected/unplugged and the device list changes quickly. If you wish to process all changes at once, use this event instead of the once-per-device ones. Keep in mind that the other events will still be emitted, though.
             - **changes** An object with the following properties always present:
                 * **added** An array of added device objects, each one as in the `add` event. Empty if none.
                 * **removed** An array of removed device objects, each one as in the `remove` event. Empty if none.
@@ -232,7 +259,7 @@ Runs a shell command on the device. Note that you'll be limited to the permissio
 * **command** The shell command to execute.
 * **callback(err, output)**
     - **err** `null` when successful, `Error` otherwise.
-    - **output** An output [`Stream`][node-stream] in non-flowing mode. Unfortunately it is not possible to separate stdin and stdout, you'll get both of them in one stream. It is also not possible to access the exit code of the command. If access to any of these individual properties is needed, the command must be constructed in a way that allows you to parse the information from the output.
+    - **output** An output [`Stream`][node-stream] in non-flowing mode. Unfortunately it is not possible to separate stdout and stderr, you'll get both of them in one stream. It is also not possible to access the exit code of the command. If access to any of these individual properties is needed, the command must be constructed in a way that allows you to parse the information from the output.
 * Returns: The client instance.
 
 #### client.remount(serial, callback)
@@ -394,15 +421,15 @@ A convenience shortcut for `sync.stat()`, mainly for one-off use cases. The conn
 * **callback(err, stats)** See `sync.stat()` for details.
 * Returns: The client instance.
 
-#### client.push(serial, path, contents[, mode], callback)
+#### client.push(serial, contents, path[, mode], callback)
 
 A convenience shortcut for `sync.push()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **path** See `sync.push()` for details.
 * **contents** See `sync.push()` for details.
+* **path** See `sync.push()` for details.
 * **mode** See `sync.push()` for details.
-* **callback(err)** See `sync.push()` for details.
+* **callback(err, transfer)** See `sync.push()` for details.
 * Returns: The client instance.
 
 #### client.pull(serial, path, callback)
@@ -411,7 +438,7 @@ A convenience shortcut for `sync.pull()`, mainly for one-off use cases. The conn
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **path** See `sync.pull()` for details.
-* **callback(err, stream)** See `sync.pull()` for details.
+* **callback(err, transfer)** See `sync.pull()` for details.
 * Returns: The client instance.
 
 ### Sync
@@ -429,48 +456,47 @@ Retrieves information about the given path.
         * **mtime** The time of last modification as a `Date`.
 * Returns: The sync instance.
 
-#### sync.push(path, contents[, mode], callback)
+#### sync.push(contents, path[, mode]&#91;, callback])
 
 Attempts to identify `contents` and calls the appropriate `push*` method for it.
 
-* **path** The path to push to.
 * **contents** When `String`, treated as a local file path and forwarded to `sync.pushFile()`. Otherwise, treated as a [`Stream`][node-stream] and forwarded to `sync.pushStream()`.
-* **mode** Optional. The mode of the file. Defaults to `0644`.
-* **callback(err)**
-    - **err** `null` when successful, `Error` otherwise.
-* Returns: The sync instance.
-
-#### sync.pushFile(path, file[, mode], callback)
-
-Pushes a local file to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `/data/local/tmp`.
-
 * **path** The path to push to.
-* **file** The local file path.
 * **mode** Optional. The mode of the file. Defaults to `0644`.
-* **callback(err)**
-    - **err** `null` when successful, `Error` otherwise.
-* Returns: The sync instance.
+* **callback(err, transfer)** Optional. Called when the push has completed.
+    - **err** `null` when successfully initialized, `Error` otherwise. Note that `transfer` may still emit errors that occur during the transfer.
+    - **transfer** The same `PushTransfer` instance returned by the `sync.push()` call.
+* Returns: A `PushTransfer` instance. See below for details.
 
-#### sync.pushStream(path, stream[, mode], callback)
+#### sync.pushFile(file, path[, mode]&#91;, callback])
+
+Pushes a local file to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `'/data/local/tmp'` with an appropriate filename.
+
+* **file** The local file path.
+* **path** See `sync.push()` for details.
+* **mode** See `sync.push()` for details.
+* **callback(err)** See `sync.push()` for details.
+* Returns: See `sync.push()` for details.
+
+#### sync.pushStream(stream, path[, mode]&#91;, callback])
 
 Pushes a [`Stream`][node-stream] to the given path. Note that the path must be writable by the ADB user (usually `shell`). When in doubt, use `'/data/local/tmp'` with an appropriate filename.
 
-* **path** The path to push to.
 * **stream** The readable stream.
-* **mode** Optional. The mode of the file. Defaults to `0644`.
-* **callback(err)**
-    - **err** `null` when successful, `Error` otherwise.
-* Returns: The sync instance.
+* **path** See `sync.push()` for details.
+* **mode** See `sync.push()` for details.
+* **callback(err)** See `sync.push()` for details.
+* Returns: See `sync.push()` for details.
 
-#### sync.pull(path, callback)
+#### sync.pull(path[, callback])
 
-Pulls a file from the device as a [`Stream`][node-stream].
+Pulls a file from the device as a `PullTransfer` [`Stream`][node-stream].
 
-* **path** The path to push to.
-* **callback(err, stream)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **stream** The file [`Stream`][node-stream]. Use [`fs.createWriteStream()`][node-fs] to pipe the stream to a file if necessary.
-* Returns: The sync instance.
+* **path** The path to pull from.
+* **callback(err, transfer)** Optional. Called when data is ready to be received or an error occured during initialization.
+    - **err** `null` when successfully initialized, `Error` otherwise. Note that `transfer` may still emit errors that occur during the transfer.
+    - **transfer** The same `PullTransfer` instance returned by the `sync.pull()` call.
+* Returns: A `PullTransfer` instance. See below for details.
 
 #### sync.tempFile(path)
 
@@ -484,6 +510,44 @@ A simple helper method for creating appropriate temporary filenames for pushing 
 Closes the Sync connection, allowing Node to quit (assuming nothing else is keeping it alive, of course).
 
 * Returns: The sync instance.
+
+### PushTransfer
+
+A simple EventEmitter, mainly for keeping track of the progress.
+
+List of events:
+
+* **progress** **(stats)** Emitted when a chunk has been flushed to the ADB connection.
+    - **stats** An object with the following stats about the transfer:
+        * **bytesTransferred** The number of bytes transferred so far.
+* **error** **(err)** Emitted on error.
+    - **err** An `Error`.
+* **end** Emitted when the transfer has successfully completed.
+
+#### pushTransfer.cancel()
+
+Cancels the transfer by ending both the stream that is being pushed and the sync connection. This will most likely end up creating a broken file on your device. **Use at your own risk.** Also note that you must create a new sync connection if you wish to continue using the sync service.
+
+* Returns: The pushTransfer instance.
+
+### PullTransfer
+
+`PullTransfer` is a [`Stream`][node-stream]. Use [`fs.createWriteStream()`][node-fs] to pipe the stream to a file if necessary.
+
+List of events:
+
+* **progress** **(stats)** Emitted when a new chunk is received.
+    - **stats** An object with the following stats about the transfer:
+        * **bytesTransferred** The number of bytes transferred so far.
+* **error** **(err)** Emitted on error.
+    - **err** An `Error`.
+* **end** Emitted when the transfer has successfully completed.
+
+#### pullTransfer.cancel()
+
+Cancels the transfer by ending the connection. Can be useful for reading endless streams of data, such as `/dev/urandom` or `/dev/zero`, perhaps for benchmarking use. Note that you must create a new sync connection if you wish to continue using the sync service.
+
+* Returns: The pullTransfer instance.
 
 ## Debugging
 
