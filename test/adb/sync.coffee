@@ -58,7 +58,6 @@ describe 'Sync', ->
         spy = Sinon.spy sync, 'pushStream'
         sync.push stream, SURELY_WRITABLE_FILE, ->
         expect(spy).to.have.been.called
-        sync.end()
         callback()
       , done
 
@@ -68,7 +67,6 @@ describe 'Sync', ->
         transfer = sync.push 'foo.bar', SURELY_WRITABLE_FILE, ->
         transfer.on 'error', ->
         expect(spy).to.have.been.called
-        sync.end()
         callback()
       , done
 
