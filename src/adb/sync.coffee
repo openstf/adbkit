@@ -10,9 +10,12 @@ PushTransfer = require './sync/pushtransfer'
 PullTransfer = require './sync/pulltransfer'
 
 class Sync extends EventEmitter
-  TEMP = '/data/local/tmp'
+  TEMP_PATH = '/data/local/tmp'
   DEFAULT_CHMOD = 0o644
   DATA_MAX_LENGTH = 65536
+
+  @temp: (path) ->
+    "#{TEMP_PATH}/#{Path.basename path}"
 
   constructor: (@connection, @parser) ->
 
@@ -65,7 +68,7 @@ class Sync extends EventEmitter
     return this
 
   tempFile: (path) ->
-    "#{TEMP}/#{Path.basename path}"
+    Sync.temp path
 
   _writeData: (stream, timeStamp, callback) ->
     callback = once callback if callback
