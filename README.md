@@ -492,7 +492,7 @@ Pushes a [`Stream`][node-stream] to the given path. Note that the path must be w
 
 Pulls a file from the device as a `PullTransfer` [`Stream`][node-stream].
 
-* **path** The path to push to.
+* **path** The path to pull from.
 * **callback(err, transfer)** Optional. Called when data is ready to be received or an error occured during initialization.
     - **err** `null` when successfully initialized, `Error` otherwise. Note that `transfer` may still emit errors that occur during the transfer.
     - **transfer** The same `PullTransfer` instance returned by the `sync.pull()` call.
