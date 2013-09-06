@@ -1,5 +1,5 @@
-Command = require '../command'
-Protocol = require '../protocol'
+Command = require '../../command'
+Protocol = require '../../protocol'
 
 class ForwardCommand extends Command
   execute: (serial, local, remote, callback) ->
