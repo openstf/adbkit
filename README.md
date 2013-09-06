@@ -92,7 +92,6 @@ client.listDevices(function(err, devices) {
 ### Pushing a file to a device
 
 ```js
-var fs = require('fs');
 var adb = require('stf-adb');
 var client = adb.createClient();
 
