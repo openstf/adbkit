@@ -4,6 +4,8 @@
 
 Most of the `adb` command line tool's functionality is supported (including pushing/pulling files, installing APKs and processing logs), with some added functionality such as being able to generate touch/key events and take screenshots.
 
+Note that even though the module is written in [CoffeeScript][coffeescript], only the compiled JavaScript is published to [NPM][npm], which means that it can easily be used with pure JavaScript codebases, too.
+
 ## Requirements
 
 Please note that although it may happen at some point, **this project is NOT an implementation of the ADB _server_**. The target host (where the devices are connected) must still have ADB installed and either already running (e.g. via `adb start-server`) or available in `$PATH`. An attempt will be made to start the server locally via the aforementioned command if the initial connection fails. This is the only case where we fall back to the `adb` binary.
@@ -579,6 +581,8 @@ We use [debug][node-debug], and our debug namespace is `adb`. Some of the depend
 Restricted until further notice.
 
 [nodejs]: <http://nodejs.org/>
+[coffeescript]: <http://coffeescript.org/>
+[npm]: <https://npmjs.org/>
 [adb-js]: <https://github.com/flier/adb.js>
 [adb-site]: <http://developer.android.com/tools/help/adb.html>
 [adb-services]: <https://github.com/android/platform_system_core/blob/master/adb/SERVICES.TXT>
