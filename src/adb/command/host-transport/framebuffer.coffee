@@ -2,9 +2,9 @@ Assert = require 'assert'
 {spawn} = require 'child_process'
 debug = require('debug')('adb:command:framebuffer')
 
-Command = require '../command'
-Protocol = require '../protocol'
-RgbTransform = require '../framebuffer/rgbtransform'
+Command = require '../../command'
+Protocol = require '../../protocol'
+RgbTransform = require '../../framebuffer/rgbtransform'
 
 class FrameBufferCommand extends Command
   execute: (callback) ->

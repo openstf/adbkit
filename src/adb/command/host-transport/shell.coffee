@@ -1,8 +1,8 @@
-Command = require '../command'
-Protocol = require '../protocol'
+Command = require '../../command'
+Protocol = require '../../protocol'
 
-class LogCommand extends Command
-  execute: (name, callback) ->
+class ShellCommand extends Command
+  execute: (command, callback) ->
     @parser.readAscii 4, (reply) =>
       switch reply
         when Protocol.OKAY
@@ -11,6 +11,6 @@ class LogCommand extends Command
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send "log:#{name}"
+    this._send "shell:#{command}"
 
-module.exports = LogCommand
+module.exports = ShellCommand

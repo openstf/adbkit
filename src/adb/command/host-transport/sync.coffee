@@ -1,6 +1,6 @@
-Command = require '../command'
-Protocol = require '../protocol'
-Sync = require '../sync'
+Command = require '../../command'
+Protocol = require '../../protocol'
+Sync = require '../../sync'
 
 class SyncCommand extends Command
   execute: (callback) ->

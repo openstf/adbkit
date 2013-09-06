@@ -1,5 +1,5 @@
-Command = require '../command'
-Protocol = require '../protocol'
+Command = require '../../command'
+Protocol = require '../../protocol'
 
 class MonkeyCommand extends Command
   execute: (port, callback) ->
