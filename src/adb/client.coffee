@@ -4,6 +4,7 @@ debug = require('debug')('adb:client')
 
 Connection = require './connection'
 Sync = require './sync'
+
 HostVersionCommand = require './command/hostversion'
 HostDevicesCommand = require './command/hostdevices'
 HostDevicesWithPathsCommand = require './command/hostdeviceswithpaths'
