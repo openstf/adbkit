@@ -251,6 +251,19 @@ Forwards socket connections from the ADB server host (local) to the device (remo
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
+#### client.listForwards(serial, callback)
+
+Lists forwarded connections on the device. This is analogous to `adb forward --list`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, forwards)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **forwards** An array of forward objects with the following properties:
+        * **serial** The device serial.
+        * **local** The local endpoint. Same format as `client.forward()`'s `local` argument.
+        * **remote** The remote endpoint on the device. Same format as `client.forward()`'s `remote` argument.
+* Returns: The client instance.
+
 #### client.shell(serial, command, callback)
 
 Runs a shell command on the device. Note that you'll be limited to the permissions of the `shell` user, which ADB uses.

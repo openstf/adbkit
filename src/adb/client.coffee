@@ -15,6 +15,7 @@ GetStateCommand = require './command/getstate'
 GetPropertiesCommand = require './command/getproperties'
 GetFeaturesCommand = require './command/getfeatures'
 ForwardCommand = require './command/forward'
+ListForwardsCommand = require './command/listforwards'
 HostTransportCommand = require './command/hosttransport'
 ShellCommand = require './command/shell'
 RemountCommand = require './command/remount'
@@ -120,6 +121,14 @@ class Client
       .on 'connect', ->
         new ForwardCommand(this)
           .execute serial, local, remote, callback
+      .on 'error', callback
+    return this
+
+  listForwards: (serial, callback) ->
+    this.connection()
+      .on 'connect', ->
+        new ListForwardsCommand(this)
+          .execute serial, callback
       .on 'error', callback
     return this
 
