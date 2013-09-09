@@ -1,7 +1,7 @@
-Command = require '../command'
-Protocol = require '../protocol'
-Tracker = require '../tracker'
-HostDevicesCommand = require './hostdevices'
+Command = require '../../command'
+Protocol = require '../../protocol'
+Tracker = require '../../tracker'
+HostDevicesCommand = require './devices'
 
 class HostTrackDevicesCommand extends HostDevicesCommand
   execute: (callback) ->

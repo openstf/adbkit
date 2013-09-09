@@ -1,8 +1,8 @@
-Command = require '../command'
-Protocol = require '../protocol'
+Command = require '../../command'
+Protocol = require '../../protocol'
 
-class HostKillCommand extends Command
-  execute: (callback) ->
+class HostTransportCommand extends Command
+  execute: (serial, callback) ->
     @parser.readAscii 4, (reply) =>
       switch reply
         when Protocol.OKAY
@@ -11,6 +11,6 @@ class HostKillCommand extends Command
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send 'host:kill'
+    this._send "host:transport:#{serial}"
 
-module.exports = HostKillCommand
+module.exports = HostTransportCommand

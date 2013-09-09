@@ -5,12 +5,12 @@ debug = require('debug')('adb:client')
 Connection = require './connection'
 Sync = require './sync'
 
-HostVersionCommand = require './command/hostversion'
-HostDevicesCommand = require './command/hostdevices'
-HostDevicesWithPathsCommand = require './command/hostdeviceswithpaths'
-HostTrackDevicesCommand = require './command/hosttrackdevices'
-HostKillCommand = require './command/hostkill'
-HostTransportCommand = require './command/hosttransport'
+HostVersionCommand = require './command/host/version'
+HostDevicesCommand = require './command/host/devices'
+HostDevicesWithPathsCommand = require './command/host/deviceswithpaths'
+HostTrackDevicesCommand = require './command/host/trackdevices'
+HostKillCommand = require './command/host/kill'
+HostTransportCommand = require './command/host/transport'
 
 FrameBufferCommand = require './command/host-transport/framebuffer'
 GetFeaturesCommand = require './command/host-transport/getfeatures'
