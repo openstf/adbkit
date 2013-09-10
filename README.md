@@ -373,6 +373,29 @@ For more information, check out the stf-logcat documentation.
     - **logcat** The Logcat client. Please see the stf-logcat documentation for details.
 * Returns: The client instance.
 
+#### client.openProcStat(serial, callback)
+
+Tracks `/proc/stat` and emits useful information, such as CPU load. A single sync service instance is used to download the `/proc/stat` file for processing. While doing this does consume some resources, it is very light and should not be a problem.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, stats)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **stats** The `/proc/stat` tracker, which is an [`EventEmitter`][node-events]. Call `stat.end()` to stop tracking. The following events are available:
+        * **load** **(loads)** Emitted when a CPU load calculation is available.
+            - **loads** CPU loads of **online** CPUs. Each key is a CPU id (e.g. `'cpu0'`, `'cpu1'`) and the value an object with the following properties:
+                * **user** Percentage (0-100) of ticks spent on user programs.
+                * **nice** Percentage (0-100) of ticks spent on `nice`d user programs.
+                * **system** Percentage (0-100) of ticks spent on system programs.
+                * **idle** Percentage (0-100) of ticks spent idling.
+                * **iowait** Percentage (0-100) of ticks spent waiting for IO.
+                * **irq** Percentage (0-100) of ticks spent on hardware interrupts.
+                * **softirq** Percentage (0-100) of ticks spent on software interrupts.
+                * **steal** Percentage (0-100) of ticks stolen by others.
+                * **guest** Percentage (0-100) of ticks spent by a guest.
+                * **guestnice** Percentage (0-100) of ticks spent by a `nice`d guest.
+                * **total** Total. Always 100.
+* Returns: The client instance.
+
 #### client.install(serial, apk, callback)
 
 Installs the APK on the device, replacing any previously installed version. This is roughly analogous to `adb install -r <apk>`.

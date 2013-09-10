@@ -4,6 +4,7 @@ debug = require('debug')('adb:client')
 
 Connection = require './connection'
 Sync = require './sync'
+ProcStat = require './proc/stat'
 
 HostVersionCommand = require './command/host/version'
 HostDevicesCommand = require './command/host/devices'
@@ -211,6 +212,10 @@ class Client
         .execute (err, stream) =>
           return callback err if err
           callback null, Logcat.readStream stream, fixLineFeeds: false
+
+  openProcStat: (serial, callback) ->
+    this.syncService serial, (err, sync) ->
+      callback null, new ProcStat sync
 
   install: (serial, apk, callback) ->
     temp = Sync.temp apk
