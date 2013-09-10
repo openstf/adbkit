@@ -1,6 +1,6 @@
-Command = require '../command'
-Protocol = require '../protocol'
-LineTransform = require '../linetransform'
+Command = require '../../command'
+Protocol = require '../../protocol'
+LineTransform = require '../../linetransform'
 
 class LogcatCommand extends Command
   execute: (callback) ->

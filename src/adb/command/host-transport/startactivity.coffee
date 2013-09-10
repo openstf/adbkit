@@ -1,7 +1,7 @@
 split = require 'split'
 
-Command = require '../command'
-Protocol = require '../protocol'
+Command = require '../../command'
+Protocol = require '../../protocol'
 
 class StartActivityCommand extends Command
   RE_ERROR = /^Error: (.*)$/

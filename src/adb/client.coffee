@@ -4,31 +4,36 @@ debug = require('debug')('adb:client')
 
 Connection = require './connection'
 Sync = require './sync'
-HostVersionCommand = require './command/hostversion'
-HostDevicesCommand = require './command/hostdevices'
-HostDevicesWithPathsCommand = require './command/hostdeviceswithpaths'
-HostTrackDevicesCommand = require './command/hosttrackdevices'
-HostKillCommand = require './command/hostkill'
-GetSerialNoCommand = require './command/getserialno'
-GetDevicePathCommand = require './command/getdevicepath'
-GetStateCommand = require './command/getstate'
-GetPropertiesCommand = require './command/getproperties'
-GetFeaturesCommand = require './command/getfeatures'
-ForwardCommand = require './command/forward'
-HostTransportCommand = require './command/hosttransport'
-ShellCommand = require './command/shell'
-RemountCommand = require './command/remount'
-LogCommand = require './command/log'
-TcpCommand = require './command/tcp'
-FrameBufferCommand = require './command/framebuffer'
-ScreencapCommand = require './command/screencap'
-MonkeyCommand = require './command/monkey'
-LogcatCommand = require './command/logcat'
-InstallCommand = require './command/install'
-UninstallCommand = require './command/uninstall'
-IsInstalledCommand = require './command/isinstalled'
-StartActivityCommand = require './command/startactivity'
-SyncCommand = require './command/sync'
+ProcStat = require './proc/stat'
+
+HostVersionCommand = require './command/host/version'
+HostDevicesCommand = require './command/host/devices'
+HostDevicesWithPathsCommand = require './command/host/deviceswithpaths'
+HostTrackDevicesCommand = require './command/host/trackdevices'
+HostKillCommand = require './command/host/kill'
+HostTransportCommand = require './command/host/transport'
+
+FrameBufferCommand = require './command/host-transport/framebuffer'
+GetFeaturesCommand = require './command/host-transport/getfeatures'
+GetPropertiesCommand = require './command/host-transport/getproperties'
+InstallCommand = require './command/host-transport/install'
+IsInstalledCommand = require './command/host-transport/isinstalled'
+LogcatCommand = require './command/host-transport/logcat'
+LogCommand = require './command/host-transport/log'
+MonkeyCommand = require './command/host-transport/monkey'
+RemountCommand = require './command/host-transport/remount'
+ScreencapCommand = require './command/host-transport/screencap'
+ShellCommand = require './command/host-transport/shell'
+StartActivityCommand = require './command/host-transport/startactivity'
+SyncCommand = require './command/host-transport/sync'
+TcpCommand = require './command/host-transport/tcp'
+UninstallCommand = require './command/host-transport/uninstall'
+
+ForwardCommand = require './command/host-serial/forward'
+GetDevicePathCommand = require './command/host-serial/getdevicepath'
+GetSerialNoCommand = require './command/host-serial/getserialno'
+GetStateCommand = require './command/host-serial/getstate'
+ListForwardsCommand = require './command/host-serial/listforwards'
 
 class Client
   constructor: (@options = {}) ->
@@ -123,6 +128,14 @@ class Client
       .on 'error', callback
     return this
 
+  listForwards: (serial, callback) ->
+    this.connection()
+      .on 'connect', ->
+        new ListForwardsCommand(this)
+          .execute serial, callback
+      .on 'error', callback
+    return this
+
   transport: (serial, callback) ->
     this.connection()
       .on 'connect', ->
@@ -199,6 +212,10 @@ class Client
         .execute (err, stream) =>
           return callback err if err
           callback null, Logcat.readStream stream, fixLineFeeds: false
+
+  openProcStat: (serial, callback) ->
+    this.syncService serial, (err, sync) ->
+      callback null, new ProcStat sync
 
   install: (serial, apk, callback) ->
     temp = Sync.temp apk

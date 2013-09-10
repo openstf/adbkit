@@ -4,6 +4,8 @@
 
 Most of the `adb` command line tool's functionality is supported (including pushing/pulling files, installing APKs and processing logs), with some added functionality such as being able to generate touch/key events and take screenshots.
 
+Note that even though the module is written in [CoffeeScript][coffeescript], only the compiled JavaScript is published to [NPM][npm], which means that it can easily be used with pure JavaScript codebases, too.
+
 ## Requirements
 
 Please note that although it may happen at some point, **this project is NOT an implementation of the ADB _server_**. The target host (where the devices are connected) must still have ADB installed and either already running (e.g. via `adb start-server`) or available in `$PATH`. An attempt will be made to start the server locally via the aforementioned command if the initial connection fails. This is the only case where we fall back to the `adb` binary.
@@ -90,7 +92,6 @@ client.listDevices(function(err, devices) {
 ### Pushing a file to a device
 
 ```js
-var fs = require('fs');
 var adb = require('stf-adb');
 var client = adb.createClient();
 
@@ -251,6 +252,19 @@ Forwards socket connections from the ADB server host (local) to the device (remo
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
+#### client.listForwards(serial, callback)
+
+Lists forwarded connections on the device. This is analogous to `adb forward --list`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, forwards)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **forwards** An array of forward objects with the following properties:
+        * **serial** The device serial.
+        * **local** The local endpoint. Same format as `client.forward()`'s `local` argument.
+        * **remote** The remote endpoint on the device. Same format as `client.forward()`'s `remote` argument.
+* Returns: The client instance.
+
 #### client.shell(serial, command, callback)
 
 Runs a shell command on the device. Note that you'll be limited to the permissions of the `shell` user, which ADB uses.
@@ -357,6 +371,29 @@ For more information, check out the stf-logcat documentation.
 * **callback(err, logcat)**
     - **err** `null` when successful, `Error` otherwise.
     - **logcat** The Logcat client. Please see the stf-logcat documentation for details.
+* Returns: The client instance.
+
+#### client.openProcStat(serial, callback)
+
+Tracks `/proc/stat` and emits useful information, such as CPU load. A single sync service instance is used to download the `/proc/stat` file for processing. While doing this does consume some resources, it is very light and should not be a problem.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, stats)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **stats** The `/proc/stat` tracker, which is an [`EventEmitter`][node-events]. Call `stat.end()` to stop tracking. The following events are available:
+        * **load** **(loads)** Emitted when a CPU load calculation is available.
+            - **loads** CPU loads of **online** CPUs. Each key is a CPU id (e.g. `'cpu0'`, `'cpu1'`) and the value an object with the following properties:
+                * **user** Percentage (0-100) of ticks spent on user programs.
+                * **nice** Percentage (0-100) of ticks spent on `nice`d user programs.
+                * **system** Percentage (0-100) of ticks spent on system programs.
+                * **idle** Percentage (0-100) of ticks spent idling.
+                * **iowait** Percentage (0-100) of ticks spent waiting for IO.
+                * **irq** Percentage (0-100) of ticks spent on hardware interrupts.
+                * **softirq** Percentage (0-100) of ticks spent on software interrupts.
+                * **steal** Percentage (0-100) of ticks stolen by others.
+                * **guest** Percentage (0-100) of ticks spent by a guest.
+                * **guestnice** Percentage (0-100) of ticks spent by a `nice`d guest.
+                * **total** Total. Always 100.
 * Returns: The client instance.
 
 #### client.install(serial, apk, callback)
@@ -566,6 +603,8 @@ We use [debug][node-debug], and our debug namespace is `adb`. Some of the depend
 Restricted until further notice.
 
 [nodejs]: <http://nodejs.org/>
+[coffeescript]: <http://coffeescript.org/>
+[npm]: <https://npmjs.org/>
 [adb-js]: <https://github.com/flier/adb.js>
 [adb-site]: <http://developer.android.com/tools/help/adb.html>
 [adb-services]: <https://github.com/android/platform_system_core/blob/master/adb/SERVICES.TXT>

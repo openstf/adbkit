@@ -1,7 +1,7 @@
-Command = require '../command'
-Protocol = require '../protocol'
+Command = require '../../command'
+Protocol = require '../../protocol'
 
-class HostDevicesCommand extends Command
+class HostDevicesWithPathsCommand extends Command
   execute: (callback) ->
     @parser.readAscii 4, (reply) =>
       switch reply
@@ -12,15 +12,16 @@ class HostDevicesCommand extends Command
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send 'host:devices'
+    this._send 'host:devices-l'
 
   _parseDevices: (value) ->
     devices = []
     return devices unless value.length
     for line in value.toString('ascii').split '\n'
       if line
-        [id, type] = line.split '\t'
-        devices.push id: id, type: type
+        # For some reason, the columns are separated by spaces instead of tabs
+        [id, type, path] = line.split /\s+/
+        devices.push id: id, type: type, path: path
     return devices
 
-module.exports = HostDevicesCommand
+module.exports = HostDevicesWithPathsCommand

@@ -1,6 +1,6 @@
-Command = require '../command'
-Protocol = require '../protocol'
-LineTransform = require '../linetransform'
+Command = require '../../command'
+Protocol = require '../../protocol'
+LineTransform = require '../../linetransform'
 
 class GetPropertiesCommand extends Command
   RE_KEYVAL = /^\[([\s\S]*?)\]: \[([\s\S]*?)\]$/gm

@@ -1,8 +1,8 @@
-Command = require '../command'
-Protocol = require '../protocol'
+Command = require '../../command'
+Protocol = require '../../protocol'
 
-class RemountCommand extends Command
-  execute: (callback) ->
+class HostTransportCommand extends Command
+  execute: (serial, callback) ->
     @parser.readAscii 4, (reply) =>
       switch reply
         when Protocol.OKAY
@@ -11,6 +11,6 @@ class RemountCommand extends Command
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send 'remount:'
+    this._send "host:transport:#{serial}"
 
-module.exports = RemountCommand
+module.exports = HostTransportCommand
