@@ -188,22 +188,25 @@ class Client
     if arguments.length is 2
       callback = port
       port = 1080
-    this.transport serial, (err, transport) =>
-      return callback err if err
-      new MonkeyCommand(transport)
-        .execute port, (err) =>
-          return callback err if err
-          retries = 10
-          connect = =>
-            this.openTcp serial, port, (err, stream) =>
-              if err and retries -= 1
-                debug "Monkey can't be reached, trying #{retries} more times"
-                setTimeout connect, 100
-              else if err
-                callback err
-              else
-                callback null, Monkey.connectStream stream
-          connect()
+    tryConnect = (times, callback) =>
+      this.openTcp serial, port, (err, stream) =>
+        if err and times -= 1
+          debug "Monkey can't be reached, trying #{times} more times"
+          setTimeout ->
+            tryConnect times, callback
+          , 100
+        else if err
+          callback err
+        else
+          callback null, Monkey.connectStream stream
+    tryConnect 1, (err, monkey) =>
+      return callback null, monkey unless err
+      this.transport serial, (err, transport) =>
+        return callback err if err
+        new MonkeyCommand(transport)
+          .execute port, (err) =>
+            return callback err if err
+            tryConnect 10, callback
 
   openLogcat: (serial, callback) ->
     this.transport serial, (err, transport) =>
