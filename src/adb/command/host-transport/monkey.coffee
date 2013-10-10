@@ -25,7 +25,7 @@ class MonkeyCommand extends Command
           raw.once 'end', endListener = ->
             done new Error 'Unexpected end of stream'
           # If there's output, act on it.
-          raw.once 'data', (chunk) ->
+          raw.once 'data', (chunk) =>
             if RE_OK.test chunk
               done null
             else
