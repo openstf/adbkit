@@ -206,7 +206,7 @@ class Client
         new MonkeyCommand(transport)
           .execute port, (err) =>
             return callback err if err
-            tryConnect 10, callback
+            tryConnect 20, callback
 
   openLogcat: (serial, callback) ->
     this.transport serial, (err, transport) =>
