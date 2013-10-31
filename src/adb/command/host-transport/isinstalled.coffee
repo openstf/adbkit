@@ -19,6 +19,6 @@ class IsInstalledCommand extends Command
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send "shell:pm path #{pkg}"
+    this._send "shell:pm path #{pkg} 2>/dev/null"
 
 module.exports = IsInstalledCommand

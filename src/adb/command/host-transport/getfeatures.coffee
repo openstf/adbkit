@@ -19,7 +19,7 @@ class GetFeaturesCommand extends Command
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send 'shell:pm list features'
+    this._send 'shell:pm list features 2>/dev/null'
 
   _parseFeatures: (value) ->
     features = {}
