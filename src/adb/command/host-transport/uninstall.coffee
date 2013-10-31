@@ -17,6 +17,6 @@ class UninstallCommand extends Command
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send "shell:pm uninstall #{pkg}"
+    this._send "shell:pm uninstall #{pkg} 2>/dev/null"
 
 module.exports = UninstallCommand
