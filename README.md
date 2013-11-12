@@ -270,7 +270,7 @@ Lists forwarded connections on the device. This is analogous to `adb forward --l
 Runs a shell command on the device. Note that you'll be limited to the permissions of the `shell` user, which ADB uses.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **command** The shell command to execute.
+* **command** The shell command to execute. When `String`, the command is run as-is. When `Array`, the elements will be rudimentarily escaped (for convenience, not security) and joined to form a command.
 * **callback(err, output)**
     - **err** `null` when successful, `Error` otherwise.
     - **output** An output [`Stream`][node-stream] in non-flowing mode. Unfortunately it is not possible to separate stdout and stderr, you'll get both of them in one stream. It is also not possible to access the exit code of the command. If access to any of these individual properties is needed, the command must be constructed in a way that allows you to parse the information from the output.
