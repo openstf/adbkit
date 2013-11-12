@@ -1,5 +1,5 @@
-Monkey = require 'stf-monkey'
-Logcat = require 'stf-logcat'
+Monkey = require 'adbkit-monkey'
+Logcat = require 'adbkit-logcat'
 debug = require('debug')('adb:client')
 
 Connection = require './connection'
