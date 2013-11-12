@@ -1,6 +1,6 @@
-# stf-adb
+# adbkit
 
-**stf-adb** is a pure [Node.js][nodejs] client for the [Android Debug Bridge][adb-site] server. It can be used either as a library in your own application, or simply as a convenient utility for playing with your device.
+**adbkit** is a pure [Node.js][nodejs] client for the [Android Debug Bridge][adb-site] server. It can be used either as a library in your own application, or simply as a convenient utility for playing with your device.
 
 Most of the `adb` command line tool's functionality is supported (including pushing/pulling files, installing APKs and processing logs), with some added functionality such as being able to generate touch/key events and take screenshots.
 
@@ -19,7 +19,7 @@ Alternatively, you may want to consider using the Chrome [ADB][chrome-adb] exten
 ### Checking for NFC support
 
 ```js
-var adb = require('stf-adb');
+var adb = require('adbkit');
 var client = adb.createClient();
 
 client.listDevices(function(err, devices) {
@@ -36,7 +36,7 @@ client.listDevices(function(err, devices) {
 ### Installing an APK
 
 ```js
-var adb = require('stf-adb');
+var adb = require('adbkit');
 var client = adb.createClient();
 var apk = 'vendor/app.apk';
 
@@ -54,7 +54,7 @@ client.listDevices(function(err, devices) {
 ### Tracking devices
 
 ```js
-var adb = require('stf-adb');
+var adb = require('adbkit');
 var client = adb.createClient();
 
 client.trackDevices(function(err, tracker) {
@@ -71,7 +71,7 @@ client.trackDevices(function(err, tracker) {
 
 ```js
 var fs = require('fs');
-var adb = require('stf-adb');
+var adb = require('adbkit');
 var client = adb.createClient();
 
 client.listDevices(function(err, devices) {
@@ -92,7 +92,7 @@ client.listDevices(function(err, devices) {
 ### Pushing a file to a device
 
 ```js
-var adb = require('stf-adb');
+var adb = require('adbkit');
 var client = adb.createClient();
 
 client.listDevices(function(err, devices) {
@@ -350,27 +350,27 @@ Opens a direct TCP connection to a port on the device, without any port forwardi
 
 #### client.openMonkey(serial[, port], callback)
 
-Starts the built-in `monkey` utility on the device, connects to it using `client.openTcp()` and hands the connection to **stf-monkey**, a pure Node.js Monkey client. This allows you to create touch and key events, among other things.
+Starts the built-in `monkey` utility on the device, connects to it using `client.openTcp()` and hands the connection to **adbkit-monkey**, a pure Node.js Monkey client. This allows you to create touch and key events, among other things.
 
-For more information, check out the stf-monkey documentation.
+For more information, check out the adbkit-monkey documentation.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **port** Optional. The device port where you'd like Monkey to run at. Defaults to `1080`.
 * **callback(err, monkey)**
     - **err** `null` when successful, `Error` otherwise.
-    - **monkey** The Monkey client. Please see the stf-monkey documentation for details.
+    - **monkey** The Monkey client. Please see the adbkit-monkey documentation for details.
 * Returns: The client instance.
 
 #### client.openLogcat(serial, callback)
 
-Calls the `logcat` utility on the device and hands off the connection to **stf-logcat**, a pure Node.js Logcat client. This is analogous to `adb logcat -B`, but the event stream will be parsed for you and a separate event will be emitted for every log entry, allowing for easy processing.
+Calls the `logcat` utility on the device and hands off the connection to **adbkit-logcat**, a pure Node.js Logcat client. This is analogous to `adb logcat -B`, but the event stream will be parsed for you and a separate event will be emitted for every log entry, allowing for easy processing.
 
-For more information, check out the stf-logcat documentation.
+For more information, check out the adbkit-logcat documentation.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err, logcat)**
     - **err** `null` when successful, `Error` otherwise.
-    - **logcat** The Logcat client. Please see the stf-logcat documentation for details.
+    - **logcat** The Logcat client. Please see the adbkit-logcat documentation for details.
 * Returns: The client instance.
 
 #### client.openProcStat(serial, callback)
