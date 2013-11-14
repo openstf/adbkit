@@ -1,6 +1,6 @@
 {
   "name": "adbkit",
-  "version": "0.4.10",
+  "version": "0.4.11",
   "author": "CyberAgent, Inc.",
   "main": "./index",
   "scripts": {
