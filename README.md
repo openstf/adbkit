@@ -14,6 +14,14 @@ When targeting a remote host, starting the server is entirely your responsibilit
 
 Alternatively, you may want to consider using the Chrome [ADB][chrome-adb] extension, as it includes the ADB server and can be started/stopped quite easily.
 
+## Installation
+
+Install via NPM:
+
+```bash
+npm install --save adbkit
+```
+
 ## Examples
 
 ### Checking for NFC support
@@ -125,115 +133,6 @@ Creates a client instance with the provided options. Note that this will not aut
 
 ### Client
 
-##### client.version(callback)
-
-Queries the ADB server for its version. This is mainly useful for backwards-compatibility purposes.
-
-* **callback(err, version)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **version** The version of the ADB server.
-* Returns: The client instance.
-
-#### client.listDevices(callback)
-
-Gets the list of currently connected devices and emulators.
-
-* **callback(err, devices)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **devices** An array of device objects. The device objects are plain JavaScript objects with two properties: `id` and `type`.
-        * **id** The ID of the device. For real devices, this is usually the USB identifier.
-        * **type** The device type. Values include `'emulator'` for emulators, `'device'` for devices, and `'offline'` for offline devices. `'offline'` can occur for example during boot, in low-battery conditions or when the ADB connection has not yet been approved on the device.
-* Returns: The client instance.
-
-#### client.listDevicesWithPaths(callback)
-
-Like `client.listDevices(callback)`, but includes the "path" of every device.
-
-* **callback(err, devices)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **devices** An array of device objects. The device objects are plain JavaScript objects with the following properties:
-        * **id** See `client.listDevices()`.
-        * **type** See `client.listDevices()`.
-        * **path** The device path. This can be something like `usb:FD120000` for real devices.
-* Returns: The client instance.
-
-#### client.trackDevices(callback)
-
-Gets a device tracker. Events will be emitted when devices are added, removed, or their type changes (i.e. to/from `offline`). Note that the same events will be emitted for the initially connected devices also, so that you don't need to use both `client.listDevices()` and `client.trackDevices()`.
-
-Note that as the tracker will keep a connection open, you must call `tracker.end()` if you wish to stop tracking devices.
-
-* **callback(err, tracker)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **tracker** The device tracker, which is an [`EventEmitter`][node-events]. The following events are available:
-        * **add** **(device)** Emitted when a new device is connected, once per device. See `client.listDevices()` for details on the device object.
-        * **remove** **(device)** Emitted when a device is unplugged, once per device. This does not include `offline` devices, those devices are connected but unavailable to ADB. See `client.listDevices()` for details on the device object.
-        * **change** **(device)** Emitted when the `type` property of a device changes, once per device. The current value of `type` is the new value. This event usually occurs the type changes from `'device'` to `'offline'` or the other way around. See `client.listDevices()` for details on the device object and the `'offline'` type.
-        * **changeSet** **(changes)** Emitted once for all changes reported by ADB in a single run. Multiple changes can occur when, for example, a USB hub is connected/unplugged and the device list changes quickly. If you wish to process all changes at once, use this event instead of the once-per-device ones. Keep in mind that the other events will still be emitted, though.
-            - **changes** An object with the following properties always present:
-                * **added** An array of added device objects, each one as in the `add` event. Empty if none.
-                * **removed** An array of removed device objects, each one as in the `remove` event. Empty if none.
-                * **changed** An array of changed device objects, each one as in the `change` event. Empty if none.
-* Returns: The client instance.
-
-#### client.kill(callback)
-
-This kills the ADB server. Note that the next connection will attempt to start the server again when it's unable to connect.
-
-* **callback(err)**
-    - **err** `null` when successful, `Error` otherwise.
-* Returns: The client instance.
-
-#### client.getSerialNo(serial, callback)
-
-Gets the serial number of the device identified by the given serial number. With our API this doesn't really make much sense, but it has been implemented for completeness. _FYI: in the raw ADB protocol you can specify a device in other ways, too._
-
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **callback(err, serial)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **serial** The serial number of the device.
-* Returns: The client instance.
-
-#### client.getDevicePath(serial, callback)
-
-Gets the device path of the device identified by the given serial number.
-
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **callback(err, path)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **path** The device path. This corresponds to the device path in `client.listDevicesWithPaths()`.
-* Returns: The client instance.
-
-#### client.getState(serial, callback)
-
-Gets the state of the device identified by the given serial number.
-
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **callback(err, state)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **state** The device state. This corresponds to the device type in `client.listDevices()`.
-* Returns: The client instance.
-
-#### client.getProperties(serial, callback)
-
-Retrieves the properties of the device identified by the given serial number. This is analogous to `adb shell getprop`.
-
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **callback(err, properties)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **properties** An object of device properties. Each key corresponds to a device property. Convenient for accessing things like `'ro.product.model'`.
-* Returns: The client instance.
-
-#### client.getFeatures(serial, callback)
-
-Retrieves the features of the device identified by the given serial number. This is analogous to `adb shell pm list features`. Useful for checking whether hardware features such as NFC are available (you'd check for `'android.hardware.nfc'`).
-
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **callback(err, features)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **features** An object of device features. Each key corresponds to a device feature, with the value being either `true` for a boolean feature, or the feature value as a string (e.g. `'0x20000'` for `reqGlEsVersion`).
-* Returns: The client instance.
-
 #### client.forward(serial, local, remote, callback)
 
 Forwards socket connections from the ADB server host (local) to the device (remote). This is analogous to `adb forward <local> <remote>`. It's important to note that if you are connected to a remote ADB server, the forward will be created on that host.
@@ -248,39 +147,6 @@ Forwards socket connections from the ADB server host (local) to the device (remo
 * **remote** A string representing the remote endpoint on the device. At time of writing, can be one of:
     - Any value accepted by the `local` argument
     - `jdwp:<process pid>`
-* **callback(err)**
-    - **err** `null` when successful, `Error` otherwise.
-* Returns: The client instance.
-
-#### client.listForwards(serial, callback)
-
-Lists forwarded connections on the device. This is analogous to `adb forward --list`.
-
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **callback(err, forwards)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **forwards** An array of forward objects with the following properties:
-        * **serial** The device serial.
-        * **local** The local endpoint. Same format as `client.forward()`'s `local` argument.
-        * **remote** The remote endpoint on the device. Same format as `client.forward()`'s `remote` argument.
-* Returns: The client instance.
-
-#### client.shell(serial, command, callback)
-
-Runs a shell command on the device. Note that you'll be limited to the permissions of the `shell` user, which ADB uses.
-
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **command** The shell command to execute. When `String`, the command is run as-is. When `Array`, the elements will be rudimentarily escaped (for convenience, not security) and joined to form a command.
-* **callback(err, output)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **output** An output [`Stream`][node-stream] in non-flowing mode. Unfortunately it is not possible to separate stdout and stderr, you'll get both of them in one stream. It is also not possible to access the exit code of the command. If access to any of these individual properties is needed, the command must be constructed in a way that allows you to parse the information from the output.
-* Returns: The client instance.
-
-#### client.remount(serial, callback)
-
-Attempts to remount the `/system` partition in read-write mode. This will usually only work on emulators and developer devices.
-
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err)**
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
@@ -313,16 +179,119 @@ Note that high-resolution devices can have quite massive framebuffers. For examp
     - **raw** The raw framebuffer stream.
 * Returns: The client instance.
 
-#### client.screencap(serial, callback)
+#### client.getDevicePath(serial, callback)
 
-Takes a screenshot in PNG format using the built-in `screencap` utility. This is analogous to `adb shell screencap -p`. Sadly, the utility is not available on most Android `<=2.3` devices, and the current implementation does not provide a shim for older devices.
-
-Generating the PNG on the device naturally requires considerably more processing time on that side. However, as the data transferred over USB easily decreases by ~95%, and no conversion being required on the host, this method is usually several times faster than using the framebuffer.
+Gets the device path of the device identified by the given serial number.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **callback(err, screencap)**
+* **callback(err, path)**
     - **err** `null` when successful, `Error` otherwise.
-    - **screencap** The PNG stream.
+    - **path** The device path. This corresponds to the device path in `client.listDevicesWithPaths()`.
+* Returns: The client instance.
+
+#### client.getFeatures(serial, callback)
+
+Retrieves the features of the device identified by the given serial number. This is analogous to `adb shell pm list features`. Useful for checking whether hardware features such as NFC are available (you'd check for `'android.hardware.nfc'`).
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, features)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **features** An object of device features. Each key corresponds to a device feature, with the value being either `true` for a boolean feature, or the feature value as a string (e.g. `'0x20000'` for `reqGlEsVersion`).
+* Returns: The client instance.
+
+#### client.getProperties(serial, callback)
+
+Retrieves the properties of the device identified by the given serial number. This is analogous to `adb shell getprop`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, properties)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **properties** An object of device properties. Each key corresponds to a device property. Convenient for accessing things like `'ro.product.model'`.
+* Returns: The client instance.
+
+#### client.getSerialNo(serial, callback)
+
+Gets the serial number of the device identified by the given serial number. With our API this doesn't really make much sense, but it has been implemented for completeness. _FYI: in the raw ADB protocol you can specify a device in other ways, too._
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, serial)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **serial** The serial number of the device.
+* Returns: The client instance.
+
+#### client.getState(serial, callback)
+
+Gets the state of the device identified by the given serial number.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, state)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **state** The device state. This corresponds to the device type in `client.listDevices()`.
+* Returns: The client instance.
+
+#### client.install(serial, apk, callback)
+
+Installs the APK on the device, replacing any previously installed version. This is roughly analogous to `adb install -r <apk>`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **apk** The path to the APK file.
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The client instance.
+
+#### client.isInstalled(serial, pkg, callback)
+
+Uninstalls the package from the device. This is analogous to `adb shell pm path <pkg>` and some output parsing.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **pkg** The package name. This is NOT the APK.
+* **callback(err, installed)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **installed** `true` if the package is installed, `false` otherwise.
+* Returns: The client instance.
+
+#### client.kill(callback)
+
+This kills the ADB server. Note that the next connection will attempt to start the server again when it's unable to connect.
+
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The client instance.
+
+#### client.listDevices(callback)
+
+Gets the list of currently connected devices and emulators.
+
+* **callback(err, devices)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **devices** An array of device objects. The device objects are plain JavaScript objects with two properties: `id` and `type`.
+        * **id** The ID of the device. For real devices, this is usually the USB identifier.
+        * **type** The device type. Values include `'emulator'` for emulators, `'device'` for devices, and `'offline'` for offline devices. `'offline'` can occur for example during boot, in low-battery conditions or when the ADB connection has not yet been approved on the device.
+* Returns: The client instance.
+
+#### client.listDevicesWithPaths(callback)
+
+Like `client.listDevices(callback)`, but includes the "path" of every device.
+
+* **callback(err, devices)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **devices** An array of device objects. The device objects are plain JavaScript objects with the following properties:
+        * **id** See `client.listDevices()`.
+        * **type** See `client.listDevices()`.
+        * **path** The device path. This can be something like `usb:FD120000` for real devices.
+* Returns: The client instance.
+
+#### client.listForwards(serial, callback)
+
+Lists forwarded connections on the device. This is analogous to `adb forward --list`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, forwards)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **forwards** An array of forward objects with the following properties:
+        * **serial** The device serial.
+        * **local** The local endpoint. Same format as `client.forward()`'s `local` argument.
+        * **remote** The remote endpoint on the device. Same format as `client.forward()`'s `remote` argument.
 * Returns: The client instance.
 
 #### client.openLog(serial, name, callback)
@@ -336,16 +305,16 @@ Opens a direct connection to a binary log file, providing access to the raw log 
     - **log** The binary log stream. Call `log.end()` when you wish to stop receiving data.
 * Returns: The client instance.
 
-#### client.openTcp(serial, port[, host], callback)
+#### client.openLogcat(serial, callback)
 
-Opens a direct TCP connection to a port on the device, without any port forwarding required.
+Calls the `logcat` utility on the device and hands off the connection to **adbkit-logcat**, a pure Node.js Logcat client. This is analogous to `adb logcat -B`, but the event stream will be parsed for you and a separate event will be emitted for every log entry, allowing for easy processing.
+
+For more information, check out the adbkit-logcat documentation.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **port** The port number to connect to.
-* **host** Optional. The host to connect to. Allegedly this is supposed to establish a connection to the given host from the device, but we have not been able to get it to work at all. Skip the host and everything works great.
-* **callback(err, conn)**
+* **callback(err, logcat)**
     - **err** `null` when successful, `Error` otherwise.
-    - **conn** The TCP connection (i.e. [`net.Socket`][node-net]). Read and write as you please. Call `conn.end()` to end the connection.
+    - **logcat** The Logcat client. Please see the adbkit-logcat documentation for details.
 * Returns: The client instance.
 
 #### client.openMonkey(serial[, port], callback)
@@ -359,18 +328,6 @@ For more information, check out the adbkit-monkey documentation.
 * **callback(err, monkey)**
     - **err** `null` when successful, `Error` otherwise.
     - **monkey** The Monkey client. Please see the adbkit-monkey documentation for details.
-* Returns: The client instance.
-
-#### client.openLogcat(serial, callback)
-
-Calls the `logcat` utility on the device and hands off the connection to **adbkit-logcat**, a pure Node.js Logcat client. This is analogous to `adb logcat -B`, but the event stream will be parsed for you and a separate event will be emitted for every log entry, allowing for easy processing.
-
-For more information, check out the adbkit-logcat documentation.
-
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **callback(err, logcat)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **logcat** The Logcat client. Please see the adbkit-logcat documentation for details.
 * Returns: The client instance.
 
 #### client.openProcStat(serial, callback)
@@ -396,35 +353,68 @@ Tracks `/proc/stat` and emits useful information, such as CPU load. A single syn
                 * **total** Total. Always 100.
 * Returns: The client instance.
 
-#### client.install(serial, apk, callback)
+#### client.openTcp(serial, port[, host], callback)
 
-Installs the APK on the device, replacing any previously installed version. This is roughly analogous to `adb install -r <apk>`.
+Opens a direct TCP connection to a port on the device, without any port forwarding required.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **apk** The path to the APK file.
+* **port** The port number to connect to.
+* **host** Optional. The host to connect to. Allegedly this is supposed to establish a connection to the given host from the device, but we have not been able to get it to work at all. Skip the host and everything works great.
+* **callback(err, conn)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **conn** The TCP connection (i.e. [`net.Socket`][node-net]). Read and write as you please. Call `conn.end()` to end the connection.
+* Returns: The client instance.
+
+#### client.pull(serial, path, callback)
+
+A convenience shortcut for `sync.pull()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **path** See `sync.pull()` for details.
+* **callback(err, transfer)** See `sync.pull()` for details.
+* Returns: The client instance.
+
+#### client.push(serial, contents, path[, mode], callback)
+
+A convenience shortcut for `sync.push()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **contents** See `sync.push()` for details.
+* **path** See `sync.push()` for details.
+* **mode** See `sync.push()` for details.
+* **callback(err, transfer)** See `sync.push()` for details.
+* Returns: The client instance.
+
+#### client.remount(serial, callback)
+
+Attempts to remount the `/system` partition in read-write mode. This will usually only work on emulators and developer devices.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err)**
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
-#### client.uninstall(serial, pkg, callback)
+#### client.screencap(serial, callback)
 
-Uninstalls the package from the device. This is roughly analogous to `adb uninstall <pkg>`.
+Takes a screenshot in PNG format using the built-in `screencap` utility. This is analogous to `adb shell screencap -p`. Sadly, the utility is not available on most Android `<=2.3` devices, and the current implementation does not provide a shim for older devices.
+
+Generating the PNG on the device naturally requires considerably more processing time on that side. However, as the data transferred over USB easily decreases by ~95%, and no conversion being required on the host, this method is usually several times faster than using the framebuffer.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **pkg** The package name. This is NOT the APK.
-* **callback(err)**
+* **callback(err, screencap)**
     - **err** `null` when successful, `Error` otherwise.
+    - **screencap** The PNG stream.
 * Returns: The client instance.
 
-#### client.isInstalled(serial, pkg, callback)
+#### client.shell(serial, command, callback)
 
-Uninstalls the package from the device. This is analogous to `adb shell pm path <pkg>` and some output parsing.
+Runs a shell command on the device. Note that you'll be limited to the permissions of the `shell` user, which ADB uses.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **pkg** The package name. This is NOT the APK.
-* **callback(err, installed)**
+* **command** The shell command to execute. When `String`, the command is run as-is. When `Array`, the elements will be rudimentarily escaped (for convenience, not security) and joined to form a command.
+* **callback(err, output)**
     - **err** `null` when successful, `Error` otherwise.
-    - **installed** `true` if the package is installed, `false` otherwise.
+    - **output** An output [`Stream`][node-stream] in non-flowing mode. Unfortunately it is not possible to separate stdout and stderr, you'll get both of them in one stream. It is also not possible to access the exit code of the command. If access to any of these individual properties is needed, the command must be constructed in a way that allows you to parse the information from the output.
 * Returns: The client instance.
 
 #### client.startActivity(serial, options, callback)
@@ -439,6 +429,15 @@ Starts the configured activity on the device. Roughly analogous to `adb shell am
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
+#### client.stat(serial, path, callback)
+
+A convenience shortcut for `sync.stat()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **path** See `sync.stat()` for details.
+* **callback(err, stats)** See `sync.stat()` for details.
+* Returns: The client instance.
+
 #### client.syncService(serial, callback)
 
 Establishes a new Sync connection that can be used to push and pull files. This method provides the most freedom and the best performance for repeated use, but can be a bit cumbersome to use. For simple use cases, consider using `client.stat()`, `client.push()` and `client.pull()`.
@@ -449,49 +448,61 @@ Establishes a new Sync connection that can be used to push and pull files. This 
     - **sync** The Sync client. See below for details. Call `sync.end()` when done.
 * Returns: The client instance.
 
-#### client.stat(serial, path, callback)
+#### client.trackDevices(callback)
 
-A convenience shortcut for `sync.stat()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+Gets a device tracker. Events will be emitted when devices are added, removed, or their type changes (i.e. to/from `offline`). Note that the same events will be emitted for the initially connected devices also, so that you don't need to use both `client.listDevices()` and `client.trackDevices()`.
 
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **path** See `sync.stat()` for details.
-* **callback(err, stats)** See `sync.stat()` for details.
+Note that as the tracker will keep a connection open, you must call `tracker.end()` if you wish to stop tracking devices.
+
+* **callback(err, tracker)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **tracker** The device tracker, which is an [`EventEmitter`][node-events]. The following events are available:
+        * **add** **(device)** Emitted when a new device is connected, once per device. See `client.listDevices()` for details on the device object.
+        * **remove** **(device)** Emitted when a device is unplugged, once per device. This does not include `offline` devices, those devices are connected but unavailable to ADB. See `client.listDevices()` for details on the device object.
+        * **change** **(device)** Emitted when the `type` property of a device changes, once per device. The current value of `type` is the new value. This event usually occurs the type changes from `'device'` to `'offline'` or the other way around. See `client.listDevices()` for details on the device object and the `'offline'` type.
+        * **changeSet** **(changes)** Emitted once for all changes reported by ADB in a single run. Multiple changes can occur when, for example, a USB hub is connected/unplugged and the device list changes quickly. If you wish to process all changes at once, use this event instead of the once-per-device ones. Keep in mind that the other events will still be emitted, though.
+            - **changes** An object with the following properties always present:
+                * **added** An array of added device objects, each one as in the `add` event. Empty if none.
+                * **removed** An array of removed device objects, each one as in the `remove` event. Empty if none.
+                * **changed** An array of changed device objects, each one as in the `change` event. Empty if none.
 * Returns: The client instance.
 
-#### client.push(serial, contents, path[, mode], callback)
+#### client.uninstall(serial, pkg, callback)
 
-A convenience shortcut for `sync.push()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+Uninstalls the package from the device. This is roughly analogous to `adb uninstall <pkg>`.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **contents** See `sync.push()` for details.
-* **path** See `sync.push()` for details.
-* **mode** See `sync.push()` for details.
-* **callback(err, transfer)** See `sync.push()` for details.
+* **pkg** The package name. This is NOT the APK.
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
-#### client.pull(serial, path, callback)
+##### client.version(callback)
 
-A convenience shortcut for `sync.pull()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+Queries the ADB server for its version. This is mainly useful for backwards-compatibility purposes.
 
-* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **path** See `sync.pull()` for details.
-* **callback(err, transfer)** See `sync.pull()` for details.
+* **callback(err, version)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **version** The version of the ADB server.
 * Returns: The client instance.
 
 ### Sync
 
-#### sync.stat(path, callback)
+#### sync.end()
 
-Retrieves information about the given path.
+Closes the Sync connection, allowing Node to quit (assuming nothing else is keeping it alive, of course).
 
-* **path** The path.
-* **callback(err, stats)**
-    - **err** `null` when successful, `Error` otherwise.
-    - **stats** An [`fs.Stats`][node-fs-stats] instance. While the `stats.is*` methods are available, only the following properties are supported:
-        * **mode** The raw mode.
-        * **size** The file size.
-        * **mtime** The time of last modification as a `Date`.
 * Returns: The sync instance.
+
+#### sync.pull(path[, callback])
+
+Pulls a file from the device as a `PullTransfer` [`Stream`][node-stream].
+
+* **path** The path to pull from.
+* **callback(err, transfer)** Optional. Called when data is ready to be received or an error occured during initialization.
+    - **err** `null` when successfully initialized, `Error` otherwise. Note that `transfer` may still emit errors that occur during the transfer.
+    - **transfer** The same `PullTransfer` instance returned by the `sync.pull()` call.
+* Returns: A `PullTransfer` instance. See below for details.
 
 #### sync.push(contents, path[, mode]&#91;, callback])
 
@@ -525,15 +536,18 @@ Pushes a [`Stream`][node-stream] to the given path. Note that the path must be w
 * **callback(err)** See `sync.push()` for details.
 * Returns: See `sync.push()` for details.
 
-#### sync.pull(path[, callback])
+#### sync.stat(path, callback)
 
-Pulls a file from the device as a `PullTransfer` [`Stream`][node-stream].
+Retrieves information about the given path.
 
-* **path** The path to pull from.
-* **callback(err, transfer)** Optional. Called when data is ready to be received or an error occured during initialization.
-    - **err** `null` when successfully initialized, `Error` otherwise. Note that `transfer` may still emit errors that occur during the transfer.
-    - **transfer** The same `PullTransfer` instance returned by the `sync.pull()` call.
-* Returns: A `PullTransfer` instance. See below for details.
+* **path** The path.
+* **callback(err, stats)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **stats** An [`fs.Stats`][node-fs-stats] instance. While the `stats.is*` methods are available, only the following properties are supported:
+        * **mode** The raw mode.
+        * **size** The file size.
+        * **mtime** The time of last modification as a `Date`.
+* Returns: The sync instance.
 
 #### sync.tempFile(path)
 
@@ -541,12 +555,6 @@ A simple helper method for creating appropriate temporary filenames for pushing 
 
 * **path** The path of the file.
 * Returns: An appropriate temporary file path.
-
-#### sync.end()
-
-Closes the Sync connection, allowing Node to quit (assuming nothing else is keeping it alive, of course).
-
-* Returns: The sync instance.
 
 ### PushTransfer
 
