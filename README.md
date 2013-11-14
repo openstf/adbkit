@@ -600,7 +600,7 @@ We use [debug][node-debug], and our debug namespace is `adb`. Some of the depend
 
 ## License
 
-Restricted until further notice.
+See [LICENSE](LICENSE).
 
 [nodejs]: <http://nodejs.org/>
 [coffeescript]: <http://coffeescript.org/>
