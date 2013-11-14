@@ -1,6 +1,6 @@
 {
   "name": "adbkit",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "author": "CyberAgent, Inc.",
   "main": "./index",
   "scripts": {
@@ -33,7 +33,7 @@
     "sinon": "~1.7.3",
     "sinon-chai": "~2.4.0"
   },
-  "license": "restricted",
+  "license": "Apache-2.0",
   "engines": {
     "node": ">= 0.10.4"
   }
