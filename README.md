@@ -14,6 +14,14 @@ When targeting a remote host, starting the server is entirely your responsibilit
 
 Alternatively, you may want to consider using the Chrome [ADB][chrome-adb] extension, as it includes the ADB server and can be started/stopped quite easily.
 
+## Installation
+
+Install via NPM:
+
+```bash
+npm install --save adbkit
+```
+
 ## Examples
 
 ### Checking for NFC support
