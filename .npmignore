@@ -1,8 +1,11 @@
-/test/
-/tasks/
-/bench/
-/git_hooks/
-/Gruntfile.coffee
-/.npmignore
 /.editorconfig
+/.npmignore
 /*.tgz
+/Gruntfile.coffee
+/index.coffee
+/src/
+/test/
+/bench/
+/tasks/
+/temp/
+/git_hooks/
