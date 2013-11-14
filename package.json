@@ -1,0 +1,40 @@
+{
+  "name": "adbkit",
+  "version": "0.4.9",
+  "author": "CyberAgent, Inc.",
+  "main": "./index",
+  "scripts": {
+    "test": "grunt test",
+    "prepublish": "grunt test coffee",
+    "postpublish": "grunt clean"
+  },
+  "dependencies": {
+    "adbkit-monkey": "https://dl.dropboxusercontent.com/u/538216/repo/adbkit-monkey-0.3.x.tgz",
+    "adbkit-logcat": "https://dl.dropboxusercontent.com/u/538216/repo/adbkit-logcat-0.5.x.tgz",
+    "async": "0.2.7",
+    "debug": "0.7.2",
+    "split": "0.2.5",
+    "once": "1.2.0"
+  },
+  "devDependencies": {
+    "coffee-script": "1.6.2",
+    "grunt": "0.4.1",
+    "grunt-cli": "0.1.7",
+    "grunt-notify": "0.2.3",
+    "grunt-contrib-coffee": "0.6.6",
+    "grunt-contrib-watch": "0.5.3",
+    "grunt-contrib-clean": "0.5.0",
+    "grunt-coffeelint": "0.0.6",
+    "grunt-jsonlint": "1.0.0",
+    "grunt-exec": "0.4.0",
+    "mocha": "1.9.0",
+    "chai": "1.5.0",
+    "sinon": "1.6.0",
+    "sinon-chai": "2.4.0",
+    "bench": "0.3.5"
+  },
+  "license": "restricted",
+  "engines": {
+    "node": ">= 0.10.4"
+  }
+}
