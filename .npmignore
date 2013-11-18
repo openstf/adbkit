@@ -3,6 +3,7 @@
 /*.tgz
 /Gruntfile.coffee
 /index.coffee
+/CONTRIBUTING.md
 /src/
 /test/
 /bench/

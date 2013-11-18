@@ -606,6 +606,10 @@ We use [debug][node-debug], and our debug namespace is `adb`. Some of the depend
 * [adb.js][adb-js] (another Node.js ADB implementation)
 * [ADB Chrome extension][chrome-adb]
 
+## Contributing
+
+See [CONTRIBUTING](CONTRIBUTING.md).
+
 ## License
 
 See [LICENSE](LICENSE).
