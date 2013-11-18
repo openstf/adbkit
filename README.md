@@ -4,9 +4,10 @@
 
 Most of the `adb` command line tool's functionality is supported (including pushing/pulling files, installing APKs and processing logs), with some added functionality such as being able to generate touch/key events and take screenshots.
 
-Note that even though the module is written in [CoffeeScript][coffeescript], only the compiled JavaScript is published to [NPM][npm], which means that it can easily be used with pure JavaScript codebases, too.
-
 ## Requirements
+
+* [Node.js][nodejs] >= 0.10
+* The `adb` command line tool
 
 Please note that although it may happen at some point, **this project is NOT an implementation of the ADB _server_**. The target host (where the devices are connected) must still have ADB installed and either already running (e.g. via `adb start-server`) or available in `$PATH`. An attempt will be made to start the server locally via the aforementioned command if the initial connection fails. This is the only case where we fall back to the `adb` binary.
 
@@ -14,7 +15,7 @@ When targeting a remote host, starting the server is entirely your responsibilit
 
 Alternatively, you may want to consider using the Chrome [ADB][chrome-adb] extension, as it includes the ADB server and can be started/stopped quite easily.
 
-## Installation
+## Getting started
 
 Install via NPM:
 
@@ -22,9 +23,13 @@ Install via NPM:
 npm install --save adbkit
 ```
 
-## Examples
+We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
 
-### Checking for NFC support
+Note that even though the module is written in [CoffeeScript][coffeescript], only the compiled JavaScript is published to [NPM][npm], which means that it can easily be used with pure JavaScript codebases, too.
+
+### Examples
+
+#### Checking for NFC support
 
 ```js
 var adb = require('adbkit');
@@ -41,7 +46,7 @@ client.listDevices(function(err, devices) {
 });
 ```
 
-### Installing an APK
+#### Installing an APK
 
 ```js
 var adb = require('adbkit');
@@ -59,7 +64,7 @@ client.listDevices(function(err, devices) {
 });
 ```
 
-### Tracking devices
+#### Tracking devices
 
 ```js
 var adb = require('adbkit');
@@ -75,7 +80,7 @@ client.trackDevices(function(err, tracker) {
 });
 ```
 
-### Pulling a file from a device
+#### Pulling a file from a device
 
 ```js
 var fs = require('fs');
@@ -97,7 +102,7 @@ client.listDevices(function(err, devices) {
 });
 ```
 
-### Pushing a file to a device
+#### Pushing a file to a device
 
 ```js
 var adb = require('adbkit');
@@ -594,17 +599,17 @@ Cancels the transfer by ending the connection. Can be useful for reading endless
 
 * Returns: The pullTransfer instance.
 
-## Debugging
-
-We use [debug][node-debug], and our debug namespace is `adb`. Some of the dependencies may provide debug output of their own. To see the debug output, set the `DEBUG` environment variable. For example, run your program with `DEBUG=adb:* node app.js`.
-
-## Links
+## More information
 
 * [Android Debug Bridge][adb-site]
     - [SERVICES.TXT][adb-services] (ADB socket protocol)
 * [Android ADB Protocols][adb-protocols] (a blog post explaining the protocol)
 * [adb.js][adb-js] (another Node.js ADB implementation)
 * [ADB Chrome extension][chrome-adb]
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
