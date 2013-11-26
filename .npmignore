@@ -1,6 +1,7 @@
 /.editorconfig
 /.npmignore
 /*.tgz
+/npm-debug.log
 /Gruntfile.coffee
 /index.coffee
 /CONTRIBUTING.md
@@ -10,3 +11,4 @@
 /tasks/
 /temp/
 /git_hooks/
+*.!sync
