@@ -312,27 +312,27 @@ Opens a direct connection to a binary log file, providing access to the raw log 
 
 #### client.openLogcat(serial, callback)
 
-Calls the `logcat` utility on the device and hands off the connection to **adbkit-logcat**, a pure Node.js Logcat client. This is analogous to `adb logcat -B`, but the event stream will be parsed for you and a separate event will be emitted for every log entry, allowing for easy processing.
+Calls the `logcat` utility on the device and hands off the connection to [adbkit-logcat][adbkit-logcat], a pure Node.js Logcat client. This is analogous to `adb logcat -B`, but the event stream will be parsed for you and a separate event will be emitted for every log entry, allowing for easy processing.
 
-For more information, check out the adbkit-logcat documentation.
+For more information, check out the [adbkit-logcat][adbkit-logcat] documentation.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err, logcat)**
     - **err** `null` when successful, `Error` otherwise.
-    - **logcat** The Logcat client. Please see the adbkit-logcat documentation for details.
+    - **logcat** The Logcat client. Please see the [adbkit-logcat][adbkit-logcat] documentation for details.
 * Returns: The client instance.
 
 #### client.openMonkey(serial[, port], callback)
 
-Starts the built-in `monkey` utility on the device, connects to it using `client.openTcp()` and hands the connection to **adbkit-monkey**, a pure Node.js Monkey client. This allows you to create touch and key events, among other things.
+Starts the built-in `monkey` utility on the device, connects to it using `client.openTcp()` and hands the connection to [adbkit-monkey][adbkit-monkey], a pure Node.js Monkey client. This allows you to create touch and key events, among other things.
 
-For more information, check out the adbkit-monkey documentation.
+For more information, check out the [adbkit-monkey][adbkit-monkey] documentation.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **port** Optional. The device port where you'd like Monkey to run at. Defaults to `1080`.
 * **callback(err, monkey)**
     - **err** `null` when successful, `Error` otherwise.
-    - **monkey** The Monkey client. Please see the adbkit-monkey documentation for details.
+    - **monkey** The Monkey client. Please see the [adbkit-monkey][adbkit-monkey] documentation for details.
 * Returns: The client instance.
 
 #### client.openProcStat(serial, callback)
@@ -636,3 +636,5 @@ Copyright © CyberAgent, Inc. All Rights Reserved.
 [node-gm]: <https://github.com/aheckmann/gm>
 [graphicsmagick]: <http://www.graphicsmagick.org/>
 [imagemagick]: <http://www.imagemagick.org/>
+[adbkit-logcat]: <https://npmjs.org/package/adbkit-logcat>
+[adbkit-monkey]: <https://npmjs.org/package/adbkit-monkey>
