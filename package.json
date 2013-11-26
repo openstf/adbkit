@@ -1,16 +1,36 @@
 {
   "name": "adbkit",
   "version": "0.4.14",
-  "author": "CyberAgent, Inc.",
+  "description": "A pure Node.js client for the Android Debug Bridge.",
+  "keywords": [
+    "adb",
+    "adbkit",
+    "android",
+    "logcat",
+    "monkey"
+  ],
+  "bugs": {
+    "url": "https://github.com/CyberAgent/adbkit/issues"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "CyberAgent, Inc.",
+    "email": "npm@cyberagent.co.jp",
+    "url": "http://www.cyberagent.co.jp/"
+  },
   "main": "./index",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CyberAgent/adbkit.git"
+  },
   "scripts": {
-    "test": "grunt test",
+    "postpublish": "grunt clean",
     "prepublish": "grunt test coffee",
-    "postpublish": "grunt clean"
+    "test": "grunt test"
   },
   "dependencies": {
-    "adbkit-logcat": "https://dl.dropboxusercontent.com/u/538216/repo/adbkit-logcat-0.5.x.tgz",
-    "adbkit-monkey": "https://dl.dropboxusercontent.com/u/538216/repo/adbkit-monkey-0.3.x.tgz",
+    "adbkit-logcat": "~1.0.0",
+    "adbkit-monkey": "~1.0.1",
     "async": "~0.2.9",
     "debug": "~0.7.3",
     "once": "~1.3.0",
@@ -33,7 +53,6 @@
     "sinon": "~1.7.3",
     "sinon-chai": "~2.4.0"
   },
-  "license": "Apache-2.0",
   "engines": {
     "node": ">= 0.10.4"
   }
