@@ -8,6 +8,8 @@ Chai.use require 'sinon-chai'
 
 Adb = require '../../'
 Sync = require '../../src/adb/sync'
+Stats = require '../../src/adb/sync/stats'
+Entry = require '../../src/adb/sync/entry'
 PushTransfer= require '../../src/adb/sync/pushtransfer'
 PullTransfer = require '../../src/adb/sync/pulltransfer'
 
@@ -176,6 +178,10 @@ describe 'Sync', ->
 
     describe 'Stats', ->
 
+      it "should implement Fs.Stats", (done) ->
+        expect(new Stats 0, 0, 0).to.be.an.instanceof Fs.Stats
+        done()
+
       it "should set the `.mode` property for isFile() etc", (done) ->
         forEachSyncDevice (sync, callback) ->
           sync.stat SURELY_EXISTING_FILE, (err, stats) ->
@@ -206,3 +212,31 @@ describe 'Sync', ->
             callback()
         , done
 
+    describe 'Entry', ->
+
+      it "should implement Stats", (done) ->
+        expect(new Entry 'foo', 0, 0, 0).to.be.an.instanceof Stats
+        done()
+
+      it "should set the `.name` property", (done) ->
+        forEachSyncDevice (sync, callback) ->
+          sync.readdir SURELY_EXISTING_PATH, (err, files) ->
+            expect(err).to.be.null
+            expect(files).to.be.an 'Array'
+            files.forEach (file) ->
+              expect(file.name).to.not.be.null
+              expect(file).to.be.an.instanceof Entry
+            callback()
+        , done
+
+      it "should set the Stats properties", (done) ->
+        forEachSyncDevice (sync, callback) ->
+          sync.readdir SURELY_EXISTING_PATH, (err, files) ->
+            expect(err).to.be.null
+            expect(files).to.be.an 'Array'
+            files.forEach (file) ->
+              expect(file.mode).to.not.be.null
+              expect(file.size).to.not.be.null
+              expect(file.mtime).to.not.be.null
+            callback()
+        , done
