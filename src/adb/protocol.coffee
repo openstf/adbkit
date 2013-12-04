@@ -2,6 +2,8 @@ class Protocol
   @OKAY = 'OKAY'
   @FAIL = 'FAIL'
   @STAT = 'STAT'
+  @LIST = 'LIST'
+  @DENT = 'DENT'
   @RECV = 'RECV'
   @DATA = 'DATA'
   @DONE = 'DONE'

@@ -6,6 +6,7 @@ once = require 'once'
 
 Protocol = require './protocol'
 Stats = require './sync/stats'
+Entry = require './sync/entry'
 PushTransfer = require './sync/pushtransfer'
 PullTransfer = require './sync/pulltransfer'
 
@@ -36,6 +37,33 @@ class Sync extends EventEmitter
         else
           @parser.unexpected reply, callback
     this._sendCommandWithArg Protocol.STAT, path
+    return this
+
+  readdir: (path, callback) ->
+    files = []
+    readBlock = =>
+      @parser.readAscii 4, (reply) =>
+        switch reply
+          when Protocol.DENT
+            @parser.readBytes 16, (stat) =>
+              mode = stat.readUInt32LE 0
+              size = stat.readUInt32LE 4
+              mtime = stat.readUInt32LE 8
+              namelen = stat.readUInt32LE 12
+              @parser.readBytes namelen, (name) =>
+                name = name.toString()
+                # Skip '.' and '..' to match Node's fs.readdir().
+                unless name is '.' or name is '..'
+                  files.push new Entry name, mode, size, mtime
+                setImmediate readBlock
+          when Protocol.DONE
+            callback null, files
+          when Protocol.FAIL
+            this._readError callback
+          else
+            @parser.unexpected reply, callback
+    readBlock()
+    this._sendCommandWithArg Protocol.LIST, path
     return this
 
   push: (contents, path, mode, callback) ->

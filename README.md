@@ -122,6 +122,25 @@ client.listDevices(function(err, devices) {
 });
 ```
 
+#### List files in a folder
+
+```js
+var adb = require('adbkit');
+var client = adb.createClient();
+
+client.listDevices(function(err, devices) {
+  devices.forEach(function(device) {
+    client.readdir(device.id, '/sdcard', function(err, files) {
+      files.forEach(function(file) {
+        if (file.isFile()) {
+          console.log("Found file '%s' in /sdcard", file.name);
+        }
+      });
+    });
+  });
+});
+```
+
 ## API
 
 ### ADB
@@ -390,6 +409,15 @@ A convenience shortcut for `sync.push()`, mainly for one-off use cases. The conn
 * **callback(err, transfer)** See `sync.push()` for details.
 * Returns: The client instance.
 
+#### client.readdir(serial, path, callback)
+
+A convenience shortcut for `sync.readdir()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **path** See `sync.readdir()` for details.
+* **callback(err, files)** See `sync.readdir()` for details.
+* Returns: The client instance.
+
 #### client.remount(serial, callback)
 
 Attempts to remount the `/system` partition in read-write mode. This will usually only work on emulators and developer devices.
@@ -540,6 +568,20 @@ Pushes a [`Stream`][node-stream] to the given path. Note that the path must be w
 * **mode** See `sync.push()` for details.
 * **callback(err)** See `sync.push()` for details.
 * Returns: See `sync.push()` for details.
+
+#### sync.readdir(path, callback)
+
+Retrieves a list of directory entries (e.g. files) in the given path, not including the `.` and `..` entries, just like [`fs.readdir`][node-fs]. If given a non-directory path, no entries are returned.
+
+* **path** The path.
+* **callback(err, files)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **files** An `Array` of [`fs.Stats`][node-fs-stats]-compatible instances. While the `stats.is*` methods are available, only the following properties are supported (in addition to the `name` field which contains the filename):
+        * **name** The filename.
+        * **mode** The raw mode.
+        * **size** The file size.
+        * **mtime** The time of last modification as a `Date`.
+* Returns: The sync instance.
 
 #### sync.stat(path, callback)
 

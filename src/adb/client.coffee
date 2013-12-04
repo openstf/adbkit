@@ -264,6 +264,14 @@ class Client
         return callback err if err
         callback null, stats
 
+  readdir: (serial, path, callback) ->
+    this.syncService serial, (err, sync) ->
+      return callback err if err
+      sync.readdir path, (err, files) ->
+        sync.end()
+        return callback err if err
+        callback null, files
+
   pull: (serial, path, callback) ->
     this.syncService serial, (err, sync) ->
       return callback err if err
