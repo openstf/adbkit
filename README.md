@@ -223,6 +223,16 @@ Retrieves the features of the device identified by the given serial number. This
     - **features** An object of device features. Each key corresponds to a device feature, with the value being either `true` for a boolean feature, or the feature value as a string (e.g. `'0x20000'` for `reqGlEsVersion`).
 * Returns: The client instance.
 
+### client.getPackages(serial, callback)
+
+Retrieves the list of packages present on the device. This is analogous to `adb shell pm list packages`. If you just want to see if something's installed, consider using `client.isInstalled()` instead.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, packages)**
+    - **err** `null` when successful, `Error` otherwise.
+    - **packages** An array of package names.
+* Returns: The client instance.
+
 #### client.getProperties(serial, callback)
 
 Retrieves the properties of the device identified by the given serial number. This is analogous to `adb shell getprop`.

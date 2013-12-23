@@ -15,6 +15,7 @@ HostTransportCommand = require './command/host/transport'
 
 FrameBufferCommand = require './command/host-transport/framebuffer'
 GetFeaturesCommand = require './command/host-transport/getfeatures'
+GetPackagesCommand = require './command/host-transport/getpackages'
 GetPropertiesCommand = require './command/host-transport/getproperties'
 InstallCommand = require './command/host-transport/install'
 IsInstalledCommand = require './command/host-transport/isinstalled'
@@ -118,6 +119,12 @@ class Client
     this.transport serial, (err, transport) ->
       return callback err if err
       new GetFeaturesCommand(transport)
+        .execute callback
+
+  getPackages: (serial, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new GetPackagesCommand(transport)
         .execute callback
 
   forward: (serial, local, remote, callback) ->
