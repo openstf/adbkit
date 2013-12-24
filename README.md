@@ -275,7 +275,7 @@ Installs the APK on the device, replacing any previously installed version. This
 
 #### client.isInstalled(serial, pkg, callback)
 
-Uninstalls the package from the device. This is analogous to `adb shell pm path <pkg>` and some output parsing.
+Tells you if the specific package is installed or not. This is analogous to `adb shell pm path <pkg>` and some output parsing.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **pkg** The package name. This is NOT the APK.
@@ -520,7 +520,7 @@ Uninstalls the package from the device. This is roughly analogous to `adb uninst
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
-##### client.version(callback)
+#### client.version(callback)
 
 Queries the ADB server for its version. This is mainly useful for backwards-compatibility purposes.
 
