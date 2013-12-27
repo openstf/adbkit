@@ -32,4 +32,9 @@ class LineTransform extends Stream.Transform
     done()
     return
 
+  # When the stream ends on an '\r', output it as-is (assume binary data).
+  _flush: (done) ->
+    this.push @savedR if @savedR
+    done()
+
 module.exports = LineTransform
