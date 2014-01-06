@@ -47,15 +47,15 @@ describe 'LineTransform', ->
     duplex.causeRead new Buffer [0x0d, 0x0a, 0x97]
     duplex.causeEnd()
 
-  it "should not push 0x0d if last in stream", (done) ->
+  it "should push 0x0d without 0x0a if last in stream", (done) ->
     duplex = new MockDuplex
     transform = new LineTransform
     transform.on 'data', (data) ->
       expect(data.length).to.equal 1
-      expect(data[0]).to.equal 0x62
+      expect(data[0]).to.equal 0x0d
       done()
     duplex.pipe transform
-    duplex.causeRead new Buffer [0x62, 0x0d]
+    duplex.causeRead new Buffer [0x0d]
     duplex.causeEnd()
 
   it "should push saved 0x0d if next chunk does not start with 0x0a", (done) ->
