@@ -225,11 +225,13 @@ class Client
 
   openProcStat: (serial, callback) ->
     this.syncService serial, (err, sync) ->
+      return callback err if err
       callback null, new ProcStat sync
 
   install: (serial, apk, callback) ->
     temp = Sync.temp apk
     this.push serial, apk, temp, (err, transfer) =>
+      return callback err if err
       transfer.on 'end', =>
         this.transport serial, (err, transport) =>
           return callback err if err
