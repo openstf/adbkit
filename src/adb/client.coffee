@@ -13,6 +13,7 @@ HostTrackDevicesCommand = require './command/host/trackdevices'
 HostKillCommand = require './command/host/kill'
 HostTransportCommand = require './command/host/transport'
 
+ClearCommand = require './command/host-transport/clear'
 FrameBufferCommand = require './command/host-transport/framebuffer'
 GetFeaturesCommand = require './command/host-transport/getfeatures'
 GetPackagesCommand = require './command/host-transport/getpackages'
@@ -227,6 +228,12 @@ class Client
     this.syncService serial, (err, sync) ->
       return callback err if err
       callback null, new ProcStat sync
+
+  clear: (serial, pkg, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new ClearCommand(transport)
+        .execute pkg, callback
 
   install: (serial, apk, callback) ->
     temp = Sync.temp apk

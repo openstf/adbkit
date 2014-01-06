@@ -157,6 +157,16 @@ Creates a client instance with the provided options. Note that this will not aut
 
 ### Client
 
+#### client.clear(serial, pkg, callback)
+
+Deletes all data associated with a package from the device. This is roughly analogous to `adb shell pm clear <pkg>`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **pkg** The package name. This is NOT the APK.
+* **callback(err)**
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: The client instance.
+
 #### client.forward(serial, local, remote, callback)
 
 Forwards socket connections from the ADB server host (local) to the device (remote). This is analogous to `adb forward <local> <remote>`. It's important to note that if you are connected to a remote ADB server, the forward will be created on that host.
