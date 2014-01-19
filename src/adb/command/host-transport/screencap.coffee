@@ -7,11 +7,17 @@ class ScreencapCommand extends Command
     @parser.readAscii 4, (reply) =>
       switch reply
         when Protocol.OKAY
-          callback null, @parser.raw().pipe new LineTransform
+          out = @parser.raw().pipe new LineTransform
+          out.once 'end', closeListener = ->
+            out.removeListener 'readable', readableListener
+            callback new Error 'Unable to run screencap command'
+          out.once 'readable', readableListener = ->
+            out.removeListener 'end', closeListener
+            callback null, out
         when Protocol.FAIL
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send 'shell:screencap -p'
+    this._send 'shell:screencap -p 2>/dev/null'
 
 module.exports = ScreencapCommand
