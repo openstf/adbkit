@@ -165,17 +165,25 @@ class Client
       new RemountCommand(transport)
         .execute callback
 
-  framebuffer: (serial, callback) ->
+  framebuffer: (serial, format, callback) ->
+    if arguments.length is 2
+      callback = format
+      format = 'raw'
     this.transport serial, (err, transport) ->
       return callback err if err
       new FrameBufferCommand(transport)
-        .execute callback
+        .execute format, callback
 
   screencap: (serial, callback) ->
-    this.transport serial, (err, transport) ->
+    this.transport serial, (err, transport) =>
       return callback err if err
       new ScreencapCommand(transport)
-        .execute callback
+        .execute (err, out) =>
+          return callback null, out unless err
+          debug "Emulating screencap command due to '#{err}'"
+          this.framebuffer serial, 'png', (err, info, framebuffer) ->
+            return callback err if err
+            callback null, framebuffer
 
   openLog: (serial, name, callback) ->
     this.transport serial, (err, transport) ->

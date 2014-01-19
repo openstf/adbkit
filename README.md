@@ -2,7 +2,9 @@
 
 **adbkit** is a pure [Node.js][nodejs] client for the [Android Debug Bridge][adb-site] server. It can be used either as a library in your own application, or simply as a convenient utility for playing with your device.
 
-Most of the `adb` command line tool's functionality is supported (including pushing/pulling files, installing APKs and processing logs), with some added functionality such as being able to generate touch/key events and take screenshots.
+Most of the `adb` command line tool's functionality is supported (including pushing/pulling files, installing APKs and processing logs), with some added functionality such as being able to generate touch/key events and take screenshots. Some shims are provided for older devices, but we have not and will not test anything below Android 2.3.
+
+Internally, we use this library to drive a multitude of Android devices from a variety of manufacturers, so we can say with a fairly high degree of confidence that it will most likely work with your device(s), too.
 
 ## Requirements
 
@@ -185,14 +187,15 @@ Forwards socket connections from the ADB server host (local) to the device (remo
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
 
-#### client.framebuffer(serial, callback)
+#### client.framebuffer(serial[, format], callback)
 
-Fetches the current framebuffer (i.e. what is visible on the screen) from the device and converts it into PNG using [gm][node-gm], which requires either [GraphicsMagick][graphicsmagick] or [ImageMagick][imagemagick] to be installed and available in `$PATH`. Note that we don't bother supporting really old framebuffer formats such as RGB_565. If for some mysterious reason you happen to run into a `>=2.3` device that uses RGB_565, let us know.
+Fetches the current **raw** framebuffer (i.e. what is visible on the screen) from the device, and optionally converts it into something more usable by using [GraphicsMagick][graphicsmagick]'s `gm` command, which must be available in `$PATH` if conversion is desired. Note that we don't bother supporting really old framebuffer formats such as RGB_565. If for some mysterious reason you happen to run into a `>=2.3` device that uses RGB_565, let us know.
 
-Note that high-resolution devices can have quite massive framebuffers. For example, a device with a resolution of 1920x1080 and 32 bit colors would have a roughly 8MB (`1920*1080*4` byte) RGBA framebuffer. Empirical tests point to about 5MB/s bandwidth limit for the ADB USB connection, which means that even excluding all other processing such as the PNG conversion, it can take ~1.6 seconds for the raw data to arrive, or even more if the USB connection is already congested.
+Note that high-resolution devices can have quite massive framebuffers. For example, a device with a resolution of 1920x1080 and 32 bit colors would have a roughly 8MB (`1920*1080*4` byte) RGBA framebuffer. Empirical tests point to about 5MB/s bandwidth limit for the ADB USB connection, which means that it can take ~1.6 seconds for the raw data to arrive, or even more if the USB connection is already congested. Using a conversion will further slow down completion.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **callback(err, info, png, raw)**
+* **format** The desired output format. Any output format supported by [GraphicsMagick][graphicsmagick] (such as `'png'`) is supported. Defaults to `'raw'` for raw framebuffer data.
+* **callback(err, info, framebuffer)**
     - **err** `null` when successful, `Error` otherwise.
     - **info** Meta information about the framebuffer. Includes the following properties:
         * **version** The framebuffer version. Useful for patching possible backwards-compatibility issues.
@@ -209,8 +212,7 @@ Note that high-resolution devices can have quite massive framebuffers. For examp
         * **alpha_offset** The bit offset of alpha in a pixel.
         * **alpha_length** The bit length of alpha in a pixel. `0` when not available.
         * **format** The framebuffer format for convenience. This can be one of `'bgr'`,  `'bgra'`, `'rgb'`, `'rgba'`.
-    - **png** The converted PNG stream.
-    - **raw** The raw framebuffer stream.
+    - **framebuffer** The possibly converted framebuffer stream.
 * Returns: The client instance.
 
 #### client.getDevicePath(serial, callback)
@@ -449,9 +451,9 @@ Attempts to remount the `/system` partition in read-write mode. This will usuall
 
 #### client.screencap(serial, callback)
 
-Takes a screenshot in PNG format using the built-in `screencap` utility. This is analogous to `adb shell screencap -p`. Sadly, the utility is not available on most Android `<=2.3` devices, and the current implementation does not provide a shim for older devices.
+Takes a screenshot in PNG format using the built-in `screencap` utility. This is analogous to `adb shell screencap -p`. Sadly, the utility is not available on most Android `<=2.3` devices, but a silent fallback to the `client.framebuffer()` command in PNG mode is attempted, so you should have its dependencies installed just in case.
 
-Generating the PNG on the device naturally requires considerably more processing time on that side. However, as the data transferred over USB easily decreases by ~95%, and no conversion being required on the host, this method is usually several times faster than using the framebuffer.
+Generating the PNG on the device naturally requires considerably more processing time on that side. However, as the data transferred over USB easily decreases by ~95%, and no conversion being required on the host, this method is usually several times faster than using the framebuffer. Naturally, this benefit does not apply if we're forced to fall back to the framebuffer.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err, screencap)**
