@@ -244,7 +244,7 @@ class Client
         .execute pkg, callback
 
   install: (serial, apk, callback) ->
-    temp = Sync.temp apk
+    temp = Sync.temp if typeof apk is 'string' then apk else '_stream.apk'
     this.push serial, apk, temp, (err, transfer) =>
       return callback err if err
       transfer.on 'end', =>
@@ -253,7 +253,7 @@ class Client
           new InstallCommand(transport)
             .execute temp, (err) =>
               return callback err if err
-              this.shell serial, "rm -f #{temp}", (err, out) ->
+              this.shell serial, ['rm', '-f', temp], (err, out) ->
                 callback err
 
   uninstall: (serial, pkg, callback) ->

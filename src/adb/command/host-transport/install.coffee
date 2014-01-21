@@ -19,6 +19,6 @@ class InstallCommand extends Command
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send "shell:pm install -r #{apk} 2>/dev/null"
+    this._send "shell:pm install -r '#{apk}' 2>/dev/null"
 
 module.exports = InstallCommand
