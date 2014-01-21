@@ -280,7 +280,7 @@ Gets the state of the device identified by the given serial number.
 Installs the APK on the device, replacing any previously installed version. This is roughly analogous to `adb install -r <apk>`.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
-* **apk** The path to the APK file.
+* **apk** When `String`, interpreted as a path to an APK file. When [`Stream`][node-stream], installs directly from the stream, which must be a valid APK.
 * **callback(err)**
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
