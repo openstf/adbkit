@@ -541,6 +541,15 @@ Queries the ADB server for its version. This is mainly useful for backwards-comp
     - **version** The version of the ADB server.
 * Returns: The client instance.
 
+#### client.waitBootComplete(serial, callback)
+
+Waits until the device has finished booting. Note that the device must already be seen by ADB. This is roughly analogous to periodically checking `adb shell getprop sys.boot_completed`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err)**
+    - **err** `null` if the device has completed booting, `Error` otherwise (can occur if the connection dies while checking).
+* Returns: The client instance.
+
 ### Sync
 
 #### sync.end()

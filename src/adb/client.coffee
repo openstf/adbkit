@@ -30,6 +30,7 @@ StartActivityCommand = require './command/host-transport/startactivity'
 SyncCommand = require './command/host-transport/sync'
 TcpCommand = require './command/host-transport/tcp'
 UninstallCommand = require './command/host-transport/uninstall'
+WaitBootCompleteCommand = require './command/host-transport/waitbootcomplete'
 
 ForwardCommand = require './command/host-serial/forward'
 GetDevicePathCommand = require './command/host-serial/getdevicepath'
@@ -312,5 +313,11 @@ class Client
       transfer = sync.push contents, path, mode, callback
       transfer.on 'end', ->
         sync.end()
+
+  waitBootComplete: (serial, callback) ->
+    this.transport serial, (err, transport) ->
+      return callback err if err
+      new WaitBootCompleteCommand(transport)
+        .execute callback
 
 module.exports = Client
