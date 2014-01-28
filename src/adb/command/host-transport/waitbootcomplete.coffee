@@ -23,7 +23,6 @@ class WaitBootCompleteCommand extends Command
                 @connection.end()
                 callback null
               else
-                console.log 'NOT COMPLETE', line
                 debug 'Boot is not complete yet'
         when Protocol.FAIL
           @parser.readError callback
