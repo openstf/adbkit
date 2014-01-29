@@ -34,3 +34,15 @@ describe 'ShellCommand', ->
     cmd.execute ['foo', '\'bar\'', '"'], (err) ->
       expect(err).to.be.null
       done()
+
+  it "should not escape numbers in arguments", (done) ->
+    conn = new MockConnection
+    cmd = new ShellCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("""shell:'foo' 67""").toString()
+      conn.socket.causeEnd()
+      done()
+    cmd.execute ['foo', 67], (err) ->
+      expect(err).to.be.null
+      done()
