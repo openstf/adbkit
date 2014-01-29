@@ -18,6 +18,10 @@ class ShellCommand extends Command
     this._send "shell:#{command}"
 
   _escapeArg: (arg) ->
-    "'" + arg.replace(RE_SQUOT, "'\"'\"'") + "'"
+    switch typeof arg
+      when 'number'
+        arg
+      else
+        "'" + arg.toString().replace(RE_SQUOT, "'\"'\"'") + "'"
 
 module.exports = ShellCommand
