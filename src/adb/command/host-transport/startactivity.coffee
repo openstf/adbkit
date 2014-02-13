@@ -24,9 +24,7 @@ class StartActivityCommand extends Command
     args = []
 	if options.extras
 		options.extras.forEach (extra) ->
-			args.push "-e"
-			args.push extra.key
-			args.push extra.value
+			args.push "-e #{extra.key} #{extra.value}"
     if options.action
       args.push "-a #{options.action}"
     if options.component
