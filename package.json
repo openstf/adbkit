@@ -1,6 +1,6 @@
 {
   "name": "adbkit",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "A pure Node.js client for the Android Debug Bridge.",
   "keywords": [
     "adb",
@@ -31,27 +31,27 @@
   "dependencies": {
     "adbkit-logcat": "~1.0.0",
     "adbkit-monkey": "~1.0.1",
-    "async": "~0.2.9",
-    "debug": "~0.7.3",
+    "async": "~0.2.10",
+    "debug": "~0.7.4",
     "once": "~1.3.0",
     "split": "~0.2.10"
   },
   "devDependencies": {
     "bench": "~0.3.5",
-    "chai": "~1.8.1",
-    "coffee-script": "~1.6.3",
-    "grunt": "~0.4.1",
-    "grunt-cli": "~0.1.11",
-    "grunt-coffeelint": "~0.0.7",
+    "chai": "~1.9.0",
+    "coffee-script": "~1.7.1",
+    "grunt": "~0.4.2",
+    "grunt-cli": "~0.1.13",
+    "grunt-coffeelint": "0.0.8",
     "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-coffee": "~0.7.0",
+    "grunt-contrib-coffee": "~0.10.0",
     "grunt-contrib-watch": "~0.5.3",
-    "grunt-exec": "~0.4.2",
-    "grunt-jsonlint": "~1.0.2",
+    "grunt-exec": "~0.4.3",
+    "grunt-jsonlint": "~1.0.4",
     "grunt-notify": "~0.2.16",
-    "mocha": "~1.14.0",
-    "sinon": "~1.7.3",
-    "sinon-chai": "~2.4.0"
+    "mocha": "~1.17.1",
+    "sinon": "~1.8.1",
+    "sinon-chai": "~2.5.0"
   },
   "engines": {
     "node": ">= 0.10.4"

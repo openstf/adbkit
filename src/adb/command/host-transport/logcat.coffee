@@ -12,6 +12,6 @@ class LogcatCommand extends Command
           @parser.readError callback
         else
           callback this._unexpected reply
-    this._send 'shell:logcat -B'
+    this._send 'shell:logcat -B 2>/dev/null'
 
 module.exports = LogcatCommand
