@@ -22,9 +22,9 @@ class StartActivityCommand extends Command
         else
           callback this._unexpected reply
     args = []
-	if options.extras
-		options.extras.forEach (extra) ->
-			args.push "-e #{extra.key} #{extra.value}"
+    if options.extras
+      options.extras.forEach (extra) ->
+        args.push "-e #{extra.key} #{extra.value}"
     if options.action
       args.push "-a #{options.action}"
     if options.component
