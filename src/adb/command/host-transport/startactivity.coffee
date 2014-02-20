@@ -26,6 +26,9 @@ class StartActivityCommand extends Command
       args.push "-a #{options.action}"
     if options.component
       args.push "-n #{options.component}"
-    this._send "shell:am start #{args.join ' '}"
+    if options.user
+      args.push "--user #{options.user}"
+	startCmd = ((if options.isService then "startservice" else "start"))
+    this._send "shell:am " + startCmd + " #{args.join ' '}"
 
 module.exports = StartActivityCommand
