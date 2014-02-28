@@ -6,394 +6,374 @@ Chai.use require 'sinon-chai'
 
 MockConnection = require '../../../mock/connection'
 Protocol = require '../../../../src/adb/protocol'
-StartActivityCommand = require '../../../../src/adb/command/host-transport/startactivity'
+StartActivityCommand = require \
+  '../../../../src/adb/command/host-transport/startactivity'
 
 describe 'StartActivityCommand', ->
+
+  it "should succeed when 'Success' returned", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.causeRead Protocol.OKAY
+    conn.socket.causeRead 'Success'
+    conn.socket.causeEnd()
+    options =
+      component: 'com.dummy.component/.Main'
+    cmd.execute options, (err) ->
+      expect(err).to.be.null
+      done()
+
+  it "should fail when 'Error' returned", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.causeRead Protocol.OKAY
+    conn.socket.causeRead 'Error: foo'
+    conn.socket.causeEnd()
+    options =
+      component: 'com.dummy.component/.Main'
+    cmd.execute options, (err) ->
+      expect(err).to.be.be.an.instanceOf Error
+      done()
+
   it "should send 'am start -n <pkg>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:am start -n com.dummy.component/.Main').toString()
+        Protocol.encodeData("shell:am start
+          -n 'com.dummy.component/.Main'").toString()
+      done()
     conn.socket.causeRead Protocol.OKAY
     conn.socket.causeRead 'Success'
     conn.socket.causeEnd()
     options =
-      component: "com.dummy.component/.Main"
-    cmd.execute options, (err) ->
-      expect(err).to.be.null
-      done()
-
+      component: 'com.dummy.component/.Main'
+    cmd.execute options, ->
 
   it "should send 'am start -a <action>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:am start -a {someaction}').toString()
+        Protocol.encodeData("shell:am start
+          -a 'foo.ACTION_BAR'").toString()
+      done()
     conn.socket.causeRead Protocol.OKAY
     conn.socket.causeRead 'Success'
     conn.socket.causeEnd()
     options =
-      action: "{someaction}"
-    cmd.execute options, (err) ->
-      expect(err).to.be.null
-      done()
+      action: "foo.ACTION_BAR"
+    cmd.execute options, ->
 
-  it "should send 'am start -n <pgk> -e <extras>'", (done) ->
+  it "should send 'am start -n <pgk> -es <extras>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:am start -e key1 value1 -e key2 value2 -n com.dummy.component/.Main').toString()
+        Protocol.encodeData("shell:am start
+          -es 'key1' 'value1'
+          -es 'key2' 'value2'
+          -n 'com.dummy.component/.Main'").toString()
+      done()
     conn.socket.causeRead Protocol.OKAY
     conn.socket.causeRead 'Success'
     conn.socket.causeEnd()
     options =
       component: "com.dummy.component/.Main"
       extras: [
-        {
-          key: "key1"
-          value: "value1"
-        }
-        {
-          key: "key2"
-          value: "value2"
-        }
+        key: 'key1'
+        value: 'value1'
+      ,
+        key: 'key2'
+        value: 'value2'
       ]
+    cmd.execute options, ->
 
-    cmd.execute options, (err) ->
-      expect(err).to.be.null
+  it "should send 'am start -n <pgk> -ei <extras>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -ei 'key1' 1
+          -ei 'key2' 2
+          -n 'com.dummy.component/.Main'").toString()
       done()
+    conn.socket.causeRead Protocol.OKAY
+    conn.socket.causeRead 'Success'
+    conn.socket.causeEnd()
+    options =
+      component: 'com.dummy.component/.Main'
+      extras: [
+        key: 'key1'
+        value: 1
+        type: 'int'
+      ,
+        key: 'key2'
+        value: 2
+        type: 'int'
+      ]
+    cmd.execute options, ->
 
-  describe "should send 'am start with extras, type and array", ->
-    it "should send 'am start -n <pgk> -ei <extras>'", (done) ->
-      conn = new MockConnection
-      cmd = new StartActivityCommand conn
-      conn.socket.on 'write', (chunk) ->
-        expected = 'shell:am start -ei key1 1 -ei key2 2 -n '
-        expected += 'com.dummy.component/.Main'
-        expect(chunk.toString()).to.equal \
-          Protocol.encodeData(expected).toString()
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Success'
-      conn.socket.causeEnd()
-      options =
-        component: "com.dummy.component/.Main"
-        extras: [
-          {
-            key: "key1"
-            value: "1"
-            type: "int"
-          }
-          {
-            key: "key2"
-            value: "2"
-            type: "int"
-          }
+  it "should send 'am start -n <pgk> -ez <extras>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -ez 'key1' 'true'
+          -ez 'key2' 'false'
+          -n 'com.dummy.component/.Main'").toString()
+      done()
+    conn.socket.causeRead Protocol.OKAY
+    conn.socket.causeRead 'Success'
+    conn.socket.causeEnd()
+    options =
+      component: "com.dummy.component/.Main"
+      extras: [
+        key: 'key1'
+        value: true
+        type: 'bool'
+      ,
+        key: 'key2'
+        value: false
+        type: 'bool'
+      ]
+    cmd.execute options, ->
+
+  it "should send 'am start -n <pgk> -el <extras>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -el 'key1' 1
+          -el 'key2' '2'
+          -n 'com.dummy.component/.Main'").toString()
+      done()
+    conn.socket.causeRead Protocol.OKAY
+    conn.socket.causeRead 'Success'
+    conn.socket.causeEnd()
+    options =
+      component: 'com.dummy.component/.Main'
+      extras: [
+        key: 'key1'
+        value: 1
+        type: 'long'
+      ,
+        key: 'key2'
+        value: '2'
+        type: 'long'
+      ]
+    cmd.execute options, ->
+
+  it "should send 'am start -n <pgk> -eu <extras>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -eu 'key1' 'http://example.org'
+          -eu 'key2' 'http://example.org'
+          -n 'com.dummy.component/.Main'").toString()
+      done()
+    conn.socket.causeRead Protocol.OKAY
+    conn.socket.causeRead 'Success'
+    conn.socket.causeEnd()
+    options =
+      component: 'com.dummy.component/.Main'
+      extras: [
+        key: 'key1'
+        value: 'http://example.org'
+        type: 'uri'
+      ,
+        key: 'key2'
+        value: 'http://example.org'
+        type: 'uri'
+      ]
+    cmd.execute options, ->
+
+  it "should send 'am start -n <pgk> -es <extras>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -es 'key1' 'a'
+          -es 'key2' 'b'
+          -n 'com.dummy.component/.Main'").toString()
+      done()
+    conn.socket.causeRead Protocol.OKAY
+    conn.socket.causeRead 'Success'
+    conn.socket.causeEnd()
+    options =
+      component: 'com.dummy.component/.Main'
+      extras: [
+        key: 'key1'
+        value: 'a'
+        type: 'string'
+      ,
+        key: 'key2'
+        value: 'b'
+        type: 'string'
+      ]
+    cmd.execute options, ->
+
+  it "should send 'am start -n <pgk> -eia <extras with arr>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -eia 'key1' '2,3'
+          -ela 'key2' '20,30'
+          -ei 'key3' 5
+          -n 'com.dummy.component/.Main'").toString()
+      done()
+    conn.socket.causeRead Protocol.OKAY
+    conn.socket.causeRead 'Success'
+    conn.socket.causeEnd()
+    options =
+      component: 'com.dummy.component/.Main'
+      extras: [
+        key: 'key1'
+        value: [
+          2
+          3
         ]
-
-      cmd.execute options, (err) ->
-        expect(err).to.be.null
-        done()
-
-    it "should send 'am start -n <pgk> -ez <extras>'", (done) ->
-      conn = new MockConnection
-      cmd = new StartActivityCommand conn
-      conn.socket.on 'write', (chunk) ->
-        expected = 'shell:am start -ez key1 true -ez key2 false -ez key3 '
-        expected += 'true -ez key4 false -n com.dummy.component/.Main'
-        expect(chunk.toString()).to.equal \
-          Protocol.encodeData(expected).toString()
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Success'
-      conn.socket.causeEnd()
-      options =
-        component: "com.dummy.component/.Main"
-        extras: [
-          {
-            key: "key1"
-            value: true
-            type: "bool"
-          }
-          {
-            key: "key2"
-            value: false
-            type: "bool"
-          }
-          {
-            key: "key3"
-            value: "true"
-            type: "bool"
-          }
-          {
-            key: "key4"
-            value: "false"
-            type: "bool"
-          }
+        type: 'int'
+      ,
+        key: 'key2'
+        value: [
+          20
+          30
         ]
+        type: 'long'
+      ,
+        key: 'key3'
+        value: 5
+        type: 'int'
+      ]
+    cmd.execute options, ->
 
-      cmd.execute options, (err) ->
-        expect(err).to.be.null
-        done()
+  it "should send 'am start -n <pgk> -esn <extras>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -esn 'key1'
+          -esn 'key2'
+          -n 'com.dummy.component/.Main'").toString()
+      done()
+    conn.socket.causeRead Protocol.OKAY
+    conn.socket.causeRead 'Success'
+    conn.socket.causeEnd()
+    options =
+      component: 'com.dummy.component/.Main'
+      extras: [
+        key: 'key1'
+        type: 'null'
+      ,
+        key: 'key2'
+        type: 'null'
+      ]
+    cmd.execute options, ->
 
-    it "should send 'am start -n <pgk> -el <extras>'", (done) ->
-      conn = new MockConnection
-      cmd = new StartActivityCommand conn
-      conn.socket.on 'write', (chunk) ->
-        expected = 'shell:am start -el key1 1 '
-        expected += '-el key2 2 -n com.dummy.component/.Main'
-        expect(chunk.toString()).to.equal \
-          Protocol.encodeData(expected).toString()
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Success'
-      conn.socket.causeEnd()
-      options =
-        component: "com.dummy.component/.Main"
-        extras: [
-          {
-            key: "key1"
-            value: "1"
-            type: "long"
-          }
-          {
-            key: "key2"
-            value: "2"
-            type: "long"
-          }
-        ]
+  it "should throw when calling with an unknown extra type", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    options =
+      component: 'com.dummy.component/.Main'
+      extras: [
+        key: 'key1'
+        value: 'value1'
+        type: 'nonexisting'
+      ]
+    expect(-> cmd.execute(options, ->)).to.throw
+    done()
 
-      cmd.execute options, (err) ->
-        expect(err).to.be.null
-        done()
+  it "should accept mixed types of extras", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -ez 'key1' 'true'
+          -es 'key2' 'somestr'
+          -es 'key3' 'defaultType'
+          -ei 'key4' 3
+          -el 'key5' '4'
+          -eu 'key6' 'http://example.org'
+          -esn 'key7'
+          -n 'com.dummy.component/.Main'").toString()
+      done()
+    conn.socket.causeRead Protocol.OKAY
+    conn.socket.causeRead 'Success'
+    conn.socket.causeEnd()
+    options =
+      component: 'com.dummy.component/.Main'
+      extras: [
+        key: 'key1'
+        value: true
+        type: 'bool'
+      ,
+        key: 'key2'
+        value: 'somestr'
+        type: 'string'
+      ,
+        key: 'key3'
+        value: 'defaultType'
+      ,
+        key: 'key4'
+        value: 3
+        type: 'int'
+      ,
+        key: 'key5'
+        value: '4'
+        type: 'long'
+      ,
+        key: 'key6'
+        value: 'http://example.org'
+        type: 'uri'
+      ,
+        key: 'key7'
+        type: 'null'
+      ]
+    cmd.execute options, ->
 
-    it "should send 'am start -n <pgk> -eu <extras>'", (done) ->
-      conn = new MockConnection
-      cmd = new StartActivityCommand conn
-      conn.socket.on 'write', (chunk) ->
-        expected = 'shell:am start -eu key1 www.value1.com '
-        expected += '-eu key2 www.value2.com -n com.dummy.component/.Main'
-        expect(chunk.toString()).to.equal \
-          Protocol.encodeData(expected).toString()
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Success'
-      conn.socket.causeEnd()
-      options =
-        component: "com.dummy.component/.Main"
-        extras: [
-          {
-            key: "key1"
-            value: "www.value1.com"
-            type: "uri"
-          }
-          {
-            key: "key2"
-            value: "www.value2.com"
-            type: "uri"
-          }
-        ]
-
-      cmd.execute options, (err) ->
-        expect(err).to.be.null
-        done()
-
-    it "should send 'am start -n <pgk> -es <extras>'", (done) ->
-      conn = new MockConnection
-      cmd = new StartActivityCommand conn
-      conn.socket.on 'write', (chunk) ->
-        expected = 'shell:am start -es key1 a '
-        expected += '-es key2 b -n com.dummy.component/.Main'
-        expect(chunk.toString()).to.equal \
-          Protocol.encodeData(expected).toString()
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Success'
-      conn.socket.causeEnd()
-      options =
-        component: "com.dummy.component/.Main"
-        extras: [
-          {
-            key: "key1"
-            value: "a"
-            type: "string"
-          }
-          {
-            key: "key2"
-            value: "b"
-            type: "string"
-          }
-        ]
-
-      cmd.execute options, (err) ->
-        expect(err).to.be.null
-        done()
-
-    it "should send 'am start -n <pgk> -eia <extras with arr>'", (done) ->
-      conn = new MockConnection
-      cmd = new StartActivityCommand conn
-      conn.socket.on 'write', (chunk) ->
-        expected = 'shell:am start -eia key1 2,3 '
-        expected += '-ela key2 20,30 '
-        expected += '-ei key3 5 -n com.dummy.component/.Main'
-        expect(chunk.toString()).to.equal \
-          Protocol.encodeData(expected).toString()
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Success'
-      conn.socket.causeEnd()
-      options =
-        component: "com.dummy.component/.Main"
-        extras: [
-          {
-            key: "key1"
-            values: [
-              2
-              3
-              ]
-            type: "int"
-            isArray: true
-          }
-          {
-            key: "key2"
-            values: [
-              20
-              30
-            ]
-            type: "long"
-            isArray: true
-          }
-          {
-            key: "key3"
-            value: 5
-            type: "int"
-            isArray: false
-          }
-        ]
-
-      cmd.execute options, (err) ->
-        expect(err).to.be.null
-        done()
-
-
-
-
-    it "should send 'am start -n <pgk> -en <extras>'", (done) ->
-      conn = new MockConnection
-      cmd = new StartActivityCommand conn
-      conn.socket.on 'write', (chunk) ->
-        expected = 'shell:am start -en key1  '
-        expected += '-en key2  -n com.dummy.component/.Main'
-        expect(chunk.toString()).to.equal \
-          Protocol.encodeData(expected).toString()
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Success'
-      conn.socket.causeEnd()
-      options =
-        component: "com.dummy.component/.Main"
-        extras: [
-          {
-            key: "key1"
-            type: "novalue"
-          }
-          {
-            key: "key2"
-            type: "novalue"
-          }
-        ]
-
-      cmd.execute options, (err) ->
-        expect(err).to.be.null
-        done()
-
-    it "should throw exception for parameter novalue with values", (done) ->
-      conn = new MockConnection
-      cmd = new StartActivityCommand conn
-
-      options =
-        component: "com.dummy.component/.Main"
-        extras: [
-          {
-            key: "key1"
-            value: "value1"
-            type: "novalue"
-          }
-        ]
-
-      cmd.execute options, (err) ->
-        expect(err).to.be.an.instanceOf Error
-        done()
-
-    it "calling with an unknown extra types", (done) ->
-      conn = new MockConnection
-      cmd = new StartActivityCommand conn
-
-      options =
-        component: "com.dummy.component/.Main"
-        extras: [
-          {
-            key: "key1"
-            value: "value1"
-            type: "nonexisting"
-          }
-        ]
-
-      cmd.execute options, (err) ->
-        expect(err).to.be.an.instanceOf Error
-        done()
-
-    it "mixed type of extras", (done) ->
-      conn = new MockConnection
-      cmd = new StartActivityCommand conn
-      conn.socket.on 'write', (chunk) ->
-        expected = 'shell:am start -ez key1 true '
-        expected += '-es key2 somestr -e key3 defaultType '
-        expected += '-ei key4 3 -el key5 4 -eu key6 www.uri.com '
-        expected += '-en key7  -n com.dummy.component/.Main'
-        expect(chunk.toString()).to.equal \
-          Protocol.encodeData(expected).toString()
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Success'
-      conn.socket.causeEnd()
-      options =
-        component: "com.dummy.component/.Main"
-        extras: [
-          {
-            key: "key1"
-            value: true
-            type: "bool"
-          }
-          {
-            key: "key2"
-            value: "somestr"
-            type: "string"
-          }
-          {
-            key: "key3"
-            value: "defaultType"
-          }
-          {
-            key: "key4"
-            value: 3
-            type: "int"
-          }
-          {
-            key: "key5"
-            value: "4"
-            type: "long"
-          }
-          {
-            key: "key6"
-            value: "www.uri.com"
-            type: "uri"
-          }
-          {
-            key: "key7"
-            type: "novalue"
-          }
-        ]
-
-      cmd.execute options, (err) ->
-        console.log(err)
-        expect(err).to.be.null
-        done()
-
-
-
+  it "should map short extras to long extras", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    short = cmd._formatExtras
+      someString: 'bar'
+      someInt: 5
+      someUrl:
+        type: 'uri'
+        value: 'http://example.org'
+      someArray:
+        type: 'int'
+        value: [1, 2]
+      someNull: null
+    long = cmd._formatExtras [
+      key: 'someString'
+      value: 'bar'
+      type: 'string'
+    ,
+      key: 'someInt'
+      value: 5
+      type: 'int'
+    ,
+      key: 'someUrl'
+      value: 'http://example.org'
+      type: 'uri'
+    ,
+      key: 'someArray'
+      value: [1, 2]
+      type: 'int'
+    ,
+      key: 'someNull'
+      type: 'null'
+    ]
+    expect(short).to.eql long
+    done()
