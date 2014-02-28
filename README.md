@@ -480,6 +480,13 @@ Starts the configured activity on the device. Roughly analogous to `adb shell am
 * **options** The activity configuration. The following options are available:
     - **action** The action.
     - **component** The component.
+    - **extras** Any extra data.
+        * When an `Array`, each item must be an `Object` the following properties:
+            - **key** The key name.
+            - **type** The type, which can be one of `'string'`, `'null'`, `'bool'`, `'int'`, `'long'`, `'float'`, `'uri'`, `'component'`.
+            - **value** The value. Optional and unused if type is `'null'`. If an `Array`, type is automatically set to be an array of `<type>`.
+        * When an `Object`, each key is treated as the key name. Simple values like `null`, `String`, `Boolean` and `Number` are type-mapped automatically (`Number` maps to `'int'`) and can be used as-is. For more complex types, like arrays and URIs, set the value to be an `Object` like in the Array syntax (see above), but leave out the `key` property.
+
 * **callback(err)**
     - **err** `null` when successful, `Error` otherwise.
 * Returns: The client instance.
