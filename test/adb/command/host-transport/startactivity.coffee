@@ -65,7 +65,7 @@ describe 'StartActivityCommand', ->
       action: "foo.ACTION_BAR"
     cmd.execute options, ->
 
-  it "should send 'am start -n <pgk> -es <extras>'", (done) ->
+  it "should send 'am start -n <pgk> --es <extras>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
