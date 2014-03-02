@@ -71,8 +71,8 @@ describe 'StartActivityCommand', ->
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
-          -es 'key1' 'value1'
-          -es 'key2' 'value2'
+          --es 'key1' 'value1'
+          --es 'key2' 'value2'
           -n 'com.dummy.component/.Main'").toString()
       done()
     conn.socket.causeRead Protocol.OKAY
@@ -89,14 +89,14 @@ describe 'StartActivityCommand', ->
       ]
     cmd.execute options, ->
 
-  it "should send 'am start -n <pgk> -ei <extras>'", (done) ->
+  it "should send 'am start -n <pgk> --ei <extras>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
-          -ei 'key1' 1
-          -ei 'key2' 2
+          --ei 'key1' 1
+          --ei 'key2' 2
           -n 'com.dummy.component/.Main'").toString()
       done()
     conn.socket.causeRead Protocol.OKAY
@@ -115,14 +115,14 @@ describe 'StartActivityCommand', ->
       ]
     cmd.execute options, ->
 
-  it "should send 'am start -n <pgk> -ez <extras>'", (done) ->
+  it "should send 'am start -n <pgk> --ez <extras>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
-          -ez 'key1' 'true'
-          -ez 'key2' 'false'
+          --ez 'key1' 'true'
+          --ez 'key2' 'false'
           -n 'com.dummy.component/.Main'").toString()
       done()
     conn.socket.causeRead Protocol.OKAY
@@ -141,14 +141,14 @@ describe 'StartActivityCommand', ->
       ]
     cmd.execute options, ->
 
-  it "should send 'am start -n <pgk> -el <extras>'", (done) ->
+  it "should send 'am start -n <pgk> --el <extras>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
-          -el 'key1' 1
-          -el 'key2' '2'
+          --el 'key1' 1
+          --el 'key2' '2'
           -n 'com.dummy.component/.Main'").toString()
       done()
     conn.socket.causeRead Protocol.OKAY
@@ -167,14 +167,14 @@ describe 'StartActivityCommand', ->
       ]
     cmd.execute options, ->
 
-  it "should send 'am start -n <pgk> -eu <extras>'", (done) ->
+  it "should send 'am start -n <pgk> --eu <extras>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
-          -eu 'key1' 'http://example.org'
-          -eu 'key2' 'http://example.org'
+          --eu 'key1' 'http://example.org'
+          --eu 'key2' 'http://example.org'
           -n 'com.dummy.component/.Main'").toString()
       done()
     conn.socket.causeRead Protocol.OKAY
@@ -193,14 +193,14 @@ describe 'StartActivityCommand', ->
       ]
     cmd.execute options, ->
 
-  it "should send 'am start -n <pgk> -es <extras>'", (done) ->
+  it "should send 'am start -n <pgk> --es <extras>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
-          -es 'key1' 'a'
-          -es 'key2' 'b'
+          --es 'key1' 'a'
+          --es 'key2' 'b'
           -n 'com.dummy.component/.Main'").toString()
       done()
     conn.socket.causeRead Protocol.OKAY
@@ -219,15 +219,15 @@ describe 'StartActivityCommand', ->
       ]
     cmd.execute options, ->
 
-  it "should send 'am start -n <pgk> -eia <extras with arr>'", (done) ->
+  it "should send 'am start -n <pgk> --eia <extras with arr>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
-          -eia 'key1' '2,3'
-          -ela 'key2' '20,30'
-          -ei 'key3' 5
+          --eia 'key1' '2,3'
+          --ela 'key2' '20,30'
+          --ei 'key3' 5
           -n 'com.dummy.component/.Main'").toString()
       done()
     conn.socket.causeRead Protocol.OKAY
@@ -256,14 +256,14 @@ describe 'StartActivityCommand', ->
       ]
     cmd.execute options, ->
 
-  it "should send 'am start -n <pgk> -esn <extras>'", (done) ->
+  it "should send 'am start -n <pgk> --esn <extras>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
-          -esn 'key1'
-          -esn 'key2'
+          --esn 'key1'
+          --esn 'key2'
           -n 'com.dummy.component/.Main'").toString()
       done()
     conn.socket.causeRead Protocol.OKAY
@@ -299,13 +299,13 @@ describe 'StartActivityCommand', ->
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
-          -ez 'key1' 'true'
-          -es 'key2' 'somestr'
-          -es 'key3' 'defaultType'
-          -ei 'key4' 3
-          -el 'key5' '4'
-          -eu 'key6' 'http://example.org'
-          -esn 'key7'
+          --ez 'key1' 'true'
+          --es 'key2' 'somestr'
+          --es 'key3' 'defaultType'
+          --ei 'key4' 3
+          --el 'key5' '4'
+          --eu 'key6' 'http://example.org'
+          --esn 'key7'
           -n 'com.dummy.component/.Main'").toString()
       done()
     conn.socket.causeRead Protocol.OKAY
