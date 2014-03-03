@@ -83,14 +83,14 @@ class StartActivityCommand extends Command
       throw new Error "Unsupported type '#{extra.type}' for extra
         '#{extra.key}'"
     if extra.type is 'null'
-      args.push "-e#{type}"
+      args.push "--e#{type}"
       args.push this._escape extra.key
     else if Array.isArray extra.value
-      args.push "-e#{type}a"
+      args.push "--e#{type}a"
       args.push this._escape extra.key
       args.push this._escape extra.value.join ','
     else
-      args.push "-e#{type}"
+      args.push "--e#{type}"
       args.push this._escape extra.key
       args.push this._escape extra.value
     return args
