@@ -128,7 +128,7 @@ class Parser
   readError: ->
     this.readValue()
       .then (value) ->
-        new Parser.FailError value.toString()
+        Promise.reject new Parser.FailError value.toString()
 
   readValue: ->
     this.readAscii 4

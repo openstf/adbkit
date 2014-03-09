@@ -193,12 +193,11 @@ describe.only 'Parser', ->
 
   describe 'readError()', ->
 
-    it "should read a value as a FailError", (done) ->
+    it "should reject with Parser.FailError using the value", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
       parser.readError()
-        .then (err) ->
-          expect(err).to.be.an.instanceOf Parser.FailError
+        .catch Parser.FailError, (err) ->
           expect(err.message).to.equal "Failure: 'epic failure'"
           done()
       stream.write '000cepic failure'
