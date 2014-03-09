@@ -20,10 +20,12 @@ class Parser
       Error.captureStackTrace this, Parser.PrematureEOFError
 
   class @UnexpectedDataError extends Error
-    constructor: (data) ->
+    constructor: (unexpected, expected) ->
       Error.call this
       this.name = 'UnexpectedDataError'
-      this.message = "Unexpected '#{data}'"
+      this.message = "Unexpected '#{unexpected}', was expecting #{expected}"
+      this.unexpected = unexpected
+      this.expected = expected
       Error.captureStackTrace this, Parser.UnexpectedDataError
 
   constructor: (@stream) ->
@@ -150,5 +152,8 @@ class Parser
 
   skipLine: ->
     this.readUntil 0x0a
+
+  unexpected: (data, expected) ->
+    Promise.reject new Parser.UnexpectedDataError data, expected
 
 module.exports = Parser

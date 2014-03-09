@@ -275,3 +275,16 @@ describe.only 'Parser', ->
       raw.on 'data', ->
         done()
       raw.write 'foo'
+
+  describe 'unexpected(data, expected)', ->
+
+    it "should reject with Parser.UnexpectedDataError", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.unexpected('foo', "'bar' or end of stream")
+        .catch Parser.UnexpectedDataError, (err) ->
+          expect(err.message).to.equal "Unexpected 'foo', was expecting 'bar'
+            or end of stream"
+          expect(err.unexpected).to.equal 'foo'
+          expect(err.expected).to.equal "'bar' or end of stream"
+          done()
