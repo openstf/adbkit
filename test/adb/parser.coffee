@@ -1,4 +1,5 @@
 Stream = require 'stream'
+Promise = require 'bluebird'
 Sinon = require 'sinon'
 Chai = require 'chai'
 Chai.use require 'sinon-chai'
@@ -6,55 +7,104 @@ Chai.use require 'sinon-chai'
 
 Parser = require '../../src/adb/parser'
 
-describe 'Parser', ->
+describe.only 'Parser', ->
 
-  describe 'readAll(callback)', ->
+  describe 'readAll()', ->
 
     it "should read all remaining content until the stream ends", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.readAll (buf) ->
-        expect(buf.length).to.equal 3
-        expect(buf.toString()).to.equal 'FOO'
-        done()
+      parser.readAll()
+        .then (buf) ->
+          expect(buf.length).to.equal 3
+          expect(buf.toString()).to.equal 'FOO'
+          done()
       stream.write 'F'
       stream.write 'O'
       stream.write 'O'
       stream.end()
 
-  describe 'readBytes(howMany, callback)', ->
+  describe 'readBytes(howMany)', ->
 
     it "should read as many bytes as requested", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.readBytes 4, (buf) ->
-        expect(buf.length).to.equal 4
-        expect(buf.toString()).to.equal 'OKAY'
-        parser.readBytes 2, (buf) ->
-          expect(buf).to.have.length 2
-          expect(buf.toString()).to.equal 'FA'
-          done()
+      parser.readBytes 4
+        .then (buf) ->
+          expect(buf.length).to.equal 4
+          expect(buf.toString()).to.equal 'OKAY'
+          parser.readBytes 2
+            .then (buf) ->
+              expect(buf).to.have.length 2
+              expect(buf.toString()).to.equal 'FA'
+              done()
       stream.write 'OKAYFAIL'
 
-  describe 'readByteFlow(maxHowMany, callback)', ->
+    it "should wait for enough data to appear", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readBytes 5
+        .then (buf) ->
+          expect(buf.toString()).to.equal 'BYTES'
+          done()
+      Promise.delay 50
+        .then ->
+          stream.write 'BYTES'
+
+    it "should keep data waiting even when nothing has been
+        requested", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      stream.write 'FOO'
+      Promise.delay 50
+        .then ->
+          parser.readBytes 2
+            .then (buf) ->
+              expect(buf.length).to.equal 2
+              expect(buf.toString()).to.equal 'FO'
+              done()
+
+    it "should reject with Parser.PrematureEOFError if stream ends
+        before enough bytes can be read", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      stream.write 'F'
+      parser.readBytes 10
+        .catch Parser.PrematureEOFError, (err) ->
+          expect(err.missingBytes).to.equal 9
+          done()
+      stream.end()
+
+  describe 'readByteFlow(maxHowMany)', ->
 
     it "should read as many bytes as requested", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.readByteFlow 4, (buf) ->
-        expect(buf.length).to.equal 4
-        expect(buf.toString()).to.equal 'OKAY'
-        parser.readByteFlow 2, (buf) ->
-          expect(buf).to.have.length 2
-          expect(buf.toString()).to.equal 'FA'
-          done()
+      parser.readByteFlow 4
+        .progressed (buf) ->
+          expect(buf.length).to.equal 4
+          expect(buf.toString()).to.equal 'OKAY'
+        .then ->
+          parser.readByteFlow 2
+            .progressed (buf) ->
+              expect(buf).to.have.length 2
+              expect(buf.toString()).to.equal 'FA'
+            .then ->
+              done()
       stream.write 'OKAYFAIL'
 
-    it "should call callback with new/partial chunk until maxHowMany", (done) ->
+    it "should progress with new/partial chunk until maxHowMany", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
       spy = Sinon.spy()
-      parser.readByteFlow 3, spy
+      parser.readByteFlow 3
+        .progressed spy
+        .then ->
+          expect(spy).to.have.been.calledThrice
+          expect(spy).to.have.been.calledWith b1
+          expect(spy).to.have.been.calledWith b2
+          expect(spy.thirdCall.args).to.eql [new Buffer('E')]
+          done()
       b1 = new Buffer 'P'
       b2 = new Buffer 'I'
       b3 = new Buffer 'ES'
@@ -63,17 +113,19 @@ describe 'Parser', ->
       stream.write b2
       stream.write b3
       stream.write b4
-      expect(spy).to.have.been.calledThrice
-      expect(spy).to.have.been.calledWith b1, false
-      expect(spy).to.have.been.calledWith b2, false
-      expect(spy.thirdCall.args).to.eql [new Buffer('E'), true]
-      done()
 
-    it "should give callback a 2nd parameter to indicate last chunk", (done) ->
+    it "should resolve on last chunk", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
       spy = Sinon.spy()
-      parser.readByteFlow 3, spy
+      parser.readByteFlow 3
+        .progressed spy
+        .then ->
+          expect(spy).to.have.been.calledThrice
+          expect(spy).to.have.been.calledWith b1
+          expect(spy).to.have.been.calledWith b2
+          expect(spy).to.have.been.calledWith b3
+          done()
       b1 = new Buffer 'P'
       b2 = new Buffer 'I'
       b3 = new Buffer 'E'
@@ -82,65 +134,137 @@ describe 'Parser', ->
       stream.write b2
       stream.write b3
       stream.write b4
-      expect(spy).to.have.been.calledThrice
-      expect(spy).to.have.been.calledWith b1, false
-      expect(spy).to.have.been.calledWith b2, false
-      expect(spy).to.have.been.calledWith b3, true
-      done()
 
-  describe 'readAscii(howMany, callback)', ->
+  describe 'readAscii(howMany)', ->
 
     it "should read as many ascii characters as requested", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.readAscii 4, (str) ->
-        expect(str.length).to.equal 4
-        expect(str).to.equal 'OKAY'
-        done()
+      parser.readAscii 4
+        .then (str) ->
+          expect(str.length).to.equal 4
+          expect(str).to.equal 'OKAY'
+          done()
       stream.write 'OKAYFAIL'
 
-  describe 'readValue(callback)', ->
+    it "should reject with Parser.PrematureEOFError if stream ends
+        before enough bytes can be read", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      stream.write 'FOO'
+      parser.readAscii 7
+        .catch Parser.PrematureEOFError, (err) ->
+          expect(err.missingBytes).to.equal 4
+          done()
+      stream.end()
+
+  describe 'readValue()', ->
 
     it "should read a protocol value as a Buffer", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.readValue (value) ->
-        expect(value).to.be.an.instanceOf Buffer
-        expect(value).to.have.length 4
-        expect(value.toString()).to.equal '001f'
-        done()
+      parser.readValue()
+        .then (value) ->
+          expect(value).to.be.an.instanceOf Buffer
+          expect(value).to.have.length 4
+          expect(value.toString()).to.equal '001f'
+          done()
       stream.write '0004001f'
 
     it "should return an empty value", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.readValue (value) ->
-        expect(value).to.be.an.instanceOf Buffer
-        expect(value).to.have.length 0
-        done()
+      parser.readValue()
+        .then (value) ->
+          expect(value).to.be.an.instanceOf Buffer
+          expect(value).to.have.length 0
+          done()
       stream.write '0000'
 
-  describe 'readError(callback)', ->
-
-    it "should read a value as an Error", (done) ->
+    it "should reject with Parser.PrematureEOFError if stream ends
+        before the value can be read", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.readError (err) ->
-        expect(err).to.be.an.instanceOf Error
-        expect(err.message).to.equal 'epic failure'
-        done()
+      parser.readValue()
+        .catch Parser.PrematureEOFError, (err) ->
+          done()
+      stream.write '00ffabc'
+      stream.end()
+
+  describe 'readError()', ->
+
+    it "should read a value as a FailError", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readError()
+        .then (err) ->
+          expect(err).to.be.an.instanceOf Parser.FailError
+          expect(err.message).to.equal "Failure: 'epic failure'"
+          done()
       stream.write '000cepic failure'
 
-  describe 'skipLine(callback)', ->
+    it "should reject with Parser.PrematureEOFError if stream ends
+        before the error can be read", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readError()
+        .catch Parser.PrematureEOFError, (err) ->
+          done()
+      stream.write '000cepic'
+      stream.end()
+
+  describe 'skipLine()', ->
 
     it "should skip a line terminated by \\n", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.skipLine ->
-        parser.readBytes 7, (buf) ->
-          expect(buf.toString()).to.equal 'zip zap'
+      parser.skipLine()
+        .then ->
+          parser.readBytes 7
+            .then (buf) ->
+              expect(buf.toString()).to.equal 'zip zap'
+              done()
+      stream.write 'foo bar\nzip zap\npip pop'
+
+    it "should return skipped line", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.skipLine()
+        .then (buf) ->
+          expect(buf.toString()).to.equal 'foo bar'
           done()
       stream.write 'foo bar\nzip zap\npip pop'
+
+    it "should reject with Parser.PrematureEOFError if stream ends
+        before a line is found", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.skipLine()
+        .catch Parser.PrematureEOFError, (err) ->
+          done()
+      stream.write 'foo bar'
+      stream.end()
+
+  describe 'readUntil(code)', ->
+
+    it "should return any characters before given value", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readUntil 'p'.charCodeAt 0
+        .then (buf) ->
+          expect(buf.toString()).to.equal 'foo bar\nzi'
+          done()
+      stream.write 'foo bar\nzip zap\npip pop'
+
+    it "should reject with Parser.PrematureEOFError if stream ends
+        before a line is found", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readUntil 'z'.charCodeAt 0
+        .catch Parser.PrematureEOFError, (err) ->
+          done()
+      stream.write 'ho ho'
+      stream.end()
 
   describe 'raw()', ->
 
@@ -152,24 +276,3 @@ describe 'Parser', ->
       raw.on 'data', ->
         done()
       raw.write 'foo'
-
-  it "should wait for enough data to appear", (done) ->
-    stream = new Stream.PassThrough
-    parser = new Parser stream
-    parser.readBytes 5, (buf) ->
-      expect(buf.toString()).to.equal 'BYTES'
-      done()
-    setTimeout ->
-      stream.write 'BYTES'
-    , 50
-
-  it "should keep data waiting even when nothing has been requested", (done) ->
-    stream = new Stream.PassThrough
-    parser = new Parser stream
-    stream.write 'FOO'
-    setTimeout ->
-      parser.readBytes 2, (buf) ->
-        expect(buf.length).to.equal 2
-        expect(buf.toString()).to.equal 'FO'
-        done()
-    , 50

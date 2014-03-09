@@ -18,6 +18,9 @@ module.exports = (grunt) ->
       index:
         src: 'index.js'
     coffeelint:
+      options:
+        indentation:
+          level: 'ignore'
       src:
         src: '<%= coffee.src.cwd %>/<%= coffee.src.src %>'
       index:
