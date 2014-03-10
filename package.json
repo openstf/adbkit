@@ -31,7 +31,6 @@
   "dependencies": {
     "adbkit-logcat": "~1.0.0",
     "adbkit-monkey": "~1.0.1",
-    "async": "~0.2.10",
     "debug": "~0.7.4",
     "once": "~1.3.0",
     "split": "~0.2.10",
