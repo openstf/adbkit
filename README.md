@@ -527,6 +527,8 @@ Note that as the tracker will keep a connection open, you must call `tracker.end
                 * **added** An array of added device objects, each one as in the `add` event. Empty if none.
                 * **removed** An array of removed device objects, each one as in the `remove` event. Empty if none.
                 * **changed** An array of changed device objects, each one as in the `change` event. Empty if none.
+        * **end** Emitted when the underlying connection ends.
+        * **error** **(err)** Emitted if there's an error.
 * Returns: The client instance.
 
 #### client.uninstall(serial, pkg, callback)

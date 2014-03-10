@@ -3,16 +3,18 @@ Protocol = require '../../protocol'
 
 class HostDevicesWithPathsCommand extends Command
   execute: (callback) ->
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.OKAY
-          @parser.readValue (value) =>
-            callback null, this._parseDevices value
-        when Protocol.FAIL
-          @parser.readError callback
-        else
-          callback this._unexpected reply
     this._send 'host:devices-l'
+    @parser.readAscii 4
+      .then (reply) =>
+        switch reply
+          when Protocol.OKAY
+            @parser.readValue()
+              .then (value) =>
+                this._parseDevices value
+          when Protocol.FAIL
+            @parser.readError()
+          else
+            @parser.unexpected reply, 'OKAY or FAIL'
 
   _parseDevices: (value) ->
     devices = []
