@@ -37,9 +37,11 @@ class Parser
     all = new Buffer 0
     resolver = Promise.defer()
 
-    @stream.on 'readable', readableListener = =>
+    tryRead = =>
       while chunk = @stream.read()
         all = Buffer.concat [all, chunk]
+
+    @stream.on 'readable', tryRead
 
     @stream.on 'error', errorListener = (err) ->
       resolver.reject err
@@ -47,8 +49,10 @@ class Parser
     @stream.on 'end', endListener = ->
       resolver.resolve all
 
+    tryRead()
+
     resolver.promise.finally =>
-      @stream.removeListener 'readable', readableListener
+      @stream.removeListener 'readable', tryRead
       @stream.removeListener 'error', errorListener
       @stream.removeListener 'end', endListener
 

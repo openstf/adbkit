@@ -1,25 +1,22 @@
 Command = require '../../command'
 Protocol = require '../../protocol'
-LineTransform = require '../../linetransform'
 
 class GetPackagesCommand extends Command
-  RE_PACKAGE = /^package:(.*?)$/gm
+  RE_PACKAGE = /^package:(.*?)\r?$/gm
 
-  execute: (callback) ->
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.OKAY
-          data = new Buffer ''
-          transform = @parser.raw().pipe new LineTransform
-          transform.on 'data', (chunk) ->
-            data = Buffer.concat [data, chunk]
-          transform.on 'end', =>
-            callback null, this._parsePackages data.toString()
-        when Protocol.FAIL
-          @parser.readError callback
-        else
-          callback this._unexpected reply
+  execute: ->
     this._send 'shell:pm list packages 2>/dev/null'
+    @parser.readAscii 4
+      .then (reply) =>
+        switch reply
+          when Protocol.OKAY
+            @parser.readAll()
+              .then (data) =>
+                this._parsePackages data.toString()
+          when Protocol.FAIL
+            @parser.readError()
+          else
+            @parser.unexpected reply, 'OKAY or FAIL'
 
   _parsePackages: (value) ->
     features = []
