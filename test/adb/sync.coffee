@@ -10,7 +10,7 @@ Adb = require '../../'
 Sync = require '../../src/adb/sync'
 Stats = require '../../src/adb/sync/stats'
 Entry = require '../../src/adb/sync/entry'
-PushTransfer= require '../../src/adb/sync/pushtransfer'
+PushTransfer = require '../../src/adb/sync/pushtransfer'
 PullTransfer = require '../../src/adb/sync/pulltransfer'
 
 # This test suite is a bit special in that it requires a connected Android
