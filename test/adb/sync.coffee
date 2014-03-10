@@ -1,6 +1,7 @@
 Fs = require 'fs'
 Stream = require 'stream'
 Async = require 'async'
+Promise = require 'bluebird'
 Sinon = require 'sinon'
 Chai = require 'chai'
 Chai.use require 'sinon-chai'
@@ -29,19 +30,20 @@ describe 'Sync', ->
     assert deviceList.length > 0,
       'At least one connected Android device is required'
     Async.each deviceList, (device, callback) ->
-      client.syncService device.id, (err, sync) ->
-        expect(err).to.be.null
-        expect(sync).to.be.an.instanceof Sync
-        iterator sync, (err) ->
-          sync.end()
-          callback err
+      client.syncService device.id
+        .then (sync) ->
+          expect(sync).to.be.an.instanceof Sync
+          iterator sync, (err) ->
+            sync.end()
+            callback err
     , done
 
   before (done) ->
     client = Adb.createClient()
-    client.listDevices (err, devices) ->
-      deviceList = devices
-      done err
+    client.listDevices()
+      .then (devices) ->
+        deviceList = devices
+        done()
 
   describe 'end()', ->
 
@@ -58,7 +60,8 @@ describe 'Sync', ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
         spy = Sinon.spy sync, 'pushStream'
-        sync.push stream, SURELY_WRITABLE_FILE, ->
+        transfer = sync.push stream, SURELY_WRITABLE_FILE
+        transfer.cancel()
         expect(spy).to.have.been.called
         callback()
       , done
@@ -66,8 +69,8 @@ describe 'Sync', ->
     it "should call pushFile when contents is a String", (done) ->
       forEachSyncDevice (sync, callback) ->
         spy = Sinon.spy sync, 'pushFile'
-        transfer = sync.push 'foo.bar', SURELY_WRITABLE_FILE, ->
-        transfer.on 'error', ->
+        transfer = sync.push 'foo.bar', SURELY_WRITABLE_FILE
+        transfer.cancel()
         expect(spy).to.have.been.called
         callback()
       , done
@@ -75,28 +78,20 @@ describe 'Sync', ->
     it "should return a PushTransfer instance", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
-        rval = sync.push stream, SURELY_WRITABLE_FILE, ->
+        rval = sync.push stream, SURELY_WRITABLE_FILE
         expect(rval).to.be.an.instanceof PushTransfer
+        rval.cancel()
         callback()
       , done
 
   describe 'pushStream(stream, path[, mode][, callback])', ->
 
-    it "should call the callback when done pushing", (done) ->
-      forEachSyncDevice (sync, callback) ->
-        stream = new Stream.PassThrough
-        sync.pushStream stream, SURELY_WRITABLE_FILE, (err) ->
-          expect(err).to.be.null
-          callback()
-        stream.write 'FOO'
-        stream.end()
-      , done
-
     it "should return a PushTransfer instance", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
-        rval = sync.pushStream stream, SURELY_WRITABLE_FILE, ->
+        rval = sync.pushStream stream, SURELY_WRITABLE_FILE
         expect(rval).to.be.an.instanceof PushTransfer
+        rval.cancel()
         callback()
       , done
 
@@ -104,9 +99,9 @@ describe 'Sync', ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
         content = new Buffer 1000000
-        sync.pushStream stream, SURELY_WRITABLE_FILE, (err) ->
-          throw err if err
-          callback()
+        transfer = sync.pushStream stream, SURELY_WRITABLE_FILE
+        transfer.on 'error', callback
+        transfer.on 'end', callback
         stream.write content
         stream.end()
       , done
@@ -116,25 +111,26 @@ describe 'Sync', ->
     it "should retrieve the same content pushStream() pushed", (done) ->
       forEachSyncDevice (sync, callback) ->
         stream = new Stream.PassThrough
-        content = 'ABCDEFGHI'
-        sync.pushStream stream, SURELY_WRITABLE_FILE, (err, transfer) ->
-          expect(err).to.be.null
-          expect(transfer).to.be.an.instanceof PushTransfer
-          transfer.on 'end', ->
-            sync.pull SURELY_WRITABLE_FILE, (err, transfer) ->
-              expect(err).to.be.null
-              expect(transfer).to.be.an.instanceof PullTransfer
-              transfer.on 'readable', ->
-                expect(transfer.read().toString()).to.equal content
-                callback()
+        content = 'ABCDEFGHI' + Date.now()
+        transfer = sync.pushStream stream, SURELY_WRITABLE_FILE
+        expect(transfer).to.be.an.instanceof PushTransfer
+        transfer.on 'error', callback
+        transfer.on 'end', ->
+          transfer = sync.pull SURELY_WRITABLE_FILE
+          expect(transfer).to.be.an.instanceof PullTransfer
+          transfer.on 'error', callback
+          transfer.on 'readable', ->
+            expect(transfer.read().toString()).to.equal content
+            callback()
         stream.write content
         stream.end()
       , done
 
     it "should return a PullTransfer instance", (done) ->
       forEachSyncDevice (sync, callback) ->
-        rval = sync.pull SURELY_EXISTING_FILE, ->
+        rval = sync.pull SURELY_EXISTING_FILE
         expect(rval).to.be.an.instanceof PullTransfer
+        rval.cancel()
         callback()
       , done
 
@@ -142,38 +138,40 @@ describe 'Sync', ->
 
       it "should emit 'end' when pull is done", (done) ->
         forEachSyncDevice (sync, callback) ->
-          sync.pull SURELY_EXISTING_FILE, (err, out) ->
-            expect(err).to.be.null
-            out.on 'end', callback
-            out.resume()
+          transfer = sync.pull SURELY_EXISTING_FILE
+          transfer.on 'end', callback
+          transfer.resume()
         , done
 
   describe 'stat(path, callback)', ->
 
-    it "should return the Sync instance for chaining", (done) ->
+    it "should return a Promise", (done) ->
       forEachSyncDevice (sync, callback) ->
-        rval = sync.stat SURELY_EXISTING_PATH, ->
-        expect(rval).to.be.an.instanceof Sync
-        callback()
+        rval = sync.stat SURELY_EXISTING_PATH
+        expect(rval).to.be.an.instanceof Promise
+        rval.then ->
+          callback()
       , done
 
     it "should call with an ENOENT error if the path does not exist", (done) ->
       forEachSyncDevice (sync, callback) ->
-        sync.stat SURELY_NONEXISTING_PATH, (err, stats) ->
-          expect(err).to.be.an.instanceof Error
-          expect(err.code).to.equal 'ENOENT'
-          expect(err.errno).to.equal 34
-          expect(err.path).to.equal
-          expect(stats).to.be.undefined
-          callback()
+        sync.stat SURELY_NONEXISTING_PATH
+          .then (stats) ->
+            callback new Error 'Should not reach success branch'
+          .catch (err) ->
+            expect(err).to.be.an.instanceof Error
+            expect(err.code).to.equal 'ENOENT'
+            expect(err.errno).to.equal 34
+            expect(err.path).to.equal SURELY_NONEXISTING_PATH
+            callback()
       , done
 
     it "should call with an fs.Stats instance for an existing path", (done) ->
       forEachSyncDevice (sync, callback) ->
-        sync.stat SURELY_EXISTING_PATH, (err, stats) ->
-          expect(err).to.be.null
-          expect(stats).to.be.an.instanceof Fs.Stats
-          callback()
+        sync.stat SURELY_EXISTING_PATH
+          .then (stats) ->
+            expect(stats).to.be.an.instanceof Fs.Stats
+            callback()
       , done
 
     describe 'Stats', ->
@@ -184,32 +182,32 @@ describe 'Sync', ->
 
       it "should set the `.mode` property for isFile() etc", (done) ->
         forEachSyncDevice (sync, callback) ->
-          sync.stat SURELY_EXISTING_FILE, (err, stats) ->
-            expect(err).to.be.null
-            expect(stats).to.be.an.instanceof Fs.Stats
-            expect(stats.mode).to.be.above 0
-            expect(stats.isFile()).to.be.true
-            expect(stats.isDirectory()).to.be.false
-            callback()
+          sync.stat SURELY_EXISTING_FILE
+            .then (stats) ->
+              expect(stats).to.be.an.instanceof Fs.Stats
+              expect(stats.mode).to.be.above 0
+              expect(stats.isFile()).to.be.true
+              expect(stats.isDirectory()).to.be.false
+              callback()
         , done
 
       it "should set the `.size` property", (done) ->
         forEachSyncDevice (sync, callback) ->
-          sync.stat SURELY_EXISTING_FILE, (err, stats) ->
-            expect(err).to.be.null
-            expect(stats).to.be.an.instanceof Fs.Stats
-            expect(stats.isFile()).to.be.true
-            expect(stats.size).to.be.above 0
-            callback()
+          sync.stat SURELY_EXISTING_FILE
+            .then (stats) ->
+              expect(stats).to.be.an.instanceof Fs.Stats
+              expect(stats.isFile()).to.be.true
+              expect(stats.size).to.be.above 0
+              callback()
         , done
 
       it "should set the `.mtime` property", (done) ->
         forEachSyncDevice (sync, callback) ->
-          sync.stat SURELY_EXISTING_FILE, (err, stats) ->
-            expect(err).to.be.null
-            expect(stats).to.be.an.instanceof Fs.Stats
-            expect(stats.mtime).to.be.an.instanceof Date
-            callback()
+          sync.stat SURELY_EXISTING_FILE
+            .then (stats) ->
+              expect(stats).to.be.an.instanceof Fs.Stats
+              expect(stats.mtime).to.be.an.instanceof Date
+              callback()
         , done
 
     describe 'Entry', ->
@@ -220,23 +218,23 @@ describe 'Sync', ->
 
       it "should set the `.name` property", (done) ->
         forEachSyncDevice (sync, callback) ->
-          sync.readdir SURELY_EXISTING_PATH, (err, files) ->
-            expect(err).to.be.null
-            expect(files).to.be.an 'Array'
-            files.forEach (file) ->
-              expect(file.name).to.not.be.null
-              expect(file).to.be.an.instanceof Entry
-            callback()
+          sync.readdir SURELY_EXISTING_PATH
+            .then (files) ->
+              expect(files).to.be.an 'Array'
+              files.forEach (file) ->
+                expect(file.name).to.not.be.null
+                expect(file).to.be.an.instanceof Entry
+              callback()
         , done
 
       it "should set the Stats properties", (done) ->
         forEachSyncDevice (sync, callback) ->
-          sync.readdir SURELY_EXISTING_PATH, (err, files) ->
-            expect(err).to.be.null
-            expect(files).to.be.an 'Array'
-            files.forEach (file) ->
-              expect(file.mode).to.not.be.null
-              expect(file.size).to.not.be.null
-              expect(file.mtime).to.not.be.null
-            callback()
+          sync.readdir SURELY_EXISTING_PATH
+            .then (files) ->
+              expect(files).to.be.an 'Array'
+              files.forEach (file) ->
+                expect(file.mode).to.not.be.null
+                expect(file.size).to.not.be.null
+                expect(file.mtime).to.not.be.null
+              callback()
         , done

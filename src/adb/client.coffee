@@ -139,6 +139,7 @@ class Client
       .then (conn) ->
         new HostTransportCommand conn
           .execute serial
+          .return conn
 
   shell: (serial, command) ->
     this.transport serial
@@ -226,10 +227,13 @@ class Client
     temp = Sync.temp if typeof apk is 'string' then apk else '_stream.apk'
     this.push serial, apk, temp
       .then (transfer) =>
-        # TODO what if the transfer cuts here?
-        # TODO fix promise
-        transfer.on 'end', =>
-          this.transport serial
+        resolver = Promise.defer()
+
+        transfer.on 'error', errorListener = (err) ->
+          resolver.reject err
+
+        transfer.on 'end', endListener = =>
+          resolver.resolve this.transport serial
             .then (transport) =>
               new InstallCommand transport
                 .execute temp
@@ -237,6 +241,10 @@ class Client
                   this.shell serial, ['rm', '-f', temp]
                 .then (out) ->
                   true
+
+        resolver.promise.finally ->
+          transfer.removeListener 'error', errorListener
+          transfer.removeListener 'end', endListener
 
   uninstall: (serial, pkg) ->
     this.transport serial
@@ -279,20 +287,16 @@ class Client
   pull: (serial, path) ->
     this.syncService serial
       .then (sync) ->
-        # TODO fix promise
-        # TODO fix unexpected connection loss
-        transfer = sync.pull path
-        transfer.on 'end', ->
-          sync.end()
+        sync.pull path
+          .on 'end', ->
+            sync.end()
 
   push: (serial, contents, path, mode) ->
     this.syncService serial
       .then (sync) ->
-        # TODO fix promise
-        # TODO fix unexpected connection loss
-        transfer = sync.push contents, path, mode
-        transfer.on 'end', ->
-          sync.end()
+        sync.push contents, path, mode
+          .on 'end', ->
+            sync.end()
 
   waitBootComplete: (serial) ->
     this.transport serial

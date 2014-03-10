@@ -1,8 +1,8 @@
 Fs = require 'fs'
 Path = require 'path'
+Promise = require 'bluebird'
 {EventEmitter} = require 'events'
 debug = require('debug')('adb:sync')
-once = require 'once'
 
 Protocol = require './protocol'
 Stats = require './sync/stats'
@@ -20,76 +20,76 @@ class Sync extends EventEmitter
 
   constructor: (@connection, @parser) ->
 
-  stat: (path, callback) ->
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.STAT
-          @parser.readBytes 12, (stat) =>
-            mode = stat.readUInt32LE 0
-            size = stat.readUInt32LE 4
-            mtime = stat.readUInt32LE 8
-            if mode is 0
-              callback this._enoent path
-            else
-              callback null, new Stats mode, size, mtime
-        when Protocol.FAIL
-          this._readError callback
-        else
-          @parser.unexpected reply, callback
+  stat: (path) ->
     this._sendCommandWithArg Protocol.STAT, path
-    return this
-
-  readdir: (path, callback) ->
-    files = []
-    readBlock = =>
-      @parser.readAscii 4, (reply) =>
+    @parser.readAscii 4
+      .then (reply) =>
         switch reply
-          when Protocol.DENT
-            @parser.readBytes 16, (stat) =>
-              mode = stat.readUInt32LE 0
-              size = stat.readUInt32LE 4
-              mtime = stat.readUInt32LE 8
-              namelen = stat.readUInt32LE 12
-              @parser.readBytes namelen, (name) =>
-                name = name.toString()
-                # Skip '.' and '..' to match Node's fs.readdir().
-                unless name is '.' or name is '..'
-                  files.push new Entry name, mode, size, mtime
-                setImmediate readBlock
-          when Protocol.DONE
-            callback null, files
+          when Protocol.STAT
+            @parser.readBytes 12
+              .then (stat) =>
+                mode = stat.readUInt32LE 0
+                size = stat.readUInt32LE 4
+                mtime = stat.readUInt32LE 8
+                if mode is 0
+                  this._enoent path
+                else
+                  new Stats mode, size, mtime
           when Protocol.FAIL
-            this._readError callback
+            this._readError()
           else
-            @parser.unexpected reply, callback
-    readBlock()
+            @parser.unexpected reply, 'STAT or FAIL'
+
+  readdir: (path) ->
+    files = []
+
+    readNext = =>
+      @parser.readAscii 4
+        .then (reply) =>
+          switch reply
+            when Protocol.DENT
+              @parser.readBytes 16
+                .then (stat) =>
+                  mode = stat.readUInt32LE 0
+                  size = stat.readUInt32LE 4
+                  mtime = stat.readUInt32LE 8
+                  namelen = stat.readUInt32LE 12
+                  @parser.readBytes namelen
+                    .then (name) ->
+                      name = name.toString()
+                      # Skip '.' and '..' to match Node's fs.readdir().
+                      unless name is '.' or name is '..'
+                        files.push new Entry name, mode, size, mtime
+                      readNext()
+            when Protocol.DONE
+              files
+            when Protocol.FAIL
+              this._readError()
+            else
+              @parser.unexpected reply, 'DENT, DONE or FAIL'
+
     this._sendCommandWithArg Protocol.LIST, path
-    return this
 
-  push: (contents, path, mode, callback) ->
+    readNext()
+
+  push: (contents, path, mode) ->
     if typeof contents is 'string'
-      return this.pushFile contents, path, mode, callback
-    this.pushStream contents, path, mode, callback
+      this.pushFile contents, path, mode
+    else
+      this.pushStream contents, path, mode
 
-  pushFile: (file, path, mode, callback) ->
-    if typeof mode is 'function'
-      callback = mode
-      mode = undefined
+  pushFile: (file, path, mode = DEFAULT_CHMOD) ->
     mode or= DEFAULT_CHMOD
-    this.pushStream Fs.createReadStream(file), path, mode, callback
+    this.pushStream Fs.createReadStream(file), path, mode
 
-  pushStream: (stream, path, mode, callback) ->
-    if typeof mode is 'function'
-      callback = mode
-      mode = undefined
-    mode or= DEFAULT_CHMOD
+  pushStream: (stream, path, mode = DEFAULT_CHMOD) ->
     mode |= Stats.S_IFREG
     this._sendCommandWithArg Protocol.SEND, "#{path},#{mode}"
-    this._writeData stream, Math.floor(Date.now() / 1000), callback
+    this._writeData stream, Math.floor(Date.now() / 1000)
 
-  pull: (path, callback) ->
+  pull: (path) ->
     this._sendCommandWithArg Protocol.RECV, "#{path}"
-    this._readData callback
+    this._readData()
 
   end: ->
     @connection.end()
@@ -98,84 +98,143 @@ class Sync extends EventEmitter
   tempFile: (path) ->
     Sync.temp path
 
-  _writeData: (stream, timeStamp, callback) ->
-    callback = once callback if callback
+  _writeData: (stream, timeStamp) ->
     transfer = new PushTransfer
-    transfer.on 'cancel', =>
-      stream.end()
-      @connection.end()
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.OKAY
-          @parser.readBytes 4, (zero) ->
-            transfer.end()
-        when Protocol.FAIL
-          this._readError (err) ->
-            transfer.emit 'error', err
-            callback err if callback
-        else
-          @parser.unexpected reply, (err) ->
-            transfer.emit 'error', err
-            callback err if callback
-    saturated = false
-    track = ->
-      transfer.pop()
-    write = =>
-      unless saturated
-        # Try to read the maximum supported amount first. If not available,
-        # just use whatever we have.
-        while chunk = stream.read(DATA_MAX_LENGTH) or stream.read()
+
+    writeData = =>
+      resolver = Promise.defer()
+      writer = Promise.resolve()
+        .cancellable()
+
+      stream.on 'end', endListener = =>
+        writer.then =>
+          this._sendCommandWithLength Protocol.DONE, timeStamp
+          resolver.resolve()
+
+      waitForDrain = =>
+        resolver = Promise.defer()
+
+        @connection.on 'drain', drainListener = ->
+          resolver.resolve()
+
+        resolver.promise.finally =>
+          @connection.removeListener 'drain', drainListener
+
+      track = ->
+        transfer.pop()
+
+      writeNext = =>
+        if chunk = stream.read(DATA_MAX_LENGTH) or stream.read()
           this._sendCommandWithLength Protocol.DATA, chunk.length
           transfer.push chunk.length
-          unless @connection.write(chunk, track)
-            saturated = true
-            stream.once 'drain', ->
-              saturated = false
-              write()
-    stream.on 'readable', write
-    stream.on 'end', =>
-      this._sendCommandWithLength Protocol.DONE, timeStamp
-    stream.on 'error', (err) ->
-      transfer.emit 'error', err
-      callback err if callback
-    if callback
-      setImmediate ->
-        callback null, transfer
-    return transfer
-
-  _readData: (callback) ->
-    callback = once callback if callback
-    transfer = new PullTransfer
-    transfer.on 'cancel', =>
-      @connection.end()
-    readBlock = =>
-      @parser.readAscii 4, (reply) =>
-        switch reply
-          when Protocol.DATA
-            callback null, transfer if callback
-            @parser.readBytes 4, (lengthData) =>
-              length = lengthData.readUInt32LE 0
-              @parser.readByteFlow length, (chunk, final) =>
-                transfer.write chunk
-                setImmediate readBlock if final
-          when Protocol.DONE
-            @parser.readBytes 4, (zero) =>
-              transfer.end()
-          when Protocol.FAIL
-            this._readError (err) ->
-              transfer.emit 'error', err
-              callback err if callback
+          if @connection.write chunk, track
+            writeNext()
           else
-            @parser.unexpected reply, (err) ->
-              transfer.emit 'error', err
-              callback err if callback
-    readBlock()
+            waitForDrain()
+              .then writeNext
+        else
+          Promise.resolve()
+
+      stream.on 'readable', readableListener = ->
+        writer.then writeNext
+
+      stream.on 'error', errorListener = (err) ->
+        resolver.reject err
+
+      resolver.promise.finally ->
+        stream.removeListener 'end', endListener
+        stream.removeListener 'readable', readableListener
+        stream.removeListener 'error', errorListener
+        writer.cancel()
+
+    readReply = =>
+      @parser.readAscii 4
+        .then (reply) =>
+          switch reply
+            when Protocol.OKAY
+              @parser.readBytes 4
+                .then (zero) ->
+                  true
+            when Protocol.FAIL
+              this._readError()
+            else
+              @parser.unexpected reply, 'OKAY or FAIL'
+
+    # While I can't think of a case that would break this double-Promise
+    # writer-reader arrangement right now, it's not immediately obvious
+    # that the code is correct and it may or may not have some failing
+    # edge cases. Refactor pending.
+
+    writer = writeData()
+      .cancellable()
+      .catch Promise.CancellationError, (err) =>
+        @connection.end()
+      .catch (err) ->
+        transfer.emit 'error', err
+        reader.cancel()
+
+    reader = readReply()
+      .cancellable()
+      .catch Promise.CancellationError, (err) ->
+        true
+      .catch (err) ->
+        transfer.emit 'error', err
+        writer.cancel()
+      .finally ->
+        transfer.end()
+
+    transfer.on 'cancel', ->
+      writer.cancel()
+      reader.cancel()
+
     return transfer
 
-  _readError: (callback) ->
-    @parser.readBytes 4, (zero) =>
-      @parser.readAll (buf) =>
-        callback new Error buf.toString()
+  _readData: ->
+    transfer = new PullTransfer
+
+    readNext = =>
+      @parser.readAscii 4
+        .cancellable()
+        .then (reply) =>
+          switch reply
+            when Protocol.DATA
+              @parser.readBytes 4
+                .then (lengthData) =>
+                  length = lengthData.readUInt32LE 0
+                  @parser.readByteFlow length
+                    .progressed (chunk) ->
+                      transfer.write chunk
+                    .then ->
+                      readNext()
+            when Protocol.DONE
+              @parser.readBytes 4
+                .then (zero) ->
+                  true
+            when Protocol.FAIL
+              this._readError()
+            else
+              @parser.unexpected reply, 'DATA, DONE or FAIL'
+
+    reader = readNext()
+      .catch Promise.CancellationError, (err) =>
+        @connection.end()
+      .catch (err) ->
+        transfer.emit 'error', err
+      .finally ->
+        transfer.removeListener 'cancel', cancelListener
+        transfer.end()
+
+    transfer.on 'cancel', cancelListener = ->
+      reader.cancel()
+
+    return transfer
+
+  _readError: ->
+    @parser.readBytes 4
+      .then (zero) =>
+        @parser.readAll()
+          .then (buf) ->
+            Promise.reject new Parser.FailError buf.toString()
 
   _sendCommandWithLength: (cmd, length) ->
     debug cmd unless cmd is Protocol.DATA
@@ -200,6 +259,6 @@ class Sync extends EventEmitter
     err.errno = 34
     err.code = 'ENOENT'
     err.path = path
-    return err
+    Promise.reject err
 
 module.exports = Sync
