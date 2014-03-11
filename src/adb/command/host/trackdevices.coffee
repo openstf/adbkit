@@ -10,7 +10,7 @@ class HostTrackDevicesCommand extends HostDevicesCommand
       .then (reply) =>
         switch reply
           when Protocol.OKAY
-            new Tracker @connection
+            new Tracker this
           when Protocol.FAIL
             @parser.readError()
           else

@@ -234,7 +234,7 @@ class Client
           resolver.reject err
 
         transfer.on 'end', endListener = =>
-          resolver.resolve this.transport serial
+          cmd = this.transport serial
             .then (transport) =>
               new InstallCommand transport
                 .execute temp
@@ -242,6 +242,7 @@ class Client
                   this.shell serial, ['rm', '-f', temp]
                 .then (out) ->
                   true
+          resolver.resolve cmd
 
         resolver.promise.finally ->
           transfer.removeListener 'error', errorListener
