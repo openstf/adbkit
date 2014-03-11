@@ -167,8 +167,6 @@ class Client
           .catch (err) =>
             debug "Emulating screencap command due to '#{err}'"
             this.framebuffer serial, 'png'
-              .then (info, framebuffer) ->
-                framebuffer
 
   openLog: (serial, name) ->
     this.transport serial

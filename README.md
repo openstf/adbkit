@@ -195,9 +195,9 @@ Note that high-resolution devices can have quite massive framebuffers. For examp
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **format** The desired output format. Any output format supported by [GraphicsMagick][graphicsmagick] (such as `'png'`) is supported. Defaults to `'raw'` for raw framebuffer data.
-* **callback(err, info, framebuffer)**
+* **callback(err, framebuffer)**
     - **err** `null` when successful, `Error` otherwise.
-    - **info** Meta information about the framebuffer. Includes the following properties:
+    - **framebuffer** The possibly converted framebuffer stream. The stream also has a `meta` property with the following values:
         * **version** The framebuffer version. Useful for patching possible backwards-compatibility issues.
         * **bpp** Bits per pixel (i.e. color depth).
         * **size** The raw byte size of the framebuffer.
@@ -212,7 +212,6 @@ Note that high-resolution devices can have quite massive framebuffers. For examp
         * **alpha_offset** The bit offset of alpha in a pixel.
         * **alpha_length** The bit length of alpha in a pixel. `0` when not available.
         * **format** The framebuffer format for convenience. This can be one of `'bgr'`,  `'bgra'`, `'rgb'`, `'rgba'`.
-    - **framebuffer** The possibly converted framebuffer stream.
 * Returns: The client instance.
 
 #### client.getDevicePath(serial, callback)
