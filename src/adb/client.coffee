@@ -56,110 +56,130 @@ class Client
       conn.removeListener 'error', errorListener
       conn.removeListener 'connect', connectListener
 
-  version: ->
+  version: (callback) ->
     this.connection()
       .then (conn) ->
         new HostVersionCommand conn
           .execute()
+      .nodeify callback
 
-  listDevices: ->
+  listDevices: (callback) ->
     this.connection()
       .then (conn) ->
         new HostDevicesCommand conn
           .execute()
+      .nodeify callback
 
-  listDevicesWithPaths: ->
+  listDevicesWithPaths: (callback) ->
     this.connection()
       .then (conn) ->
         new HostDevicesWithPathsCommand conn
           .execute()
+      .nodeify callback
 
-  trackDevices: ->
+  trackDevices: (callback) ->
     this.connection()
       .then (conn) ->
         new HostTrackDevicesCommand conn
           .execute()
+      .nodeify callback
 
-  kill: ->
+  kill: (callback) ->
     this.connection()
       .then (conn) ->
         new HostKillCommand conn
           .execute()
+      .nodeify callback
 
-  getSerialNo: (serial) ->
+  getSerialNo: (serial, callback) ->
     this.connection()
       .then (conn) ->
         new GetSerialNoCommand conn
           .execute serial
+      .nodeify callback
 
-  getDevicePath: (serial) ->
+  getDevicePath: (serial, callback) ->
     this.connection()
       .then (conn) ->
         new GetDevicePathCommand conn
           .execute serial
+      .nodeify callback
 
-  getState: (serial) ->
+  getState: (serial, callback) ->
     this.connection()
       .then (conn) ->
         new GetStateCommand conn
           .execute serial
+      .nodeify callback
 
-  getProperties: (serial) ->
+  getProperties: (serial, callback) ->
     this.transport serial
       .then (transport) ->
         new GetPropertiesCommand transport
           .execute()
+      .nodeify callback
 
-  getFeatures: (serial) ->
+  getFeatures: (serial, callback) ->
     this.transport serial
       .then (transport) ->
         new GetFeaturesCommand transport
           .execute()
+      .nodeify callback
 
-  getPackages: (serial) ->
+  getPackages: (serial, callback) ->
     this.transport serial
       .then (transport) ->
         new GetPackagesCommand transport
           .execute()
+      .nodeify callback
 
-  forward: (serial, local, remote) ->
+  forward: (serial, local, remote, callback) ->
     this.connection()
       .then (conn) ->
         new ForwardCommand conn
           .execute serial, local, remote
+      .nodeify callback
 
-  listForwards: (serial) ->
+  listForwards: (serial, callback) ->
     this.connection()
       .then (conn) ->
         new ListForwardsCommand conn
           .execute serial
+      .nodeify callback
 
-  transport: (serial) ->
+  transport: (serial, callback) ->
     this.connection()
       .then (conn) ->
         new HostTransportCommand conn
           .execute serial
           .return conn
+      .nodeify callback
 
-  shell: (serial, command) ->
+  shell: (serial, command, callback) ->
     this.transport serial
       .then (transport) ->
         new ShellCommand transport
           .execute command
+      .nodeify callback
 
-  remount: (serial) ->
+  remount: (serial, callback) ->
     this.transport serial
       .then (transport) ->
         new RemountCommand transport
           .execute()
+      .nodeify callback
 
-  framebuffer: (serial, format = 'raw') ->
+  framebuffer: (serial, format = 'raw', callback) ->
+    if typeof format is 'function'
+      callback = format
+      format = 'raw'
     this.transport serial
       .then (transport) ->
         new FrameBufferCommand transport
           .execute format
+      .nodeify callback
 
-  screencap: (serial) ->
+  screencap: (serial, callback) ->
     this.transport serial
       .then (transport) =>
         new ScreencapCommand transport
@@ -167,20 +187,29 @@ class Client
           .catch (err) =>
             debug "Emulating screencap command due to '#{err}'"
             this.framebuffer serial, 'png'
+      .nodeify callback
 
-  openLog: (serial, name) ->
+  openLog: (serial, name, callback) ->
     this.transport serial
       .then (transport) ->
         new LogCommand transport
           .execute name
+      .nodeify callback
 
-  openTcp: (serial, port, host) ->
+  openTcp: (serial, port, host, callback) ->
+    if typeof host is 'function'
+      callback = host
+      host = undefined
     this.transport serial
       .then (transport) ->
         new TcpCommand transport
           .execute port, host
+      .nodeify callback
 
-  openMonkey: (serial, port = 1080) ->
+  openMonkey: (serial, port = 1080, callback) ->
+    if typeof port is 'function'
+      callback = port
+      port = 1080
     tryConnect = (times) =>
       this.openTcp serial, port
         .then (stream) ->
@@ -204,27 +233,31 @@ class Client
                   .then (monkey) ->
                     monkey.once 'end', ->
                       out.end()
+      .nodeify callback
 
-  openLogcat: (serial) ->
+  openLogcat: (serial, callback) ->
     this.transport serial
       .then (transport) ->
         new LogcatCommand transport
           .execute (stream) ->
             Logcat.readStream stream,
               fixLineFeeds: false
+      .nodeify callback
 
-  openProcStat: (serial) ->
+  openProcStat: (serial, callback) ->
     this.syncService serial
       .then (sync) ->
         new ProcStat sync
+      .nodeify callback
 
-  clear: (serial, pkg) ->
+  clear: (serial, pkg, callback) ->
     this.transport serial
       .then (transport) ->
         new ClearCommand transport
           .execute pkg
+      .nodeify callback
 
-  install: (serial, apk) ->
+  install: (serial, apk, callback) ->
     temp = Sync.temp if typeof apk is 'string' then apk else '_stream.apk'
     this.push serial, apk, temp
       .then (transfer) =>
@@ -248,62 +281,76 @@ class Client
           transfer.removeListener 'error', errorListener
           transfer.removeListener 'end', endListener
 
-  uninstall: (serial, pkg) ->
+      .nodeify callback
+
+  uninstall: (serial, pkg, callback) ->
     this.transport serial
       .then (transport) ->
         new UninstallCommand transport
           .execute pkg
+      .nodeify callback
 
-  isInstalled: (serial, pkg) ->
+  isInstalled: (serial, pkg, callback) ->
     this.transport serial
       .then (transport) ->
         new IsInstalledCommand transport
           .execute pkg
+      .nodeify callback
 
-  startActivity: (serial, options) ->
+  startActivity: (serial, options, callback) ->
     this.transport serial
       .then (transport) ->
         new StartActivityCommand transport
           .execute options
+      .nodeify callback
 
-  syncService: (serial) ->
+  syncService: (serial, callback) ->
     this.transport serial
       .then (transport) ->
         new SyncCommand transport
           .execute()
+      .nodeify callback
 
-  stat: (serial, path) ->
+  stat: (serial, path, callback) ->
     this.syncService serial
       .then (sync) ->
         sync.stat path
           .finally ->
             sync.end()
+      .nodeify callback
 
-  readdir: (serial, path) ->
+  readdir: (serial, path, callback) ->
     this.syncService serial
       .then (sync) ->
         sync.readdir path
           .finally ->
             sync.end()
+      .nodeify callback
 
-  pull: (serial, path) ->
+  pull: (serial, path, callback) ->
     this.syncService serial
       .then (sync) ->
         sync.pull path
           .on 'end', ->
             sync.end()
+      .nodeify callback
 
-  push: (serial, contents, path, mode) ->
+  push: (serial, contents, path, mode, callback) ->
+    if typeof mode is 'function'
+      callback = mode
+      mode = undefined
     this.syncService serial
       .then (sync) ->
         sync.push contents, path, mode
           .on 'end', ->
             sync.end()
+      .nodeify callback
 
-  waitBootComplete: (serial) ->
+  waitBootComplete: (serial, callback) ->
     this.transport serial
       .then (transport) ->
         new WaitBootCompleteCommand transport
           .execute()
+      .nodeify callback
 
 module.exports = Client

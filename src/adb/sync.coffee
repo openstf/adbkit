@@ -20,7 +20,7 @@ class Sync extends EventEmitter
 
   constructor: (@connection, @parser) ->
 
-  stat: (path) ->
+  stat: (path, callback) ->
     this._sendCommandWithArg Protocol.STAT, path
     @parser.readAscii 4
       .then (reply) =>
@@ -39,8 +39,9 @@ class Sync extends EventEmitter
             this._readError()
           else
             @parser.unexpected reply, 'STAT or FAIL'
+      .nodeify callback
 
-  readdir: (path) ->
+  readdir: (path, callback) ->
     files = []
 
     readNext = =>
@@ -71,6 +72,7 @@ class Sync extends EventEmitter
     this._sendCommandWithArg Protocol.LIST, path
 
     readNext()
+      .nodeify callback
 
   push: (contents, path, mode) ->
     if typeof contents is 'string'
