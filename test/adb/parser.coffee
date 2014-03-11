@@ -212,6 +212,29 @@ describe.only 'Parser', ->
       stream.write '000cepic'
       stream.end()
 
+  describe 'searchLine(re)', ->
+
+    it "should return the re.exec match of the matching line", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.searchLine /za(p)/
+        .then (line) ->
+          expect(line[0]).to.equal 'zap'
+          expect(line[1]).to.equal 'p'
+          expect(line.input).to.equal 'zip zap'
+          done()
+      stream.write 'foo bar\nzip zap\npip pop\n'
+
+    it "should reject with Parser.PrematureEOFError if stream ends
+        before a line is found", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.searchLine /nope/
+        .catch Parser.PrematureEOFError, (err) ->
+          done()
+      stream.write 'foo bar'
+      stream.end()
+
   describe 'skipLine()', ->
 
     it "should skip a line terminated by \\n", (done) ->

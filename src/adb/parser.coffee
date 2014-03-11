@@ -154,6 +154,14 @@ class Parser
             read()
     read()
 
+  searchLine: (re) ->
+    this.skipLine()
+      .then (line) =>
+        if match = re.exec line
+          match
+        else
+          this.searchLine re
+
   skipLine: ->
     this.readUntil 0x0a # '\n'
       .then (line) ->
