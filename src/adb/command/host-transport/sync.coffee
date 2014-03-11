@@ -3,7 +3,7 @@ Protocol = require '../../protocol'
 Sync = require '../../sync'
 
 class SyncCommand extends Command
-  execute: (callback) ->
+  execute: ->
     this._send 'sync:'
     @parser.readAscii 4
       .then (reply) =>
