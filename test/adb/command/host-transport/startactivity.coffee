@@ -14,26 +14,29 @@ describe 'StartActivityCommand', ->
   it "should succeed when 'Success' returned", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success'
+      conn.socket.causeEnd()
     options =
       component: 'com.dummy.component/.Main'
-    cmd.execute options, (err) ->
-      expect(err).to.be.null
-      done()
+    cmd.execute options
+      .then ->
+        done()
 
   it "should fail when 'Error' returned", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Error: foo'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Error: foo\n'
+      conn.socket.causeEnd()
     options =
       component: 'com.dummy.component/.Main'
-    cmd.execute options, (err) ->
-      expect(err).to.be.be.an.instanceOf Error
-      done()
+    cmd.execute options
+      .catch (err) ->
+        expect(err).to.be.be.an.instanceOf Error
+        done()
 
   it "should send 'am start -n <pkg>'", (done) ->
     conn = new MockConnection
@@ -42,13 +45,15 @@ describe 'StartActivityCommand', ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
           -n 'com.dummy.component/.Main'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\n'
+      conn.socket.causeEnd()
     options =
       component: 'com.dummy.component/.Main'
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should send 'am start -a <action>'", (done) ->
     conn = new MockConnection
@@ -57,13 +62,15 @@ describe 'StartActivityCommand', ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData("shell:am start
           -a 'foo.ACTION_BAR'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\n'
+      conn.socket.causeEnd()
     options =
       action: "foo.ACTION_BAR"
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should send 'am start -n <pgk> --es <extras>'", (done) ->
     conn = new MockConnection
@@ -74,10 +81,10 @@ describe 'StartActivityCommand', ->
           --es 'key1' 'value1'
           --es 'key2' 'value2'
           -n 'com.dummy.component/.Main'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\n'
+      conn.socket.causeEnd()
     options =
       component: "com.dummy.component/.Main"
       extras: [
@@ -87,7 +94,9 @@ describe 'StartActivityCommand', ->
         key: 'key2'
         value: 'value2'
       ]
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should send 'am start -n <pgk> --ei <extras>'", (done) ->
     conn = new MockConnection
@@ -98,10 +107,10 @@ describe 'StartActivityCommand', ->
           --ei 'key1' 1
           --ei 'key2' 2
           -n 'com.dummy.component/.Main'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\n'
+      conn.socket.causeEnd()
     options =
       component: 'com.dummy.component/.Main'
       extras: [
@@ -113,7 +122,9 @@ describe 'StartActivityCommand', ->
         value: 2
         type: 'int'
       ]
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should send 'am start -n <pgk> --ez <extras>'", (done) ->
     conn = new MockConnection
@@ -124,10 +135,10 @@ describe 'StartActivityCommand', ->
           --ez 'key1' 'true'
           --ez 'key2' 'false'
           -n 'com.dummy.component/.Main'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success'
+      conn.socket.causeEnd()
     options =
       component: "com.dummy.component/.Main"
       extras: [
@@ -139,7 +150,9 @@ describe 'StartActivityCommand', ->
         value: false
         type: 'bool'
       ]
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should send 'am start -n <pgk> --el <extras>'", (done) ->
     conn = new MockConnection
@@ -150,10 +163,10 @@ describe 'StartActivityCommand', ->
           --el 'key1' 1
           --el 'key2' '2'
           -n 'com.dummy.component/.Main'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success'
+      conn.socket.causeEnd()
     options =
       component: 'com.dummy.component/.Main'
       extras: [
@@ -165,7 +178,9 @@ describe 'StartActivityCommand', ->
         value: '2'
         type: 'long'
       ]
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should send 'am start -n <pgk> --eu <extras>'", (done) ->
     conn = new MockConnection
@@ -176,10 +191,10 @@ describe 'StartActivityCommand', ->
           --eu 'key1' 'http://example.org'
           --eu 'key2' 'http://example.org'
           -n 'com.dummy.component/.Main'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success'
+      conn.socket.causeEnd()
     options =
       component: 'com.dummy.component/.Main'
       extras: [
@@ -191,7 +206,9 @@ describe 'StartActivityCommand', ->
         value: 'http://example.org'
         type: 'uri'
       ]
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should send 'am start -n <pgk> --es <extras>'", (done) ->
     conn = new MockConnection
@@ -202,10 +219,10 @@ describe 'StartActivityCommand', ->
           --es 'key1' 'a'
           --es 'key2' 'b'
           -n 'com.dummy.component/.Main'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success'
+      conn.socket.causeEnd()
     options =
       component: 'com.dummy.component/.Main'
       extras: [
@@ -217,7 +234,9 @@ describe 'StartActivityCommand', ->
         value: 'b'
         type: 'string'
       ]
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should send 'am start -n <pgk> --eia <extras with arr>'", (done) ->
     conn = new MockConnection
@@ -229,10 +248,10 @@ describe 'StartActivityCommand', ->
           --ela 'key2' '20,30'
           --ei 'key3' 5
           -n 'com.dummy.component/.Main'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success'
+      conn.socket.causeEnd()
     options =
       component: 'com.dummy.component/.Main'
       extras: [
@@ -254,7 +273,9 @@ describe 'StartActivityCommand', ->
         value: 5
         type: 'int'
       ]
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should send 'am start -n <pgk> --esn <extras>'", (done) ->
     conn = new MockConnection
@@ -265,10 +286,10 @@ describe 'StartActivityCommand', ->
           --esn 'key1'
           --esn 'key2'
           -n 'com.dummy.component/.Main'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success'
+      conn.socket.causeEnd()
     options =
       component: 'com.dummy.component/.Main'
       extras: [
@@ -278,7 +299,9 @@ describe 'StartActivityCommand', ->
         key: 'key2'
         type: 'null'
       ]
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should throw when calling with an unknown extra type", (done) ->
     conn = new MockConnection
@@ -307,10 +330,10 @@ describe 'StartActivityCommand', ->
           --eu 'key6' 'http://example.org'
           --esn 'key7'
           -n 'com.dummy.component/.Main'").toString()
-      done()
-    conn.socket.causeRead Protocol.OKAY
-    conn.socket.causeRead 'Success'
-    conn.socket.causeEnd()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success'
+      conn.socket.causeEnd()
     options =
       component: 'com.dummy.component/.Main'
       extras: [
@@ -340,7 +363,9 @@ describe 'StartActivityCommand', ->
         key: 'key7'
         type: 'null'
       ]
-    cmd.execute options, ->
+    cmd.execute options
+      .then ->
+        done()
 
   it "should map short extras to long extras", (done) ->
     conn = new MockConnection

@@ -2,6 +2,7 @@ split = require 'split'
 
 Command = require '../../command'
 Protocol = require '../../protocol'
+Parser = require '../../parser'
 
 class StartActivityCommand extends Command
   RE_ERROR = /^Error: (.*)$/
@@ -15,21 +16,7 @@ class StartActivityCommand extends Command
     uri: 'u'
     component: 'cn'
 
-  execute: (options, callback) ->
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.OKAY
-          err = null
-          lines = @parser.raw().pipe split()
-          lines.on 'data', (line) ->
-            if match = RE_ERROR.exec line
-              err = new Error match[1]
-          lines.on 'end', ->
-            callback err
-        when Protocol.FAIL
-          @parser.readError callback
-        else
-          callback this._unexpected reply
+  execute: (options) ->
     args = []
     if options.extras
       args.push.apply args, this._formatExtras options.extras
@@ -38,6 +25,20 @@ class StartActivityCommand extends Command
     if options.component
       args.push '-n', this._escape options.component
     this._send "shell:am start #{args.join ' '}"
+    @parser.readAscii 4
+      .then (reply) =>
+        switch reply
+          when Protocol.OKAY
+            @parser.searchLine RE_ERROR
+              .then (match) ->
+                @connection.end()
+                throw new Error match[1]
+              .catch Parser.PrematureEOFError, (err) ->
+                true
+          when Protocol.FAIL
+            @parser.readError()
+          else
+            @parser.unexpected reply, 'OKAY or FAIL'
 
   _formatExtras: (extras) ->
     return [] unless extras
