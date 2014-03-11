@@ -6,6 +6,18 @@ Most of the `adb` command line tool's functionality is supported (including push
 
 Internally, we use this library to drive a multitude of Android devices from a variety of manufacturers, so we can say with a fairly high degree of confidence that it will most likely work with your device(s), too.
 
+# Incompatible changes since 1.x.x
+
+Previously, we made extensive use of callbacks in almost every feature. While this normally works okay, ADB connections can be quite fickle, and it was starting to become difficult to handle every possible error. For example, we'd often fail to properly clean up after ourselves when a connection suddenly died in an unexpected place, causing memory and resource leaks.
+
+In version 2, we've replaced nearly all callbacks with [Promises](http://promisesaplus.com/) (using [Bluebird](https://github.com/petkaantonov/bluebird)), allowing for much more reliable error propagation and resource cleanup (thanks to `.finally()`). Additionally, many commands can now be cancelled on the fly!
+
+Unfortunately, some API changes were required for this change. `client.framebuffer()`'s callback, for example, previously accepted more than one argument, which doesn't translate into Promises so well. Thankfully, it made sense to combine the arguments anyway, and we were able to do it quite cleanly.
+
+Furthermore, most API methods were returning the current instance for chaining purposes. While perhaps useful in some contexts, most of the time it probably didn't quite do what users expected, as chained calls were run in parallel rather than in serial fashion. Now every API method returns a Promise, which is an incompatible but welcome change. This will also allow you to hook into `yield` and coroutines in Node 0.12.
+
+Test coverage was also massively improved, although we've still got ways to go.
+
 ## Requirements
 
 * [Node.js][nodejs] >= 0.10
@@ -31,116 +43,178 @@ Note that even though the module is written in [CoffeeScript][coffeescript], onl
 
 ### Examples
 
+The examples may be a bit verbose, but that's because we're trying to keep them as close to real-life code as possible, with flow control and error handling taken care of.
+
 #### Checking for NFC support
 
 ```js
-var adb = require('adbkit');
-var client = adb.createClient();
+var Promise = require('bluebird')
+var adb = require('adbkit')
+var client = adb.createClient()
 
-client.listDevices(function(err, devices) {
-  devices.forEach(function(device) {
-    client.getFeatures(device.id, function(err, features) {
-      if (features['android.hardware.nfc']) {
-        console.log('Device %s supports NFC', device.id);
-      }
-    });
-  });
-});
+client.listDevices()
+  .then(function(devices) {
+    return Promise.filter(devices, function(device) {
+      return client.getFeatures(device.id)
+        .then(function(features) {
+          return features['android.hardware.nfc']
+        })
+    })
+  })
+  .then(function(supportedDevices) {
+    console.log('The following devices support NFC:', supportedDevices)
+  })
+  .catch(function(err) {
+    console.error('Something went wrong:', err.stack)
+  })
 ```
 
 #### Installing an APK
 
 ```js
-var adb = require('adbkit');
-var client = adb.createClient();
-var apk = 'vendor/app.apk';
+var Promise = require('bluebird')
+var adb = require('adbkit')
+var client = adb.createClient()
+var apk = 'vendor/app.apk'
 
-client.listDevices(function(err, devices) {
-  devices.forEach(function(device) {
-    client.install(device.id, apk, function(err) {
-      if (!err) {
-        console.log('Installed %s on device %s', apk, device.id);
-      }
-    });
-  });
-});
+client.listDevices()
+  .then(function(devices) {
+    return Promise.map(devices, function(device) {
+      return client.install(device.id, apk)
+    })
+  })
+  .then(function() {
+    console.log('Installed %s on all connected devices', apk)
+  })
+  .catch(function(err) {
+    console.error('Something went wrong:', err.stack)
+  })
 ```
 
 #### Tracking devices
 
 ```js
-var adb = require('adbkit');
-var client = adb.createClient();
+var adb = require('adbkit')
+var client = adb.createClient()
 
-client.trackDevices(function(err, tracker) {
-  tracker.on('add', function(device) {
-    console.log('Device %s was plugged in', device.id);
-  });
-  tracker.on('remove', function(device) {
-    console.log('Device %s was unplugged', device.id);
-  });
-});
+client.trackDevices()
+  .then(function(tracker) {
+    tracker.on('add', function(device) {
+      console.log('Device %s was plugged in', device.id)
+    })
+    tracker.on('remove', function(device) {
+      console.log('Device %s was unplugged', device.id)
+    })
+    tracker.on('end', function() {
+      console.log('Tracking stopped')
+    })
+  })
+  .catch(function(err) {
+    console.error('Something went wrong:', err.stack)
+  })
 ```
 
-#### Pulling a file from a device
+#### Pulling a file from all connected devices
 
 ```js
-var fs = require('fs');
-var adb = require('adbkit');
-var client = adb.createClient();
+var Promise = require('bluebird')
+var fs = require('fs')
+var adb = require('adbkit')
+var client = adb.createClient()
 
-client.listDevices(function(err, devices) {
-  devices.forEach(function(device) {
-    client.pull(device.id, '/system/build.prop', function(err, transfer) {
-      transfer.on('progress', function(stats) {
-        console.log('Pulled %d bytes so far', stats.bytesTransferred);
-      });
-      transfer.on('end', function() {
-        console.log('Pull complete');
-      });
-      transfer.pipe(fs.createWriteStream(device.id + '.build.prop'));
-    });
-  });
-});
+client.listDevices()
+  .then(function(devices) {
+    return Promise.map(devices, function(device) {
+      return client.pull(device.id, '/system/build.prop')
+        .then(function(transfer) {
+          return new Promise(function(resolve, reject) {
+            var fn = '/tmp/' + device.id + '.build.prop'
+            transfer.on('progress', function(stats) {
+              console.log('[%s] Pulled %d bytes so far',
+                device.id,
+                stats.bytesTransferred)
+            })
+            transfer.on('end', function() {
+              console.log('[%s] Pull complete', device.id)
+              resolve(device.id)
+            })
+            transfer.on('error', reject)
+            transfer.pipe(fs.createWriteStream(fn))
+          })
+        })
+    })
+  })
+  .then(function() {
+    console.log('Done pulling /system/build.prop from all connected devices')
+  })
+  .catch(function(err) {
+    console.error('Something went wrong:', err.stack)
+  })
 ```
 
-#### Pushing a file to a device
+#### Pushing a file to all connected devices
 
 ```js
-var adb = require('adbkit');
-var client = adb.createClient();
+var Promise = require('bluebird')
+var adb = require('adbkit')
+var client = adb.createClient()
 
-client.listDevices(function(err, devices) {
-  devices.forEach(function(device) {
-    client.push(device.id, 'foo.txt', '/data/local/tmp/foo.txt', function(err, transfer) {
-      transfer.on('progress', function(stats) {
-        console.log('Pushed %d bytes so far', stats.bytesTransferred);
-      });
-      transfer.on('end', function() {
-        console.log('Push complete');
-      });
-    });
-  });
-});
+client.listDevices()
+  .then(function(devices) {
+    return Promise.map(devices, function(device) {
+      return client.push(device.id, 'temp/foo.txt', '/data/local/tmp/foo.txt')
+        .then(function(transfer) {
+          return new Promise(function(resolve, reject) {
+            transfer.on('progress', function(stats) {
+              console.log('[%s] Pushed %d bytes so far',
+                device.id,
+                stats.bytesTransferred)
+            })
+            transfer.on('end', function() {
+              console.log('[%s] Push complete', device.id)
+              resolve()
+            })
+            transfer.on('error', reject)
+          })
+        })
+    })
+  })
+  .then(function() {
+    console.log('Done pushing foo.txt to all connected devices')
+  })
+  .catch(function(err) {
+    console.error('Something went wrong:', err.stack)
+  })
 ```
 
 #### List files in a folder
 
 ```js
-var adb = require('adbkit');
-var client = adb.createClient();
+var Promise = require('bluebird')
+var adb = require('adbkit')
+var client = adb.createClient()
 
-client.listDevices(function(err, devices) {
-  devices.forEach(function(device) {
-    client.readdir(device.id, '/sdcard', function(err, files) {
-      files.forEach(function(file) {
-        if (file.isFile()) {
-          console.log("Found file '%s' in /sdcard", file.name);
-        }
-      });
-    });
-  });
-});
+client.listDevices()
+  .then(function(devices) {
+    return Promise.map(devices, function(device) {
+      return client.readdir(device.id, '/sdcard')
+        .then(function(files) {
+          // Synchronous, so we don't have to care about returning at the
+          // right time
+          files.forEach(function(file) {
+            if (file.isFile()) {
+              console.log('[%s] Found file "%s"', device.id, file.name)
+            }
+          })
+        })
+    })
+  })
+  .then(function() {
+    console.log('Done checking /sdcard files on connected devices')
+  })
+  .catch(function(err) {
+    console.error('Something went wrong:', err.stack)
+  })
 ```
 
 ## API
