@@ -454,6 +454,8 @@ Takes a screenshot in PNG format using the built-in `screencap` utility. This is
 
 Generating the PNG on the device naturally requires considerably more processing time on that side. However, as the data transferred over USB easily decreases by ~95%, and no conversion being required on the host, this method is usually several times faster than using the framebuffer. Naturally, this benefit does not apply if we're forced to fall back to the framebuffer.
 
+For convenience purposes, if the screencap command fails (e.g. because it doesn't exist on older Androids), we fall back to `client.framebuffer(serial, 'png')`, which is slower and has additional installation requirements.
+
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err, screencap)**
     - **err** `null` when successful, `Error` otherwise.
