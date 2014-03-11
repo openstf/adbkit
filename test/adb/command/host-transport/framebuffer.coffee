@@ -8,7 +8,7 @@ Protocol = require '../../../../src/adb/protocol'
 FrameBufferCommand =
   require '../../../../src/adb/command/host-transport/framebuffer'
 
-describe.only 'FrameBufferCommand', ->
+describe 'FrameBufferCommand', ->
 
   it "should send 'framebuffer:'", (done) ->
     conn = new MockConnection
