@@ -7,76 +7,81 @@ Protocol = require '../../protocol'
 RgbTransform = require '../../framebuffer/rgbtransform'
 
 class FrameBufferCommand extends Command
-  execute: (format, callback) ->
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.OKAY
-          @parser.readBytes 52, (header) =>
-            this._parseHeader header, (err, info) =>
-              return callback err if err
-              switch format
-                when 'raw'
-                  callback null, info, @parser.raw()
-                else
-                  callback null, info, this._convert info, format, @parser.raw()
-        when Protocol.FAIL
-          @parser.readError callback
-        else
-          callback this._unexpected reply
+  execute: (format) ->
     this._send 'framebuffer:'
+    @parser.readAscii 4
+      .then (reply) =>
+        switch reply
+          when Protocol.OKAY
+            @parser.readBytes 52
+              .then (header) =>
+                meta = this._parseHeader header
+                switch format
+                  when 'raw'
+                    stream = @parser.raw()
+                    stream.meta = meta
+                    stream
+                  else
+                    stream = this._convert meta
+                    stream.meta = meta
+                    stream
+          when Protocol.FAIL
+            @parser.readError()
+          else
+            @parser.unexpected reply, 'OKAY or FAIL'
 
-  _convert: (info, format, raw) ->
+  _convert: (meta, format, raw) ->
     debug "Converting raw framebuffer stream into #{format.toUpperCase()}"
-    switch info.format
+    switch meta.format
       when 'rgb', 'rgba'
         # Known to be supported by GraphicsMagick
       else
-        debug "Silently transforming '#{info.format}' into 'rgb' for `gm`"
-        transform = new RgbTransform info
-        info.format = 'rgb'
+        debug "Silently transforming '#{meta.format}' into 'rgb' for `gm`"
+        transform = new RgbTransform meta
+        meta.format = 'rgb'
         raw = @parser.raw().pipe transform
     proc = spawn 'gm', [
       'convert'
       '-size'
-      "#{info.width}x#{info.height}"
-      "#{info.format}:-"
+      "#{meta.width}x#{meta.height}"
+      "#{meta.format}:-"
       "#{format}:-"
     ]
     raw.pipe proc.stdin
     return proc.stdout
 
   _parseHeader: (header, callback) ->
-    info = {}
+    meta = {}
     offset = 0
-    info.version = header.readUInt32LE offset
-    if info.version is 16
-      return callback new Error 'Old-style raw images are not supported'
+    meta.version = header.readUInt32LE offset
+    if meta.version is 16
+      throw new Error 'Old-style raw images are not supported'
     offset += 4
-    info.bpp = header.readUInt32LE offset
+    meta.bpp = header.readUInt32LE offset
     offset += 4
-    info.size = header.readUInt32LE offset
+    meta.size = header.readUInt32LE offset
     offset += 4
-    info.width = header.readUInt32LE offset
+    meta.width = header.readUInt32LE offset
     offset += 4
-    info.height = header.readUInt32LE offset
+    meta.height = header.readUInt32LE offset
     offset += 4
-    info.red_offset = header.readUInt32LE offset
+    meta.red_offset = header.readUInt32LE offset
     offset += 4
-    info.red_length = header.readUInt32LE offset
+    meta.red_length = header.readUInt32LE offset
     offset += 4
-    info.blue_offset = header.readUInt32LE offset
+    meta.blue_offset = header.readUInt32LE offset
     offset += 4
-    info.blue_length = header.readUInt32LE offset
+    meta.blue_length = header.readUInt32LE offset
     offset += 4
-    info.green_offset = header.readUInt32LE offset
+    meta.green_offset = header.readUInt32LE offset
     offset += 4
-    info.green_length = header.readUInt32LE offset
+    meta.green_length = header.readUInt32LE offset
     offset += 4
-    info.alpha_offset = header.readUInt32LE offset
+    meta.alpha_offset = header.readUInt32LE offset
     offset += 4
-    info.alpha_length = header.readUInt32LE offset
-    info.format = if info.blue_offset is 0 then 'bgr' else 'rgb'
-    info.format += 'a' if info.bpp is 32 or info.alpha_length
-    callback null, info
+    meta.alpha_length = header.readUInt32LE offset
+    meta.format = if meta.blue_offset is 0 then 'bgr' else 'rgb'
+    meta.format += 'a' if meta.bpp is 32 or meta.alpha_length
+    return meta
 
 module.exports = FrameBufferCommand
