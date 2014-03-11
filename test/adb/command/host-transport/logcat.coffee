@@ -7,6 +7,7 @@ Chai.use require 'sinon-chai'
 
 MockConnection = require '../../../mock/connection'
 Protocol = require '../../../../src/adb/protocol'
+Parser = require '../../../../src/adb/parser'
 LogcatCommand = require '../../../../src/adb/command/host-transport/logcat'
 
 describe 'LogcatCommand', ->
@@ -41,21 +42,10 @@ describe 'LogcatCommand', ->
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'foo\r\n'
+      conn.socket.causeEnd()
     cmd.execute()
       .then (stream) ->
-        expect(stream).to.be.an.instanceof Stream.Readable
-
-        resolver = Promise.defer()
-        all = new Buffer 0
-
-        stream.on 'readable', readableListner = ->
-          while chunk = stream.read()
-            all = Buffer.concat [all, chunk]
-          if all.toString().indexOf('\n') isnt -1
-            resolver.resolve all.toString()
-
-        resolver.promise.finally ->
-          stream.removeListener 'readable', readableListner
-      .then (line) ->
-        expect(line).to.equal 'foo\n'
+        new Parser(stream).readAll()
+      .then (out) ->
+        expect(out.toString()).to.equal 'foo\n'
         done()
