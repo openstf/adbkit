@@ -28,8 +28,9 @@ class StartActivityCommand extends Command
         switch reply
           when Protocol.OKAY
             @parser.searchLine RE_ERROR
-              .then (match) ->
+              .finally =>
                 @connection.end()
+              .then (match) ->
                 throw new Error match[1]
               .catch Parser.PrematureEOFError, (err) ->
                 true
