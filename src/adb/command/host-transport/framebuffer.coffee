@@ -50,7 +50,7 @@ class FrameBufferCommand extends Command
     raw.pipe proc.stdin
     return proc.stdout
 
-  _parseHeader: (header, callback) ->
+  _parseHeader: (header) ->
     meta = {}
     offset = 0
     meta.version = header.readUInt32LE offset

@@ -19,7 +19,7 @@ class InstallCommand extends Command
                   else
                     @parser.unexpected reply, "'Success' or 'Failure'"
           when Protocol.FAIL
-            @parser.readError callback
+            @parser.readError()
           else
             @parser.unexpected reply, 'OKAY or FAIL'
 

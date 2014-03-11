@@ -10,7 +10,7 @@ class Command
     @parser = @connection.parser
     @protocol = Protocol
 
-  execute: (callback) ->
+  execute: ->
     throw new Exception 'Missing implementation'
 
   _unexpected: (data) ->

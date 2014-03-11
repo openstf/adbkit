@@ -2,7 +2,7 @@ Command = require '../../command'
 Protocol = require '../../protocol'
 
 class HostTransportCommand extends Command
-  execute: (serial, callback) ->
+  execute: (serial) ->
     this._send "host:transport:#{serial}"
     @parser.readAscii 4
       .then (reply) =>

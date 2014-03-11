@@ -2,7 +2,7 @@ Command = require '../../command'
 Protocol = require '../../protocol'
 
 class HostKillCommand extends Command
-  execute: (callback) ->
+  execute: ->
     this._send 'host:kill'
     @parser.readAscii 4
       .then (reply) =>

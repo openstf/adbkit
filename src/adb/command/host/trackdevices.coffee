@@ -4,7 +4,7 @@ Tracker = require '../../tracker'
 HostDevicesCommand = require './devices'
 
 class HostTrackDevicesCommand extends HostDevicesCommand
-  execute: (callback) ->
+  execute: ->
     this._send 'host:track-devices'
     @parser.readAscii 4
       .then (reply) =>

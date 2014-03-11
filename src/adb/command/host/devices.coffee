@@ -2,7 +2,7 @@ Command = require '../../command'
 Protocol = require '../../protocol'
 
 class HostDevicesCommand extends Command
-  execute: (callback) ->
+  execute: ->
     this._send 'host:devices'
     @parser.readAscii 4
       .then (reply) =>
