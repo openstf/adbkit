@@ -201,8 +201,11 @@ class Client
           .then (transport) ->
             new MonkeyCommand transport
               .execute port
-              .then ->
+              .then (out) ->
                 tryConnect 20
+                  .then (monkey) ->
+                    monkey.once 'end', ->
+                      out.end()
 
   openLogcat: (serial) ->
     this.transport serial
