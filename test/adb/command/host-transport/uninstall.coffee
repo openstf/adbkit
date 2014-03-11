@@ -17,12 +17,13 @@ describe 'UninstallCommand', ->
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData('shell:pm uninstall foo 2>/dev/null').toString()
+    setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'Success\r\n'
       conn.socket.causeEnd()
-    cmd.execute 'foo', (err) ->
-      expect(err).to.be.null
-      done()
+    cmd.execute 'foo'
+      .then ->
+        done()
 
   it "should succeed even if command responds with 'Failure'", (done) ->
     conn = new MockConnection
@@ -30,12 +31,13 @@ describe 'UninstallCommand', ->
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData('shell:pm uninstall foo 2>/dev/null').toString()
+    setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'Failure\r\n'
       conn.socket.causeEnd()
-    cmd.execute 'foo', (err) ->
-      expect(err).to.be.null
-      done()
+    cmd.execute 'foo'
+      .then ->
+        done()
 
   it "should fail if any other data is received", (done) ->
     conn = new MockConnection
@@ -43,10 +45,12 @@ describe 'UninstallCommand', ->
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData('shell:pm uninstall foo 2>/dev/null').toString()
+    setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'open: Permission failed\r\n'
       conn.socket.causeRead 'Failure\r\n'
       conn.socket.causeEnd()
-    cmd.execute 'foo', (err) ->
-      expect(err).to.be.an.instanceof Error
-      done()
+    cmd.execute 'foo'
+      .catch (err) ->
+        expect(err).to.be.an.instanceof Error
+        done()
