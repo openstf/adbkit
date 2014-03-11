@@ -13,9 +13,6 @@ class Command
   execute: ->
     throw new Exception 'Missing implementation'
 
-  _unexpected: (data) ->
-    new Error "Unexpected response data: '#{data}'"
-
   _send: (data) ->
     encoded = Protocol.encodeData data
     debug "Send '#{encoded}'"
