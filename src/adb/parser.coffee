@@ -155,7 +155,12 @@ class Parser
     read()
 
   skipLine: ->
-    this.readUntil 0x0a
+    this.readUntil 0x0a # '\n'
+      .then (line) ->
+        if line[line.length - 1] is 0x0d # '\r'
+          line.slice 0, -1
+        else
+          line
 
   unexpected: (data, expected) ->
     Promise.reject new Parser.UnexpectedDataError data, expected

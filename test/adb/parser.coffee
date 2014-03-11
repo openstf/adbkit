@@ -7,7 +7,7 @@ Chai.use require 'sinon-chai'
 
 Parser = require '../../src/adb/parser'
 
-describe 'Parser', ->
+describe.only 'Parser', ->
 
   describe 'readAll()', ->
 
@@ -233,6 +233,15 @@ describe 'Parser', ->
           expect(buf.toString()).to.equal 'foo bar'
           done()
       stream.write 'foo bar\nzip zap\npip pop'
+
+    it "should strip trailing \\r", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.skipLine()
+        .then (buf) ->
+          expect(buf.toString()).to.equal 'foo bar'
+          done()
+      stream.write 'foo bar\r\n'
 
     it "should reject with Parser.PrematureEOFError if stream ends
         before a line is found", (done) ->
