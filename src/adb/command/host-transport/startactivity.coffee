@@ -1,5 +1,3 @@
-split = require 'split'
-
 Command = require '../../command'
 Protocol = require '../../protocol'
 Parser = require '../../parser'
