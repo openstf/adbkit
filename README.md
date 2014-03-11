@@ -585,7 +585,7 @@ Attempts to identify `contents` and calls the appropriate `push*` method for it.
 * **contents** When `String`, treated as a local file path and forwarded to `sync.pushFile()`. Otherwise, treated as a [`Stream`][node-stream] and forwarded to `sync.pushStream()`.
 * **path** The path to push to.
 * **mode** Optional. The mode of the file. Defaults to `0644`.
-* **callback(err, transfer)** Optional. Called when the push has completed.
+* **callback(err, transfer)** Optional. Called when the push has starts.
     - **err** `null` when successfully initialized, `Error` otherwise. Note that `transfer` may still emit errors that occur during the transfer.
     - **transfer** The same `PushTransfer` instance returned by the `sync.push()` call.
 * Returns: A `PushTransfer` instance. See below for details.
