@@ -18,6 +18,8 @@ class Connection extends EventEmitter
       this.emit 'connect'
     @socket.on 'end', =>
       this.emit 'end'
+    @socket.on 'drain', =>
+      this.emit 'drain'
     @socket.on 'timeout', =>
       this.emit 'timeout'
     @socket.on 'error', (err) =>

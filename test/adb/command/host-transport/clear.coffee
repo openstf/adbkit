@@ -19,9 +19,9 @@ describe 'ClearCommand', ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'Success'
       conn.socket.causeEnd()
-    cmd.execute 'foo.bar.c', (err) ->
-      expect(err).to.be.null
-      done()
+    cmd.execute 'foo.bar.c'
+      .then ->
+        done()
 
   it "should callback with error on failure", (done) ->
     conn = new MockConnection
@@ -30,9 +30,10 @@ describe 'ClearCommand', ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'Failed'
       conn.socket.causeEnd()
-    cmd.execute 'foo.bar.c', (err) ->
-      expect(err).to.be.an.instanceof Error
-      done()
+    cmd.execute 'foo.bar.c'
+      .catch (err) ->
+        expect(err).to.be.an.instanceof Error
+        done()
 
   it "should callback with error on failure even if not closed", (done) ->
     conn = new MockConnection
@@ -40,9 +41,10 @@ describe 'ClearCommand', ->
     conn.socket.on 'write', (chunk) ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'Failed'
-    cmd.execute 'foo.bar.c', (err) ->
-      expect(err).to.be.an.instanceof Error
-      done()
+    cmd.execute 'foo.bar.c'
+      .catch (err) ->
+        expect(err).to.be.an.instanceof Error
+        done()
 
   it "should callback with error if unexpected output", (done) ->
     conn = new MockConnection
@@ -51,6 +53,7 @@ describe 'ClearCommand', ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'bar'
       conn.socket.causeEnd()
-    cmd.execute 'foo.bar.c', (err) ->
-      expect(err).to.be.an.instanceof Error
-      done()
+    cmd.execute 'foo.bar.c'
+      .catch (err) ->
+        expect(err).to.be.an.instanceof Error
+        done()

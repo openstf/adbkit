@@ -1,9 +1,28 @@
 {EventEmitter} = require 'events'
+Promise = require 'bluebird'
+
+Parser = require './parser'
 
 class Tracker extends EventEmitter
-  constructor: (@connection) ->
+  constructor: (@command) ->
     @deviceList = []
     @deviceMap = {}
+    @reader = this.read()
+      .catch Parser.PrematureEOFError, (err) =>
+        this.emit 'end'
+      .catch Promise.CancellationError, (err) =>
+        @command.connection.end()
+        this.emit 'end'
+      .catch (err) =>
+        this.emit 'error', err
+        this.emit 'end'
+
+  read: ->
+    @command._readDevices()
+      .cancellable()
+      .then (list) =>
+        this.update list
+        this.read()
 
   update: (newList) ->
     changeSet =
@@ -31,7 +50,7 @@ class Tracker extends EventEmitter
     return this
 
   end: ->
-    @connection.end()
+    @reader.cancel()
     return this
 
 module.exports = Tracker

@@ -2,17 +2,19 @@ Command = require '../../command'
 Protocol = require '../../protocol'
 
 class HostVersionCommand extends Command
-  execute: (callback) ->
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.OKAY
-          @parser.readValue (value) =>
-            callback null, this._parseVersion value
-        when Protocol.FAIL
-          @parser.readError callback
-        else
-          callback null, this._parseVersion reply
+  execute: ->
     this._send 'host:version'
+    @parser.readAscii 4
+      .then (reply) =>
+        switch reply
+          when Protocol.OKAY
+            @parser.readValue()
+              .then (value) =>
+                this._parseVersion value
+          when Protocol.FAIL
+            @parser.readError()
+          else
+            this._parseVersion reply
 
   _parseVersion: (version) ->
     parseInt version, 16
