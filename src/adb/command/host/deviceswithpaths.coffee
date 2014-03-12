@@ -8,13 +8,16 @@ class HostDevicesWithPathsCommand extends Command
       .then (reply) =>
         switch reply
           when Protocol.OKAY
-            @parser.readValue()
-              .then (value) =>
-                this._parseDevices value
+            this._readDevices()
           when Protocol.FAIL
             @parser.readError()
           else
             @parser.unexpected reply, 'OKAY or FAIL'
+
+  _readDevices: ->
+    @parser.readValue()
+      .then (value) =>
+        this._parseDevices value
 
   _parseDevices: (value) ->
     devices = []
