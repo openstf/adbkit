@@ -6,17 +6,17 @@ Chai.use require 'sinon-chai'
 
 MockConnection = require '../../../mock/connection'
 Protocol = require '../../../../src/adb/protocol'
-UninstallCommand =
-  require '../../../../src/adb/command/host-transport/uninstall'
+InstallCommand =
+  require '../../../../src/adb/command/host-transport/install'
 
-describe 'UninstallCommand', ->
+describe 'InstallCommand', ->
 
-  it "should succeed when command responds with 'Success'", (done) ->
+  it "should send 'pm install -r <apk>'", (done) ->
     conn = new MockConnection
-    cmd = new UninstallCommand conn
+    cmd = new InstallCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:pm uninstall foo 2>/dev/null').toString()
+        Protocol.encodeData("shell:pm install -r 'foo' 2>/dev/null").toString()
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'Success\r\n'
@@ -25,26 +25,31 @@ describe 'UninstallCommand', ->
       .then ->
         done()
 
-  it "should succeed even if command responds with 'Failure'", (done) ->
+  it "should succeed when command responds with 'Success'", (done) ->
     conn = new MockConnection
-    cmd = new UninstallCommand conn
-    conn.socket.on 'write', (chunk) ->
-      expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:pm uninstall foo 2>/dev/null').toString()
+    cmd = new InstallCommand conn
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Failure\r\n'
+      conn.socket.causeRead 'Success\r\n'
       conn.socket.causeEnd()
     cmd.execute 'foo'
       .then ->
         done()
 
+  it "should reject if command responds with 'Failure'", (done) ->
+    conn = new MockConnection
+    cmd = new InstallCommand conn
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Failure\r\n'
+      conn.socket.causeEnd()
+    cmd.execute 'foo'
+      .catch (err) ->
+        done()
+
   it "should fail if any other data is received", (done) ->
     conn = new MockConnection
-    cmd = new UninstallCommand conn
-    conn.socket.on 'write', (chunk) ->
-      expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:pm uninstall foo 2>/dev/null').toString()
+    cmd = new InstallCommand conn
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'open: Permission failed\r\n'

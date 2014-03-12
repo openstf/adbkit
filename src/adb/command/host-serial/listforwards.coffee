@@ -2,17 +2,19 @@ Command = require '../../command'
 Protocol = require '../../protocol'
 
 class ListForwardsCommand extends Command
-  execute: (serial, callback) ->
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.OKAY
-          @parser.readValue (value) =>
-            callback null, this._parseForwards value
-        when Protocol.FAIL
-          @parser.readError callback
-        else
-          callback this._unexpected reply
+  execute: (serial) ->
     this._send "host-serial:#{serial}:list-forward"
+    @parser.readAscii 4
+      .then (reply) =>
+        switch reply
+          when Protocol.OKAY
+            @parser.readValue()
+              .then (value) =>
+                this._parseForwards value
+          when Protocol.FAIL
+            @parser.readError()
+          else
+            @parser.unexpected reply, 'OKAY or FAIL'
 
   _parseForwards: (value) ->
     forwards = []

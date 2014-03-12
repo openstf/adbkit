@@ -1,5 +1,6 @@
 Monkey = require 'adbkit-monkey'
 Logcat = require 'adbkit-logcat'
+Promise = require 'bluebird'
 debug = require('debug')('adb:client')
 
 Connection = require './connection'
@@ -44,280 +45,312 @@ class Client
     @options.bin ||= 'adb'
 
   connection: ->
-    new Connection(@options)
+    resolver = Promise.defer()
+    conn = new Connection(@options)
+      .on 'error', errorListener = (err) ->
+        resolver.reject err
+      .on 'connect', connectListener = ->
+        resolver.resolve conn
       .connect()
+    resolver.promise.finally ->
+      conn.removeListener 'error', errorListener
+      conn.removeListener 'connect', connectListener
 
   version: (callback) ->
     this.connection()
-      .on 'connect', ->
-        new HostVersionCommand(this)
-          .execute callback
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new HostVersionCommand conn
+          .execute()
+      .nodeify callback
 
   listDevices: (callback) ->
     this.connection()
-      .on 'connect', ->
-        new HostDevicesCommand(this)
-          .execute callback
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new HostDevicesCommand conn
+          .execute()
+      .nodeify callback
 
   listDevicesWithPaths: (callback) ->
     this.connection()
-      .on 'connect', ->
-        new HostDevicesWithPathsCommand(this)
-          .execute callback
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new HostDevicesWithPathsCommand conn
+          .execute()
+      .nodeify callback
 
   trackDevices: (callback) ->
     this.connection()
-      .on 'connect', ->
-        new HostTrackDevicesCommand(this)
-          .execute callback
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new HostTrackDevicesCommand conn
+          .execute()
+      .nodeify callback
 
   kill: (callback) ->
     this.connection()
-      .on 'connect', ->
-        new HostKillCommand(this)
-          .execute callback
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new HostKillCommand conn
+          .execute()
+      .nodeify callback
 
   getSerialNo: (serial, callback) ->
     this.connection()
-      .on 'connect', ->
-        new GetSerialNoCommand(this)
-          .execute serial, callback
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new GetSerialNoCommand conn
+          .execute serial
+      .nodeify callback
 
   getDevicePath: (serial, callback) ->
     this.connection()
-      .on 'connect', ->
-        new GetDevicePathCommand(this)
-          .execute serial, callback
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new GetDevicePathCommand conn
+          .execute serial
+      .nodeify callback
 
   getState: (serial, callback) ->
     this.connection()
-      .on 'connect', ->
-        new GetStateCommand(this)
-          .execute serial, callback
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new GetStateCommand conn
+          .execute serial
+      .nodeify callback
 
   getProperties: (serial, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new GetPropertiesCommand(transport)
-        .execute callback
+    this.transport serial
+      .then (transport) ->
+        new GetPropertiesCommand transport
+          .execute()
+      .nodeify callback
 
   getFeatures: (serial, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new GetFeaturesCommand(transport)
-        .execute callback
+    this.transport serial
+      .then (transport) ->
+        new GetFeaturesCommand transport
+          .execute()
+      .nodeify callback
 
   getPackages: (serial, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new GetPackagesCommand(transport)
-        .execute callback
+    this.transport serial
+      .then (transport) ->
+        new GetPackagesCommand transport
+          .execute()
+      .nodeify callback
 
   forward: (serial, local, remote, callback) ->
     this.connection()
-      .on 'connect', ->
-        new ForwardCommand(this)
-          .execute serial, local, remote, callback
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new ForwardCommand conn
+          .execute serial, local, remote
+      .nodeify callback
 
   listForwards: (serial, callback) ->
     this.connection()
-      .on 'connect', ->
-        new ListForwardsCommand(this)
-          .execute serial, callback
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new ListForwardsCommand conn
+          .execute serial
+      .nodeify callback
 
   transport: (serial, callback) ->
     this.connection()
-      .on 'connect', ->
-        new HostTransportCommand(this)
-          .execute serial, (err) =>
-            callback err, this
-      .on 'error', callback
-    return this
+      .then (conn) ->
+        new HostTransportCommand conn
+          .execute serial
+          .return conn
+      .nodeify callback
 
   shell: (serial, command, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new ShellCommand(transport)
-        .execute command, callback
+    this.transport serial
+      .then (transport) ->
+        new ShellCommand transport
+          .execute command
+      .nodeify callback
 
   remount: (serial, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new RemountCommand(transport)
-        .execute callback
+    this.transport serial
+      .then (transport) ->
+        new RemountCommand transport
+          .execute()
+      .nodeify callback
 
-  framebuffer: (serial, format, callback) ->
-    if arguments.length is 2
+  framebuffer: (serial, format = 'raw', callback) ->
+    if typeof format is 'function'
       callback = format
       format = 'raw'
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new FrameBufferCommand(transport)
-        .execute format, callback
+    this.transport serial
+      .then (transport) ->
+        new FrameBufferCommand transport
+          .execute format
+      .nodeify callback
 
   screencap: (serial, callback) ->
-    this.transport serial, (err, transport) =>
-      return callback err if err
-      new ScreencapCommand(transport)
-        .execute (err, out) =>
-          return callback null, out unless err
-          debug "Emulating screencap command due to '#{err}'"
-          this.framebuffer serial, 'png', (err, info, framebuffer) ->
-            return callback err if err
-            callback null, framebuffer
+    this.transport serial
+      .then (transport) =>
+        new ScreencapCommand transport
+          .execute()
+          .catch (err) =>
+            debug "Emulating screencap command due to '#{err}'"
+            this.framebuffer serial, 'png'
+      .nodeify callback
 
   openLog: (serial, name, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new LogCommand(transport)
-        .execute name, callback
+    this.transport serial
+      .then (transport) ->
+        new LogCommand transport
+          .execute name
+      .nodeify callback
 
   openTcp: (serial, port, host, callback) ->
-    if arguments.length is 3
+    if typeof host is 'function'
       callback = host
       host = undefined
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new TcpCommand(transport)
-        .execute port, host, callback
+    this.transport serial
+      .then (transport) ->
+        new TcpCommand transport
+          .execute port, host
+      .nodeify callback
 
-  openMonkey: (serial, port, callback) ->
-    if arguments.length is 2
+  openMonkey: (serial, port = 1080, callback) ->
+    if typeof port is 'function'
       callback = port
       port = 1080
-    tryConnect = (times, callback) =>
-      this.openTcp serial, port, (err, stream) =>
-        if err and times -= 1
-          debug "Monkey can't be reached, trying #{times} more times"
-          setTimeout ->
-            tryConnect times, callback
-          , 100
-        else if err
-          callback err
-        else
-          callback null, Monkey.connectStream stream
-    tryConnect 1, (err, monkey) =>
-      return callback null, monkey unless err
-      this.transport serial, (err, transport) =>
-        return callback err if err
-        new MonkeyCommand(transport)
-          .execute port, (err) =>
-            return callback err if err
-            tryConnect 20, callback
+    tryConnect = (times) =>
+      this.openTcp serial, port
+        .then (stream) ->
+          Monkey.connectStream stream
+        .catch (err) ->
+          if times -= 1
+            debug "Monkey can't be reached, trying #{times} more times"
+            Promise.delay 100
+              .then ->
+                tryConnect times
+          else
+            throw err
+    tryConnect 1
+      .catch (err) ->
+        this.transport serial
+          .then (transport) ->
+            new MonkeyCommand transport
+              .execute port
+              .then (out) ->
+                tryConnect 20
+                  .then (monkey) ->
+                    monkey.once 'end', ->
+                      out.end()
+      .nodeify callback
 
   openLogcat: (serial, callback) ->
-    this.transport serial, (err, transport) =>
-      return callback err if err
-      new LogcatCommand(transport)
-        .execute (err, stream) =>
-          return callback err if err
-          callback null, Logcat.readStream stream, fixLineFeeds: false
+    this.transport serial
+      .then (transport) ->
+        new LogcatCommand transport
+          .execute (stream) ->
+            Logcat.readStream stream,
+              fixLineFeeds: false
+      .nodeify callback
 
   openProcStat: (serial, callback) ->
-    this.syncService serial, (err, sync) ->
-      return callback err if err
-      callback null, new ProcStat sync
+    this.syncService serial
+      .then (sync) ->
+        new ProcStat sync
+      .nodeify callback
 
   clear: (serial, pkg, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new ClearCommand(transport)
-        .execute pkg, callback
+    this.transport serial
+      .then (transport) ->
+        new ClearCommand transport
+          .execute pkg
+      .nodeify callback
 
   install: (serial, apk, callback) ->
     temp = Sync.temp if typeof apk is 'string' then apk else '_stream.apk'
-    this.push serial, apk, temp, (err, transfer) =>
-      return callback err if err
-      transfer.on 'end', =>
-        this.transport serial, (err, transport) =>
-          return callback err if err
-          new InstallCommand(transport)
-            .execute temp, (err) =>
-              return callback err if err
-              this.shell serial, ['rm', '-f', temp], (err, out) ->
-                callback err
+    this.push serial, apk, temp
+      .then (transfer) =>
+        resolver = Promise.defer()
+
+        transfer.on 'error', errorListener = (err) ->
+          resolver.reject err
+
+        transfer.on 'end', endListener = =>
+          cmd = this.transport serial
+            .then (transport) =>
+              new InstallCommand transport
+                .execute temp
+                .then =>
+                  this.shell serial, ['rm', '-f', temp]
+                .then (out) ->
+                  true
+          resolver.resolve cmd
+
+        resolver.promise.finally ->
+          transfer.removeListener 'error', errorListener
+          transfer.removeListener 'end', endListener
+
+      .nodeify callback
 
   uninstall: (serial, pkg, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new UninstallCommand(transport)
-        .execute pkg, callback
+    this.transport serial
+      .then (transport) ->
+        new UninstallCommand transport
+          .execute pkg
+      .nodeify callback
 
   isInstalled: (serial, pkg, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new IsInstalledCommand(transport)
-        .execute pkg, callback
+    this.transport serial
+      .then (transport) ->
+        new IsInstalledCommand transport
+          .execute pkg
+      .nodeify callback
 
   startActivity: (serial, options, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new StartActivityCommand(transport)
-        .execute options, callback
+    this.transport serial
+      .then (transport) ->
+        new StartActivityCommand transport
+          .execute options
+      .nodeify callback
 
   syncService: (serial, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new SyncCommand(transport)
-        .execute callback
+    this.transport serial
+      .then (transport) ->
+        new SyncCommand transport
+          .execute()
+      .nodeify callback
 
   stat: (serial, path, callback) ->
-    this.syncService serial, (err, sync) ->
-      return callback err if err
-      sync.stat path, (err, stats) ->
-        sync.end()
-        return callback err if err
-        callback null, stats
+    this.syncService serial
+      .then (sync) ->
+        sync.stat path
+          .finally ->
+            sync.end()
+      .nodeify callback
 
   readdir: (serial, path, callback) ->
-    this.syncService serial, (err, sync) ->
-      return callback err if err
-      sync.readdir path, (err, files) ->
-        sync.end()
-        return callback err if err
-        callback null, files
+    this.syncService serial
+      .then (sync) ->
+        sync.readdir path
+          .finally ->
+            sync.end()
+      .nodeify callback
 
   pull: (serial, path, callback) ->
-    this.syncService serial, (err, sync) ->
-      return callback err if err
-      transfer = sync.pull path, callback
-      transfer.on 'end', ->
-        sync.end()
+    this.syncService serial
+      .then (sync) ->
+        sync.pull path
+          .on 'end', ->
+            sync.end()
+      .nodeify callback
 
   push: (serial, contents, path, mode, callback) ->
     if typeof mode is 'function'
       callback = mode
       mode = undefined
-    this.syncService serial, (err, sync) ->
-      return callback err if err
-      transfer = sync.push contents, path, mode, callback
-      transfer.on 'end', ->
-        sync.end()
+    this.syncService serial
+      .then (sync) ->
+        sync.push contents, path, mode
+          .on 'end', ->
+            sync.end()
+      .nodeify callback
 
   waitBootComplete: (serial, callback) ->
-    this.transport serial, (err, transport) ->
-      return callback err if err
-      new WaitBootCompleteCommand(transport)
-        .execute callback
+    this.transport serial
+      .then (transport) ->
+        new WaitBootCompleteCommand transport
+          .execute()
+      .nodeify callback
 
 module.exports = Client

@@ -3,23 +3,21 @@ Protocol = require '../../protocol'
 LineTransform = require '../../linetransform'
 
 class GetPropertiesCommand extends Command
-  RE_KEYVAL = /^\[([\s\S]*?)\]: \[([\s\S]*?)\]$/gm
+  RE_KEYVAL = /^\[([\s\S]*?)\]: \[([\s\S]*?)\]\r?$/gm
 
-  execute: (callback) ->
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.OKAY
-          data = new Buffer ''
-          transform = @parser.raw().pipe new LineTransform
-          transform.on 'data', (chunk) ->
-            data = Buffer.concat [data, chunk]
-          transform.on 'end', =>
-            callback null, this._parseProperties data.toString()
-        when Protocol.FAIL
-          @parser.readError callback
-        else
-          callback this._unexpected reply
+  execute: ->
     this._send 'shell:getprop'
+    @parser.readAscii 4
+      .then (reply) =>
+        switch reply
+          when Protocol.OKAY
+            @parser.readAll()
+              .then (data) =>
+                this._parseProperties data.toString()
+          when Protocol.FAIL
+            @parser.readError()
+          else
+            @parser.unexpected reply, 'OKAY or FAIL'
 
   _parseProperties: (value) ->
     properties = {}

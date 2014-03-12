@@ -17,50 +17,49 @@ describe 'GetPackagesCommand', ->
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData('shell:pm list packages 2>/dev/null').toString()
+    setImmediate ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead '0000'
       conn.socket.causeEnd()
-    cmd.execute (err) ->
-      expect(err).to.be.null
-      done()
+    cmd.execute()
+      .then ->
+        done()
 
   it "should return an empty array for an empty package list", (done) ->
     conn = new MockConnection
     cmd = new GetPackagesCommand conn
-    conn.socket.on 'write', (chunk) ->
+    setImmediate ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead '0000'
       conn.socket.causeEnd()
-    cmd.execute (err, packages) ->
-      expect(err).to.be.null
-      expect(packages).to.be.empty
-      done()
+    cmd.execute()
+      .then (packages) ->
+        expect(packages).to.be.empty
+        done()
 
   it "should return an array of packages", (done) ->
     conn = new MockConnection
     cmd = new GetPackagesCommand conn
-    conn.socket.on 'write', (chunk) ->
+    setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead """
         package:com.google.android.gm
         package:com.google.android.inputmethod.japanese
-        package:com.google.android.tag
+        package:com.google.android.tag\r
         package:com.google.android.GoogleCamera
         package:com.google.android.youtube
         package:com.google.android.apps.magazines
         package:com.google.earth
         """
       conn.socket.causeEnd()
-    cmd.execute (err, packages) ->
-      expect(err).to.be.null
-      expect(packages).to.have.length 7
-      expect(packages).to.eql [
-        'com.google.android.gm'
-        'com.google.android.inputmethod.japanese'
-        'com.google.android.tag'
-        'com.google.android.GoogleCamera',
-        'com.google.android.youtube',
-        'com.google.android.apps.magazines',
-        'com.google.earth'
-      ]
-      done()
+    cmd.execute()
+      .then (packages) ->
+        expect(packages).to.have.length 7
+        expect(packages).to.eql [
+          'com.google.android.gm'
+          'com.google.android.inputmethod.japanese'
+          'com.google.android.tag'
+          'com.google.android.GoogleCamera',
+          'com.google.android.youtube',
+          'com.google.android.apps.magazines',
+          'com.google.earth'
+        ]
+        done()

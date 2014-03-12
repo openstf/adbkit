@@ -1,25 +1,22 @@
 Command = require '../../command'
 Protocol = require '../../protocol'
-LineTransform = require '../../linetransform'
 
 class GetFeaturesCommand extends Command
-  RE_FEATURE = /^feature:(.*?)(?:=(.*?))?$/gm
+  RE_FEATURE = /^feature:(.*?)(?:=(.*?))?\r?$/gm
 
-  execute: (callback) ->
-    @parser.readAscii 4, (reply) =>
-      switch reply
-        when Protocol.OKAY
-          data = new Buffer ''
-          transform = @parser.raw().pipe new LineTransform
-          transform.on 'data', (chunk) ->
-            data = Buffer.concat [data, chunk]
-          transform.on 'end', =>
-            callback null, this._parseFeatures data.toString()
-        when Protocol.FAIL
-          @parser.readError callback
-        else
-          callback this._unexpected reply
+  execute: ->
     this._send 'shell:pm list features 2>/dev/null'
+    @parser.readAscii 4
+      .then (reply) =>
+        switch reply
+          when Protocol.OKAY
+            @parser.readAll()
+              .then (data) =>
+                this._parseFeatures data.toString()
+          when Protocol.FAIL
+            @parser.readError()
+          else
+            @parser.unexpected reply, 'OKAY or FAIL'
 
   _parseFeatures: (value) ->
     features = {}
