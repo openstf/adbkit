@@ -10,7 +10,7 @@ Internally, we use this library to drive a multitude of Android devices from a v
 
 Previously, we made extensive use of callbacks in almost every feature. While this normally works okay, ADB connections can be quite fickle, and it was starting to become difficult to handle every possible error. For example, we'd often fail to properly clean up after ourselves when a connection suddenly died in an unexpected place, causing memory and resource leaks.
 
-In version 2, we've replaced nearly all callbacks with [Promises](http://promisesaplus.com/) (using [Bluebird](https://github.com/petkaantonov/bluebird)), allowing for much more reliable error propagation and resource cleanup (thanks to `.finally()`). Additionally, many commands can now be cancelled on the fly!
+In version 2, we've replaced nearly all callbacks with [Promises](http://promisesaplus.com/) (using [Bluebird](https://github.com/petkaantonov/bluebird)), allowing for much more reliable error propagation and resource cleanup (thanks to `.finally()`). Additionally, many commands can now be cancelled on the fly, and although unimplemented at this point, we'll also be able to report progress on long-running commands without any changes to the API.
 
 Unfortunately, some API changes were required for this change. `client.framebuffer()`'s callback, for example, previously accepted more than one argument, which doesn't translate into Promises so well. Thankfully, it made sense to combine the arguments anyway, and we were able to do it quite cleanly.
 
