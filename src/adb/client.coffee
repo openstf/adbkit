@@ -239,9 +239,10 @@ class Client
     this.transport serial
       .then (transport) ->
         new LogcatCommand transport
-          .execute (stream) ->
-            Logcat.readStream stream,
-              fixLineFeeds: false
+          .execute()
+      .then (stream) ->
+        Logcat.readStream stream,
+          fixLineFeeds: false
       .nodeify callback
 
   openProcStat: (serial, callback) ->
