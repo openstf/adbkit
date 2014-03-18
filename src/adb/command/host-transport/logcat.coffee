@@ -7,7 +7,7 @@ class LogcatCommand extends Command
     # For some reason, LG G Flex requires a filter spec with the -B option.
     # It doesn't actually use it, though. Regardless of the spec we always get
     # all events on all devices.
-    this._send 'shell:logcat -B * 2>/dev/null'
+    this._send 'shell:logcat -B *:I 2>/dev/null'
     @parser.readAscii 4
       .then (reply) =>
         switch reply
