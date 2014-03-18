@@ -12,12 +12,12 @@ LogcatCommand = require '../../../../src/adb/command/host-transport/logcat'
 
 describe 'LogcatCommand', ->
 
-  it "should send 'logcat -B'", (done) ->
+  it "should send 'logcat -B *'", (done) ->
     conn = new MockConnection
     cmd = new LogcatCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:logcat -B 2>/dev/null').toString()
+        Protocol.encodeData('shell:logcat -B * 2>/dev/null').toString()
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeEnd()
