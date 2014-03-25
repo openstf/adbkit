@@ -588,7 +588,9 @@ Starts the configured activity on the device. Roughly analogous to `adb shell am
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **options** The activity configuration. The following options are available:
     - **action** The action.
+    - **category** The category. For multiple categories, pass an `Array`.
     - **component** The component.
+    - **flags** Numeric flags.
     - **extras** Any extra data.
         * When an `Array`, each item must be an `Object` the following properties:
             - **key** The key name.

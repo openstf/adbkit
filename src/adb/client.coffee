@@ -225,14 +225,14 @@ class Client
     tryConnect 1
       .catch (err) ->
         this.transport serial
-          .then (transport) ->
-            new MonkeyCommand transport
-              .execute port
-              .then (out) ->
-                tryConnect 20
-                  .then (monkey) ->
-                    monkey.once 'end', ->
-                      out.end()
+      .then (transport) ->
+        new MonkeyCommand transport
+          .execute port
+      .then (out) ->
+        tryConnect 20
+      .then (monkey) ->
+        monkey.once 'end', ->
+          out.end()
       .nodeify callback
 
   openLogcat: (serial, callback) ->

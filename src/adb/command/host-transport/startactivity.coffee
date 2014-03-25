@@ -20,8 +20,16 @@ class StartActivityCommand extends Command
       args.push.apply args, this._formatExtras options.extras
     if options.action
       args.push '-a', this._escape options.action
+    if options.category
+      if Array.isArray options.category
+        options.category.forEach (category) =>
+          args.push '-c', this._escape category
+      else
+        args.push '-c', this._escape options.category
     if options.component
       args.push '-n', this._escape options.component
+    if options.flags
+      args.push '-f', this._escape options.flags
     this._send "shell:am start #{args.join ' '}"
     @parser.readAscii 4
       .then (reply) =>

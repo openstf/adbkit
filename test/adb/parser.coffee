@@ -235,12 +235,12 @@ describe 'Parser', ->
       stream.write 'foo bar'
       stream.end()
 
-  describe 'skipLine()', ->
+  describe 'readLine()', ->
 
     it "should skip a line terminated by \\n", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.skipLine()
+      parser.readLine()
         .then ->
           parser.readBytes 7
             .then (buf) ->
@@ -251,7 +251,7 @@ describe 'Parser', ->
     it "should return skipped line", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.skipLine()
+      parser.readLine()
         .then (buf) ->
           expect(buf.toString()).to.equal 'foo bar'
           done()
@@ -260,7 +260,7 @@ describe 'Parser', ->
     it "should strip trailing \\r", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.skipLine()
+      parser.readLine()
         .then (buf) ->
           expect(buf.toString()).to.equal 'foo bar'
           done()
@@ -270,7 +270,7 @@ describe 'Parser', ->
         before a line is found", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.skipLine()
+      parser.readLine()
         .catch Parser.PrematureEOFError, (err) ->
           done()
       stream.write 'foo bar'
