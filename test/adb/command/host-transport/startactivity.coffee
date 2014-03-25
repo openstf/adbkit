@@ -72,6 +72,61 @@ describe 'StartActivityCommand', ->
       .then ->
         done()
 
+  it "should send 'am start -c <category>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -c 'android.intent.category.LAUNCHER'").toString()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\n'
+      conn.socket.causeEnd()
+    options =
+      category: "android.intent.category.LAUNCHER"
+    cmd.execute options
+      .then ->
+        done()
+
+  it "should send 'am start -c <category1> -c <category2>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -c 'android.intent.category.LAUNCHER'
+          -c 'android.intent.category.DEFAULT'").toString()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\n'
+      conn.socket.causeEnd()
+    options =
+      category: [
+        "android.intent.category.LAUNCHER"
+        "android.intent.category.DEFAULT"
+      ]
+    cmd.execute options
+      .then ->
+        done()
+
+  it "should send 'am start -f <flags>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -f #{0x10210000}").toString()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\n'
+      conn.socket.causeEnd()
+    options =
+      flags: 0x10210000
+    cmd.execute options
+      .then ->
+        done()
+
   it "should send 'am start -n <pgk> --es <extras>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
