@@ -5,6 +5,7 @@ debug = require('debug')('adb:client')
 
 Connection = require './connection'
 Sync = require './sync'
+Parser = require './parser'
 ProcStat = require './proc/stat'
 
 HostVersionCommand = require './command/host/version'
@@ -268,20 +269,26 @@ class Client
           resolver.reject err
 
         transfer.on 'end', endListener = =>
-          cmd = this.transport serial
-            .then (transport) =>
-              new InstallCommand transport
-                .execute temp
-                .then =>
-                  this.shell serial, ['rm', '-f', temp]
-                .then (out) ->
-                  true
-          resolver.resolve cmd
+          resolver.resolve this.installRemote serial, temp
 
         resolver.promise.finally ->
           transfer.removeListener 'error', errorListener
           transfer.removeListener 'end', endListener
 
+      .nodeify callback
+
+  installRemote: (serial, apk, callback) ->
+    this.transport serial
+      .then (transport) =>
+        new InstallCommand transport
+          .execute apk
+          .then =>
+            this.shell serial, ['rm', '-f', apk]
+          .then (stream) ->
+            new Parser stream
+              .readAll()
+          .then (out) ->
+            true
       .nodeify callback
 
   uninstall: (serial, pkg, callback) ->

@@ -372,6 +372,19 @@ Note that if the call seems to stall, you may have to accept a dialog on the pho
 * Returns: `Promise`
 * Resolves with: `true`
 
+#### client.installRemote(serial, apk[, callback])
+
+Installs an APK file which must already be located on the device file system, and replaces any previously installed version. Useful if you've previously pushed the file to the device for some reason (perhaps to have direct access to `client.push()`'s transfer stats). This is roughly analogous to `adb shell pm install -r <apk>` followed by `adb shell rm -f <apk>`.
+
+Note that if the call seems to stall, you may have to accept a dialog on the phone first.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **apk** The path to the APK file on the device. The file will be removed when the command completes.
+* **callback(err)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: `Promise`
+* Resolves with: `true`
+
 #### client.isInstalled(serial, pkg[, callback])
 
 Tells you if the specific package is installed or not. This is analogous to `adb shell pm path <pkg>` and some output parsing.
