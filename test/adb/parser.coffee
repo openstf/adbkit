@@ -7,9 +7,19 @@ Chai.use require 'sinon-chai'
 
 Parser = require '../../src/adb/parser'
 
-describe 'Parser', ->
+describe.only 'Parser', ->
 
   describe 'readAll()', ->
+
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readAll()
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
 
     it "should read all remaining content until the stream ends", (done) ->
       stream = new Stream.PassThrough
@@ -25,6 +35,16 @@ describe 'Parser', ->
       stream.end()
 
   describe 'readBytes(howMany)', ->
+
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readBytes 1
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
 
     it "should read as many bytes as requested", (done) ->
       stream = new Stream.PassThrough
@@ -76,6 +96,16 @@ describe 'Parser', ->
       stream.end()
 
   describe 'readByteFlow(maxHowMany)', ->
+
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readByteFlow 1
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
 
     it "should read as many bytes as requested", (done) ->
       stream = new Stream.PassThrough
