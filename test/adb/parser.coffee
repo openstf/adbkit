@@ -7,7 +7,7 @@ Chai.use require 'sinon-chai'
 
 Parser = require '../../src/adb/parser'
 
-describe.only 'Parser', ->
+describe 'Parser', ->
 
   describe 'readAll()', ->
 
