@@ -25,6 +25,21 @@ describe 'LogcatCommand', ->
       .then (stream) ->
         done()
 
+  it "should send 'logcat -c && logcat -B *:I' if options.clear
+      is set", (done) ->
+    conn = new MockConnection
+    cmd = new LogcatCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData('shell:logcat -c 2>/dev/null &&
+          logcat -B *:I 2>/dev/null').toString()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeEnd()
+    cmd.execute clear: true
+      .then (stream) ->
+        done()
+
   it "should resolve with the logcat stream", (done) ->
     conn = new MockConnection
     cmd = new LogcatCommand conn

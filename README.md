@@ -457,13 +457,15 @@ Opens a direct connection to a binary log file, providing access to the raw log 
 * Returns: `Promise`
 * Resolves with: `log` (see callback)
 
-#### client.openLogcat(serial[, callback])
+#### client.openLogcat(serial[, options]&#91;, callback])
 
 Calls the `logcat` utility on the device and hands off the connection to [adbkit-logcat][adbkit-logcat], a pure Node.js Logcat client. This is analogous to `adb logcat -B`, but the event stream will be parsed for you and a separate event will be emitted for every log entry, allowing for easy processing.
 
 For more information, check out the [adbkit-logcat][adbkit-logcat] documentation.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **options** The following options are supports:
+    - **clear** When `true`, clears logcat before opening the reader. Not set by default.
 * **callback(err, logcat)** Optional. Use this or the returned `Promise`.
     - **err** `null` when successful, `Error` otherwise.
     - **logcat** The Logcat client. Please see the [adbkit-logcat][adbkit-logcat] documentation for details.
