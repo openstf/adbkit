@@ -51,7 +51,7 @@ class Parser
 
     tryRead()
 
-    resolver.promise.finally =>
+    resolver.promise.cancellable().finally =>
       @stream.removeListener 'readable', tryRead
       @stream.removeListener 'error', errorListener
       @stream.removeListener 'end', endListener
@@ -89,7 +89,7 @@ class Parser
 
     tryRead()
 
-    resolver.promise.finally =>
+    resolver.promise.cancellable().finally =>
       @stream.removeListener 'readable', tryRead
       @stream.removeListener 'error', errorListener
       @stream.removeListener 'end', endListener
@@ -126,7 +126,7 @@ class Parser
 
     tryRead()
 
-    resolver.promise.finally =>
+    resolver.promise.cancellable().finally =>
       @stream.removeListener 'readable', tryRead
       @stream.removeListener 'error', errorListener
       @stream.removeListener 'end', endListener

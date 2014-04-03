@@ -18,7 +18,8 @@ class Sync extends EventEmitter
   @temp: (path) ->
     "#{TEMP_PATH}/#{Path.basename path}"
 
-  constructor: (@connection, @parser) ->
+  constructor: (@connection) ->
+    @parser = @connection.parser
 
   stat: (path, callback) ->
     this._sendCommandWithArg Protocol.STAT, path

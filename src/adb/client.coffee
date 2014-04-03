@@ -236,11 +236,14 @@ class Client
           out.end()
       .nodeify callback
 
-  openLogcat: (serial, callback) ->
+  openLogcat: (serial, options, callback) ->
+    if typeof options is 'function'
+      callback = options
+      options = {}
     this.transport serial
       .then (transport) ->
         new LogcatCommand transport
-          .execute()
+          .execute options
       .then (stream) ->
         Logcat.readStream stream,
           fixLineFeeds: false

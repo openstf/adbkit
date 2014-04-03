@@ -12,6 +12,7 @@ Stats = require '../../src/adb/sync/stats'
 Entry = require '../../src/adb/sync/entry'
 PushTransfer = require '../../src/adb/sync/pushtransfer'
 PullTransfer = require '../../src/adb/sync/pulltransfer'
+MockConnection = require '../mock/connection'
 
 # This test suite is a bit special in that it requires a connected Android
 # device (or many devices). All will be tested.
@@ -51,50 +52,48 @@ describe 'Sync', ->
 
   describe 'end()', ->
 
-    it "should end the sync connection", (done) ->
-      forEachSyncDevice (sync) ->
-        new Promise (resolve, reject) ->
-          sync.connection.on 'end', ->
-            resolve()
-          sync.end()
-      , done
+    it "should end the sync connection", ->
+      conn = new MockConnection
+      sync = new Sync conn
+      Sinon.stub conn, 'end'
+      sync.end()
+      expect(conn.end).to.have.been.called
 
   describe 'push(contents, path[, mode])', ->
 
-    it "should call pushStream when contents is a Stream", (done) ->
-      forEachSyncDevice (sync) ->
-        stream = new Stream.PassThrough
-        spy = Sinon.spy sync, 'pushStream'
-        transfer = sync.push stream, SURELY_WRITABLE_FILE
-        transfer.cancel()
-        expect(spy).to.have.been.called
-      , done
+    it "should call pushStream when contents is a Stream", ->
+      conn = new MockConnection
+      sync = new Sync conn
+      stream = new Stream.PassThrough
+      Sinon.stub sync, 'pushStream'
+      sync.push stream, 'foo'
+      expect(sync.pushStream).to.have.been.called
 
-    it "should call pushFile when contents is a String", (done) ->
-      forEachSyncDevice (sync) ->
-        spy = Sinon.spy sync, 'pushFile'
-        transfer = sync.push 'foo.bar', SURELY_WRITABLE_FILE
-        transfer.cancel()
-        expect(spy).to.have.been.called
-      , done
+    it "should call pushFile when contents is a String", ->
+      conn = new MockConnection
+      sync = new Sync conn
+      stream = new Stream.PassThrough
+      Sinon.stub sync, 'pushFile'
+      sync.push __filename, 'foo'
+      expect(sync.pushFile).to.have.been.called
 
-    it "should return a PushTransfer instance", (done) ->
-      forEachSyncDevice (sync) ->
-        stream = new Stream.PassThrough
-        rval = sync.push stream, SURELY_WRITABLE_FILE
-        expect(rval).to.be.an.instanceof PushTransfer
-        rval.cancel()
-      , done
+    it "should return a PushTransfer instance", ->
+      conn = new MockConnection
+      sync = new Sync conn
+      stream = new Stream.PassThrough
+      transfer = sync.push stream, 'foo'
+      expect(transfer).to.be.an.instanceof PushTransfer
+      transfer.cancel()
 
   describe 'pushStream(stream, path[, mode])', ->
 
-    it "should return a PushTransfer instance", (done) ->
-      forEachSyncDevice (sync) ->
-        stream = new Stream.PassThrough
-        rval = sync.pushStream stream, SURELY_WRITABLE_FILE
-        expect(rval).to.be.an.instanceof PushTransfer
-        rval.cancel()
-      , done
+    it "should return a PushTransfer instance", ->
+      conn = new MockConnection
+      sync = new Sync conn
+      stream = new Stream.PassThrough
+      transfer = sync.pushStream stream, 'foo'
+      expect(transfer).to.be.an.instanceof PushTransfer
+      transfer.cancel()
 
     it "should be able to push >65536 byte chunks without error", (done) ->
       forEachSyncDevice (sync) ->

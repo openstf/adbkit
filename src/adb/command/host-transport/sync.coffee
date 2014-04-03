@@ -9,7 +9,7 @@ class SyncCommand extends Command
       .then (reply) =>
         switch reply
           when Protocol.OKAY
-            new Sync @connection, @parser
+            new Sync @connection
           when Protocol.FAIL
             @parser.readError()
           else

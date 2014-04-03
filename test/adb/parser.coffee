@@ -11,6 +11,16 @@ describe 'Parser', ->
 
   describe 'readAll()', ->
 
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readAll()
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
+
     it "should read all remaining content until the stream ends", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
@@ -25,6 +35,16 @@ describe 'Parser', ->
       stream.end()
 
   describe 'readBytes(howMany)', ->
+
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readBytes 1
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
 
     it "should read as many bytes as requested", (done) ->
       stream = new Stream.PassThrough
@@ -76,6 +96,16 @@ describe 'Parser', ->
       stream.end()
 
   describe 'readByteFlow(maxHowMany)', ->
+
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readByteFlow 1
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
 
     it "should read as many bytes as requested", (done) ->
       stream = new Stream.PassThrough
@@ -137,6 +167,16 @@ describe 'Parser', ->
 
   describe 'readAscii(howMany)', ->
 
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readAscii 1
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
+
     it "should read as many ascii characters as requested", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
@@ -159,6 +199,16 @@ describe 'Parser', ->
       stream.end()
 
   describe 'readValue()', ->
+
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readValue()
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
 
     it "should read a protocol value as a Buffer", (done) ->
       stream = new Stream.PassThrough
@@ -193,6 +243,16 @@ describe 'Parser', ->
 
   describe 'readError()', ->
 
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readError()
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
+
     it "should reject with Parser.FailError using the value", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
@@ -213,6 +273,16 @@ describe 'Parser', ->
       stream.end()
 
   describe 'searchLine(re)', ->
+
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.searchLine /foo/
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
 
     it "should return the re.exec match of the matching line", (done) ->
       stream = new Stream.PassThrough
@@ -236,6 +306,16 @@ describe 'Parser', ->
       stream.end()
 
   describe 'readLine()', ->
+
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readLine()
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
 
     it "should skip a line terminated by \\n", (done) ->
       stream = new Stream.PassThrough
@@ -277,6 +357,16 @@ describe 'Parser', ->
       stream.end()
 
   describe 'readUntil(code)', ->
+
+    it "should return a cancellable Promise", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      promise = parser.readUntil 0xa0
+      expect(promise).to.be.an.instanceOf Promise
+      expect(promise.isCancellable()).to.be.true
+      promise.catch Promise.CancellationError, (err) ->
+        done()
+      promise.cancel()
 
     it "should return any characters before given value", (done) ->
       stream = new Stream.PassThrough
