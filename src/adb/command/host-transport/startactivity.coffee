@@ -20,6 +20,10 @@ class StartActivityCommand extends Command
       args.push.apply args, this._formatExtras options.extras
     if options.action
       args.push '-a', this._escape options.action
+    if options.data
+      args.push '-d', this._escape options.data
+    if options.mimeType
+      args.push '-t', this._escape options.mimeType
     if options.category
       if Array.isArray options.category
         options.category.forEach (category) =>

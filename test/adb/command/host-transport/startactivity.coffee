@@ -72,6 +72,40 @@ describe 'StartActivityCommand', ->
       .then ->
         done()
 
+  it "should send 'am start -d <data>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -d 'foo://bar'").toString()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\n'
+      conn.socket.causeEnd()
+    options =
+      data: "foo://bar"
+    cmd.execute options
+      .then ->
+        done()
+
+  it "should send 'am start -t <mimeType>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -t 'text/plain'").toString()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\n'
+      conn.socket.causeEnd()
+    options =
+      mimeType: "text/plain"
+    cmd.execute options
+      .then ->
+        done()
+
   it "should send 'am start -c <category>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn
