@@ -603,6 +603,8 @@ Starts the configured activity on the device. Roughly analogous to `adb shell am
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **options** The activity configuration. The following options are available:
     - **action** The action.
+    - **data** The data URI, if any.
+    - **mimeType** The mime type, if any.
     - **category** The category. For multiple categories, pass an `Array`.
     - **component** The component.
     - **flags** Numeric flags.
