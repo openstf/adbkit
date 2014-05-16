@@ -15,45 +15,57 @@ describe 'ClearCommand', ->
     cmd = new ClearCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:pm clear foo.bar.c 2>/dev/null').toString()
+        Protocol.encodeData('shell:pm clear foo.bar.c').toString()
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Success'
+      conn.socket.causeRead 'Success\r\n'
       conn.socket.causeEnd()
     cmd.execute 'foo.bar.c'
       .then ->
         done()
 
-  it "should callback with error on failure", (done) ->
+  it "should succeed on 'Success'", (done) ->
     conn = new MockConnection
     cmd = new ClearCommand conn
     conn.socket.on 'write', (chunk) ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Failed'
+      conn.socket.causeRead 'Success\r\n'
+      conn.socket.causeEnd()
+    cmd.execute 'foo.bar.c'
+      .then ->
+        done()
+
+  it "should error on 'Failed'", (done) ->
+    conn = new MockConnection
+    cmd = new ClearCommand conn
+    conn.socket.on 'write', (chunk) ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Failed\r\n'
       conn.socket.causeEnd()
     cmd.execute 'foo.bar.c'
       .catch (err) ->
         expect(err).to.be.an.instanceof Error
         done()
 
-  it "should callback with error on failure even if not closed", (done) ->
+  it "should error on 'Failed' even if connection not closed by
+      device", (done) ->
     conn = new MockConnection
     cmd = new ClearCommand conn
     conn.socket.on 'write', (chunk) ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'Failed'
+      conn.socket.causeRead 'Failed\r\n'
     cmd.execute 'foo.bar.c'
       .catch (err) ->
         expect(err).to.be.an.instanceof Error
         done()
 
-  it "should callback with error if unexpected output", (done) ->
+  it "should ignore irrelevant lines", (done) ->
     conn = new MockConnection
     cmd = new ClearCommand conn
     conn.socket.on 'write', (chunk) ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'bar'
+      conn.socket.causeRead 'Open: foo error\n\n'
+      conn.socket.causeRead 'Success\r\n'
       conn.socket.causeEnd()
     cmd.execute 'foo.bar.c'
-      .catch (err) ->
-        expect(err).to.be.an.instanceof Error
+      .then ->
         done()

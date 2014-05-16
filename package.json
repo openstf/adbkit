@@ -1,6 +1,6 @@
 {
   "name": "adbkit",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "A pure Node.js client for the Android Debug Bridge.",
   "keywords": [
     "adb",
@@ -29,7 +29,7 @@
     "test": "grunt test"
   },
   "dependencies": {
-    "adbkit-logcat": "~1.0.0",
+    "adbkit-logcat": "~1.0.3",
     "adbkit-monkey": "~1.0.1",
     "debug": "~0.7.4",
     "split": "~0.2.10",
