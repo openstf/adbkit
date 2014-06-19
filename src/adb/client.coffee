@@ -25,6 +25,7 @@ IsInstalledCommand = require './command/host-transport/isinstalled'
 LogcatCommand = require './command/host-transport/logcat'
 LogCommand = require './command/host-transport/log'
 MonkeyCommand = require './command/host-transport/monkey'
+RebootCommand = require './command/host-transport/reboot'
 RemountCommand = require './command/host-transport/remount'
 ScreencapCommand = require './command/host-transport/screencap'
 ShellCommand = require './command/host-transport/shell'
@@ -161,6 +162,13 @@ class Client
       .then (transport) ->
         new ShellCommand transport
           .execute command
+      .nodeify callback
+
+  reboot: (serial, callback) ->
+    this.transport serial
+      .then (transport) ->
+        new RebootCommand transport
+          .execute()
       .nodeify callback
 
   remount: (serial, callback) ->
