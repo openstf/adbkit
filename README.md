@@ -559,6 +559,16 @@ A convenience shortcut for `sync.readdir()`, mainly for one-off use cases. The c
 * Returns: `Promise`
 * Resolves with: See `sync.readdir()` for details.
 
+#### client.reboot(serial[, callback])
+
+Reboots the device. Similar to `adb reboot`. Note that the method resolves when ADB reports that the device has been rebooted (i.e. the reboot command was successful), not when the device becomes available again.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: `Promise`
+* Resolves with: `true`
+
 #### client.remount(serial[, callback])
 
 Attempts to remount the `/system` partition in read-write mode. This will usually only work on emulators and developer devices.
