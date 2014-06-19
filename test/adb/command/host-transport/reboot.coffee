@@ -7,7 +7,7 @@ MockConnection = require '../../../mock/connection'
 Protocol = require '../../../../src/adb/protocol'
 RebootCommand = require '../../../../src/adb/command/host-transport/reboot'
 
-describe.only 'RebootCommand', ->
+describe 'RebootCommand', ->
 
   it "should send 'reboot:'", (done) ->
     conn = new MockConnection
