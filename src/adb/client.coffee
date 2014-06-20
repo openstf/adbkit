@@ -32,6 +32,7 @@ ShellCommand = require './command/host-transport/shell'
 StartActivityCommand = require './command/host-transport/startactivity'
 SyncCommand = require './command/host-transport/sync'
 TcpCommand = require './command/host-transport/tcp'
+TrackJdwpCommand = require './command/host-transport/trackjdwp'
 UninstallCommand = require './command/host-transport/uninstall'
 WaitBootCompleteCommand = require './command/host-transport/waitbootcomplete'
 
@@ -175,6 +176,13 @@ class Client
     this.transport serial
       .then (transport) ->
         new RemountCommand transport
+          .execute()
+      .nodeify callback
+
+  trackJdwp: (serial, callback) ->
+    this.transport serial
+      .then (transport) ->
+        new TrackJdwpCommand transport
           .execute()
       .nodeify callback
 
