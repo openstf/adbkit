@@ -32,6 +32,7 @@ ShellCommand = require './command/host-transport/shell'
 StartActivityCommand = require './command/host-transport/startactivity'
 SyncCommand = require './command/host-transport/sync'
 TcpCommand = require './command/host-transport/tcp'
+TrackJdwpCommand = require './command/host-transport/trackjdwp'
 UninstallCommand = require './command/host-transport/uninstall'
 WaitBootCompleteCommand = require './command/host-transport/waitbootcomplete'
 
@@ -41,10 +42,15 @@ GetSerialNoCommand = require './command/host-serial/getserialno'
 GetStateCommand = require './command/host-serial/getstate'
 ListForwardsCommand = require './command/host-serial/listforwards'
 
+TcpUsbServer = require './tcpusb/server'
+
 class Client
   constructor: (@options = {}) ->
     @options.port ||= 5037
     @options.bin ||= 'adb'
+
+  createTcpUsbBridge: (serial) ->
+    new TcpUsbServer this, serial
 
   connection: ->
     resolver = Promise.defer()
@@ -175,6 +181,13 @@ class Client
     this.transport serial
       .then (transport) ->
         new RemountCommand transport
+          .execute()
+      .nodeify callback
+
+  trackJdwp: (serial, callback) ->
+    this.transport serial
+      .then (transport) ->
+        new TrackJdwpCommand transport
           .execute()
       .nodeify callback
 
