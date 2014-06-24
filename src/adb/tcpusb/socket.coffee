@@ -64,6 +64,7 @@ class Socket extends EventEmitter
         this._validateMessage message
 
   _route: (message) ->
+    return if @ended
     switch message.command
       when A_SYNC
         this._handleSyncMessage message
@@ -112,6 +113,8 @@ class Socket extends EventEmitter
     command = service.toString().split(':', 1)[0]
     @client.transport @serial
       .then (transport) =>
+        return if @ended
+
         debug "Calling #{service}"
 
         @services.put remoteId, transport
@@ -187,6 +190,7 @@ class Socket extends EventEmitter
       this._writeHeader A_CLSE, remoteId, localId
 
   _writeHeader: (command, arg0, arg1, length, checksum) ->
+    return if @ended
     header = new Buffer 24
     header.writeUInt32LE command, 0
     header.writeUInt32LE arg0 || 0, 4
@@ -197,6 +201,7 @@ class Socket extends EventEmitter
     @socket.write header
 
   _writeMessage: (command, arg0, arg1, data) ->
+    return if @ended
     data = new Buffer data unless Buffer.isBuffer data
     this._writeHeader command, arg0, arg1, data.length, this._checksum data
     @socket.write data
