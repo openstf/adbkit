@@ -672,6 +672,28 @@ Note that as the tracker will keep a connection open, you must call `tracker.end
 * Returns: `Promise`
 * Resolves with: `tracker` (see callback)
 
+#### client.trackJdwp(serial[, callback])
+
+Starts a JDWP tracker for the given device.
+
+Note that as the tracker will keep a connection open, you must call `tracker.end()` if you wish to stop tracking JDWP processes.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, tracker)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+    - **tracker** The JDWP tracker, which is an [`EventEmitter`][node-events]. The following events are available:
+        * **add** **(pid)** Emitted when a new JDWP process becomes available, once per pid.
+        * **remove** **(pid)** Emitted when a JDWP process becomes unavailable, once per pid.
+        * **changeSet** **(changes, pids)** All changes in a single event.
+            - **changes** An object with the following properties always present:
+                * **added** An array of pids that were added. Empty if none.
+                * **removed** An array of pids that were removed. Empty if none.
+            - **pids** All currently active pids (including pids from previous runs).
+        * **end** Emitted when the underlying connection ends.
+        * **error** **(err)** Emitted if there's an error.
+* Returns: `Promise`
+* Resolves with: `tracker` (see callback)
+
 #### client.uninstall(serial, pkg[, callback])
 
 Uninstalls the package from the device. This is roughly analogous to `adb uninstall <pkg>`.
