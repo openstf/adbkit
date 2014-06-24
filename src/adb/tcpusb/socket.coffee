@@ -1,14 +1,12 @@
 {EventEmitter} = require 'events'
 
 Promise = require 'bluebird'
-debug = require('debug')('adb:tcpusb')
+debug = require('debug')('adb:tcpusb:socket')
 
-Parser = require './parser'
-Protocol = require './protocol'
+Parser = require '../parser'
+Protocol = require '../protocol'
 
-Promise.longStackTraces()
-
-class TcpUsb extends EventEmitter
+class Socket extends EventEmitter
   A_SYNC = 0x434e5953
   A_CNXN = 0x4e584e43
   A_OPEN = 0x4e45504f
@@ -16,7 +14,7 @@ class TcpUsb extends EventEmitter
   A_CLSE = 0x45534c43
   A_WRTE = 0x45545257
   A_AUTH = 0x48545541
-  MAX_UINT32 = 0xFFFFFFFF
+  UINT32_MAX = 0xFFFFFFFF
 
   constructor: (@client, @serial, @socket) ->
     @ended = false
@@ -24,8 +22,8 @@ class TcpUsb extends EventEmitter
     @version = 1
     @maxPayload = 4096
     @authorized = false
-    @syncToken = new RollingCounter MAX_UINT32
-    @remoteId = new RollingCounter MAX_UINT32
+    @syncToken = new RollingCounter UINT32_MAX
+    @remoteId = new RollingCounter UINT32_MAX
     @services = new ServiceMap
     this._inputLoop()
 
@@ -48,7 +46,6 @@ class TcpUsb extends EventEmitter
         this.end()
 
   _readMessage: ->
-    console.log 'Waiting for message'
     @parser.readBytes 24
       .then (header) ->
         command: header.readUInt32LE 0
@@ -110,7 +107,7 @@ class TcpUsb extends EventEmitter
     debug 'A_OPEN', message
     localId = message.arg0
     remoteId = @remoteId.next()
-    service = message.data.slice(0, -1) # Discard null byte at end
+    service = message.data.slice 0, -1 # Discard null byte at end
     command = service.toString().split(':', 1)[0]
     @client.transport @serial
       .then (transport) =>
@@ -120,67 +117,35 @@ class TcpUsb extends EventEmitter
         transport.write Protocol.encodeData service
         parser = transport.parser
 
-        handleNormalStream = =>
-          pump = =>
-            new Promise (resolve, reject) =>
-              out = parser.raw()
-              maybeRead = =>
-                while chunk = this._readChunk out
-                  this._writeMessage A_WRTE, remoteId, localId, chunk
-              out.on 'readable', maybeRead
-              out.on 'end', resolve
-          parser.readAscii 4
-            .then (reply) =>
-              switch reply
-                when Protocol.OKAY
-                  this._writeHeader A_OKAY, remoteId, localId
-                  pump()
-                when Protocol.FAIL
-                  # @TODO
-                  parser.readError()
-                else
-                  parser.unexpected reply, 'OKAY or FAIL'
-            .catch Parser.PrematureEOFError, ->
-              true
-            .catch Parser.FailError, ->
-              true
-            .finally =>
-              this._close remoteId, localId
-
-        handleProtocolStream = =>
-          looper = =>
-            parser.readValue()
-              .then (chunk) =>
+        pump = =>
+          new Promise (resolve, reject) =>
+            out = parser.raw()
+            maybeRead = =>
+              while chunk = this._readChunk out
                 this._writeMessage A_WRTE, remoteId, localId, chunk
-                looper()
-          parser.readAscii 4
-            .then (reply) =>
-              switch reply
-                when Protocol.OKAY
-                  this._writeHeader A_OKAY, remoteId, localId
-                  looper()
-                when Protocol.FAIL
-                  # @TODO
-                  parser.readError()
-                else
-                  parser.unexpected reply, 'OKAY or FAIL'
-            .catch Parser.PrematureEOFError, ->
-              true
-            .catch Parser.FailError, ->
-              true
-            .finally =>
-              this._close remoteId, localId
+            out.on 'readable', maybeRead
+            out.on 'end', resolve
 
-        switch command
-          when 'track-jdwp'
-            handleProtocolStream()
-          else
-            handleNormalStream()
+        parser.readAscii 4
+          .then (reply) =>
+            switch reply
+              when Protocol.OKAY
+                this._writeHeader A_OKAY, remoteId, localId
+                pump()
+              when Protocol.FAIL
+                parser.readError()
+              else
+                parser.unexpected reply, 'OKAY or FAIL'
+          .catch Parser.PrematureEOFError, ->
+            true
+          .finally =>
+            this._close remoteId, localId
+          .catch Parser.FailError, (err) =>
+            debug "Unable to open transport: #{err}"
+            this.end()
 
+        # At this point we are ready to accept new messages, so let's return
         return
-      .catch Parser.FailError, (err) =>
-        debug "Unable to open transport: #{err}"
-        this.end()
 
   _handleOkayMessage: (message) ->
     return unless @authorized
@@ -287,25 +252,4 @@ class TcpUsb extends EventEmitter
       else
         null
 
-Net = require 'net'
-Adb = require '../adb'
-client = Adb.createClient()
-server = Net.createServer()
-server.on 'connection', (conn) ->
-  proxy = new TcpUsb client, '8a0a640e', conn
-
-  proxy.on 'error', (err) ->
-    console.log 'PROXY ERROR', err
-
-  proxy.on 'end', ->
-    console.log 'PROXY END'
-
-  conn.on 'end', ->
-    console.log '>> connection ended'
-
-  conn.on 'error', ->
-    console.log '>> connection errored', err
-
-server.listen 6677
-
-module.exports = TcpUsb
+module.exports = Socket

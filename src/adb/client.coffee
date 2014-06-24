@@ -42,10 +42,15 @@ GetSerialNoCommand = require './command/host-serial/getserialno'
 GetStateCommand = require './command/host-serial/getstate'
 ListForwardsCommand = require './command/host-serial/listforwards'
 
+TcpUsbServer = require './tcpusb/server'
+
 class Client
   constructor: (@options = {}) ->
     @options.port ||= 5037
     @options.bin ||= 'adb'
+
+  createTcpUsbBridge: (serial) ->
+    new TcpUsbServer this, serial
 
   connection: ->
     resolver = Promise.defer()
