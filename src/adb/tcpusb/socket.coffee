@@ -25,6 +25,7 @@ class Socket extends EventEmitter
     @syncToken = new RollingCounter UINT32_MAX
     @remoteId = new RollingCounter UINT32_MAX
     @services = new ServiceMap
+    @remoteAddress = @socket.remoteAddress
     this._inputLoop()
 
   end: ->
