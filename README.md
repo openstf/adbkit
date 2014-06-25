@@ -368,7 +368,7 @@ Note that if the call seems to stall, you may have to accept a dialog on the pho
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **apk** When `String`, interpreted as a path to an APK file. When [`Stream`][node-stream], installs directly from the stream, which must be a valid APK.
 * **callback(err)** Optional. Use this or the returned `Promise`.
-    - **err** `null` when successful, `Error` otherwise.
+    - **err** `null` when successful, `Error` otherwise. It may have a `.code` property containing the error code reported by the device.
 * Returns: `Promise`
 * Resolves with: `true`
 
