@@ -64,7 +64,9 @@ class Sync extends EventEmitter
                         files.push new Entry name, mode, size, mtime
                       readNext()
             when Protocol.DONE
-              files
+              @parser.readBytes 16
+                .then (zero) ->
+                  files
             when Protocol.FAIL
               this._readError()
             else
