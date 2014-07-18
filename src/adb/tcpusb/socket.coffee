@@ -65,6 +65,7 @@ class Socket extends EventEmitter
 
   _route: (message) ->
     return if @ended
+    this.emit 'userActivity', message
     switch message.command
       when A_SYNC
         this._handleSyncMessage message
