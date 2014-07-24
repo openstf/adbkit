@@ -55,6 +55,29 @@ describe 'StartActivityCommand', ->
       .then ->
         done()
 
+  it "should send 'am start -W -D --user 0 -n <pkg>'", (done) ->
+    conn = new MockConnection
+    cmd = new StartActivityCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData("shell:am start
+          -n 'com.dummy.component/.Main'
+          -D
+          -W
+          --user 0").toString()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\n'
+      conn.socket.causeEnd()
+    options =
+      component: 'com.dummy.component/.Main'
+      user: 0
+      wait: true
+      debug: true
+    cmd.execute options
+      .then ->
+        done()
+
   it "should send 'am start -a <action>'", (done) ->
     conn = new MockConnection
     cmd = new StartActivityCommand conn

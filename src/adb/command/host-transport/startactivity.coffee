@@ -15,6 +15,34 @@ class StartActivityCommand extends Command
     component: 'cn'
 
   execute: (options) ->
+    args = this._intentArgs options
+    if options.debug
+      args.push '-D'
+    if options.wait
+      args.push '-W'
+    if options.user or options.user is 0
+      args.push '--user', this._escape options.user
+    this._run 'start', args
+
+  _run: (command, args) ->
+    this._send "shell:am #{command} #{args.join ' '}"
+    @parser.readAscii 4
+      .then (reply) =>
+        switch reply
+          when Protocol.OKAY
+            @parser.searchLine RE_ERROR
+              .finally =>
+                @connection.end()
+              .then (match) ->
+                throw new Error match[1]
+              .catch Parser.PrematureEOFError, (err) ->
+                true
+          when Protocol.FAIL
+            @parser.readError()
+          else
+            @parser.unexpected reply, 'OKAY or FAIL'
+
+  _intentArgs: (options) ->
     args = []
     if options.extras
       args.push.apply args, this._formatExtras options.extras
@@ -34,22 +62,7 @@ class StartActivityCommand extends Command
       args.push '-n', this._escape options.component
     if options.flags
       args.push '-f', this._escape options.flags
-    this._send "shell:am start #{args.join ' '}"
-    @parser.readAscii 4
-      .then (reply) =>
-        switch reply
-          when Protocol.OKAY
-            @parser.searchLine RE_ERROR
-              .finally =>
-                @connection.end()
-              .then (match) ->
-                throw new Error match[1]
-              .catch Parser.PrematureEOFError, (err) ->
-                true
-          when Protocol.FAIL
-            @parser.readError()
-          else
-            @parser.unexpected reply, 'OKAY or FAIL'
+    return args
 
   _formatExtras: (extras) ->
     return [] unless extras

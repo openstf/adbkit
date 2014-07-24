@@ -612,6 +612,9 @@ Starts the configured activity on the device. Roughly analogous to `adb shell am
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **options** The activity configuration. The following options are available:
+    - **debug** Set to `true` to enable debugging.
+    - **wait** Set to `true` to wait for the activity to launch.
+    - **user** The user to run as. Not set by default. If the option is unsupported by the device, an attempt will be made to run the same command again without the user option.
     - **action** The action.
     - **data** The data URI, if any.
     - **mimeType** The mime type, if any.
@@ -626,6 +629,23 @@ Starts the configured activity on the device. Roughly analogous to `adb shell am
         * When an `Object`, each key is treated as the key name. Simple values like `null`, `String`, `Boolean` and `Number` are type-mapped automatically (`Number` maps to `'int'`) and can be used as-is. For more complex types, like arrays and URIs, set the value to be an `Object` like in the Array syntax (see above), but leave out the `key` property.
 * **callback(err)** Optional. Use this or the returned `Promise`.
     - **err** `null` when successful, `Error` otherwise.
+* Returns: `Promise`
+* Resolves with: `true`
+
+#### client.startService(serial, options[, callback])
+
+Starts the configured service on the device. Roughly analogous to `adb shell am startservice <options>`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **options** The service configuration. The following options are available:
+    - **user** The user to run as. Defaults to `0`. If the option is unsupported by the device, an attempt will be made to run the same command again without the user option.
+    - **action** See `client.startActivity()` for details.
+    - **data** See `client.startActivity()` for details.
+    - **mimeType** See `client.startActivity()` for details.
+    - **category** See `client.startActivity()` for details.
+    - **component** See `client.startActivity()` for details.
+    - **flags** See `client.startActivity()` for details.
+    - **extras** See `client.startActivity()` for details.
 * Returns: `Promise`
 * Resolves with: `true`
 
