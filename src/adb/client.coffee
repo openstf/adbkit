@@ -30,6 +30,7 @@ RemountCommand = require './command/host-transport/remount'
 ScreencapCommand = require './command/host-transport/screencap'
 ShellCommand = require './command/host-transport/shell'
 StartActivityCommand = require './command/host-transport/startactivity'
+StartServiceCommand = require './command/host-transport/startservice'
 SyncCommand = require './command/host-transport/sync'
 TcpCommand = require './command/host-transport/tcp'
 TrackJdwpCommand = require './command/host-transport/trackjdwp'
@@ -334,6 +335,20 @@ class Client
       .then (transport) ->
         new StartActivityCommand transport
           .execute options
+      .catch NoUserOptionError, =>
+        options.user = null
+        this.startActivity serial, options
+      .nodeify callback
+
+  startService: (serial, options, callback) ->
+    this.transport serial
+      .then (transport) ->
+        options.user = 0 unless options.user or options.user is null
+        new StartServiceCommand transport
+          .execute options
+      .catch NoUserOptionError, =>
+        options.user = null
+        this.startService serial, options
       .nodeify callback
 
   syncService: (serial, callback) ->
@@ -384,5 +399,8 @@ class Client
         new WaitBootCompleteCommand transport
           .execute()
       .nodeify callback
+
+  NoUserOptionError = (err) ->
+    err.message.indexOf('--user') isnt -1
 
 module.exports = Client
