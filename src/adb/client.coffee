@@ -22,6 +22,7 @@ GetPackagesCommand = require './command/host-transport/getpackages'
 GetPropertiesCommand = require './command/host-transport/getproperties'
 InstallCommand = require './command/host-transport/install'
 IsInstalledCommand = require './command/host-transport/isinstalled'
+LocalCommand = require './command/host-transport/local'
 LogcatCommand = require './command/host-transport/logcat'
 LogCommand = require './command/host-transport/log'
 MonkeyCommand = require './command/host-transport/monkey'
@@ -210,6 +211,13 @@ class Client
           .catch (err) =>
             debug "Emulating screencap command due to '#{err}'"
             this.framebuffer serial, 'png'
+      .nodeify callback
+
+  openLocal: (serial, path, callback) ->
+    this.transport serial
+      .then (transport) ->
+        new LocalCommand transport
+          .execute path
       .nodeify callback
 
   openLog: (serial, name, callback) ->

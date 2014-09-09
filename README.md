@@ -445,6 +445,18 @@ Lists forwarded connections on the device. This is analogous to `adb forward --l
 * Returns: `Promise`
 * Resolves with: `forwards` (see callback)
 
+#### client.openLocal(serial, path[, callback])
+
+Opens a direct connection to a unix domain socket in the given path.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **path** The path to the socket. Prefixed with `'localfilesystem:'` by default, include another prefix (e.g. `'localabstract:'`) in the path to override.
+* **callback(err, conn)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+    - **conn** The connection (i.e. [`net.Socket`][node-net]). Read and write as you please. Call `conn.end()` to end the connection.
+* Returns: `Promise`
+* Resolves with: `conn` (see callback)
+
 #### client.openLog(serial, name[, callback])
 
 Opens a direct connection to a binary log file, providing access to the raw log data. Note that it is usually much more convenient to use the `client.openLogcat()` method, described separately.
