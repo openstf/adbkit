@@ -233,6 +233,17 @@ Creates a client instance with the provided options. Note that this will not aut
     - **bin** As the sole exception, this option provides the path to the `adb` binary, used for starting the server locally if initial connection fails. Defaults to `'adb'`.
 * Returns: The client instance.
 
+#### adb.util.readAll(stream[, callback])
+
+Takes a [`Stream`][node-stream] and reads everything it outputs until the stream ends. Then it resolves with the collected output. Convenient with `client.shell()`.
+
+* **stream** The [`Stream`][node-stream] to read.
+* **callback(err, output)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+    - **output** All the output as a [`Buffer`][node-buffer]. Use `output.toString('utf-8')` to get a readable string from it.
+* Returns: `Promise`
+* Resolves with: `output` (see callback)
+
 ### Client
 
 #### client.clear(serial, pkg[, callback])
@@ -614,9 +625,37 @@ Runs a shell command on the device. Note that you'll be limited to the permissio
 * **command** The shell command to execute. When `String`, the command is run as-is. When `Array`, the elements will be rudimentarily escaped (for convenience, not security) and joined to form a command.
 * **callback(err, output)** Optional. Use this or the returned `Promise`.
     - **err** `null` when successful, `Error` otherwise.
-    - **output** An output [`Stream`][node-stream] in non-flowing mode. Unfortunately it is not possible to separate stdout and stderr, you'll get both of them in one stream. It is also not possible to access the exit code of the command. If access to any of these individual properties is needed, the command must be constructed in a way that allows you to parse the information from the output.
+    - **output** A Buffer containing all the output. Call `output.toString('utf-8')` to get a readable String from it.
 * Returns: `Promise`
 * Resolves with: `output` (see callback)
+
+##### Example
+
+```js
+var Promise = require('bluebird')
+var adb = require('adbkit')
+var client = adb.createClient()
+
+client.listDevices()
+  .then(function(devices) {
+    return Promise.map(devices, function(device) {
+      return client.shell(device.id, 'echo $RANDOM')
+        // Use the readAll() utility to read all the content without
+        // having to deal with the events. `output` will be a Buffer
+        // containing all the output.
+        .then(adb.util.readAll)
+        .then(function(output) {
+          console.log('[%s] %s', device.id, output.toString().trim())
+        })
+    })
+  })
+  .then(function() {
+    console.log('Done.')
+  })
+  .catch(function(err) {
+    console.error('Something went wrong:', err.stack)
+  })
+```
 
 #### client.startActivity(serial, options[, callback])
 
@@ -904,6 +943,7 @@ Copyright © CyberAgent, Inc. All Rights Reserved.
 [net-connect]: <http://nodejs.org/api/net.html#net_net_connect_options_connectionlistener>
 [node-events]: <http://nodejs.org/api/events.html>
 [node-stream]: <http://nodejs.org/api/stream.html>
+[node-buffer]: <http://nodejs.org/api/buffer.html>
 [node-net]: <http://nodejs.org/api/net.html>
 [node-fs]: <http://nodejs.org/api/fs.html>
 [node-fs-stats]: <http://nodejs.org/api/fs.html#fs_class_fs_stats>
