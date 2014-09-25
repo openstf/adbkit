@@ -8,6 +8,8 @@ debug = require('debug')('adb:tcpusb:socket')
 Parser = require '../parser'
 Protocol = require '../protocol'
 Auth = require '../auth'
+ServiceMap = require './servicemap'
+RollingCounter = require './rollingcounter'
 
 class Socket extends EventEmitter
   A_SYNC = 0x434e5953
@@ -259,36 +261,5 @@ class Socket extends EventEmitter
           'ro.product.model'
           'ro.product.device'
         ]).join ''
-
-  class RollingCounter
-    constructor: (@max, @min = 1) ->
-      @now = @min
-
-    next: ->
-      @now = @min unless @now < @max
-      return ++@now
-
-  class ServiceMap
-    constructor: ->
-      @remotes = Object.create null
-
-    end: ->
-      for remoteId, remote of @remotes
-        remote.end()
-      @remotes = Object.create null
-      return
-
-    put: (remoteId, socket) ->
-      @remotes[remoteId] = socket
-
-    get: (remoteId) ->
-      @remotes[remoteId] or null
-
-    remove: (remoteId) ->
-      if remote = @remotes[remoteId]
-        delete @remotes[remoteId]
-        remote
-      else
-        null
 
 module.exports = Socket
