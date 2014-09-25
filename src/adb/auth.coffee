@@ -16,31 +16,63 @@ The stucture of an ADB RSAPublicKey is as follows:
     } RSAPublicKey;
 
 ###
-readPublicKeyFromStruct = (struct) ->
-  offset = 0
+class Auth
+  RE = /^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?) (.*)$/
 
-  # Get len
-  len = struct.readUInt32LE(offset) * 4
-  offset += 4
+  readPublicKeyFromStruct = (struct, comment) ->
+    throw new Error "Invalid public key" unless struct.length
 
-  # Skip n0inv, we don't need it
-  offset += 4
+    # Keep track of what we've read already
+    offset = 0
 
-  # Get n
-  n = [].reverse.call(struct.slice(offset, offset + len))
-  offset += len
+    # Get len
+    len = struct.readUInt32LE(offset) * 4
+    offset += 4
 
-  # Skip rr, we don't need it
-  offset += len
+    unless struct.length is 4 + 4 + len + len + 4
+      throw new Error "Invalid public key"
 
-  # Get e
-  e = [].reverse.call(struct.slice(offset, offset + 4))
+    # Skip n0inv, we don't need it
+    offset += 4
 
-  forge.pki.setRsaPublicKey(
-    new BigInteger(n.toString('hex'), 16)
-    new BigInteger(e.toString('hex'), 16)
-  )
+    # Get n
+    n = new Buffer len
+    struct.copy(n, 0, offset, offset + len)
+    [].reverse.call(n)
+    offset += len
 
-module.exports.parsePublicKey = (buffer) ->
-  [base64EncodedKey] = buffer.toString().split ' ', 1
-  readPublicKeyFromStruct new Buffer base64EncodedKey, 'base64'
+    # Skip rr, we don't need it
+    offset += len
+
+    # Get e
+    e = struct.readUInt32LE(offset)
+
+    unless e is 3 or e is 65537
+      throw new Error "Invalid exponent #{e}, only 3 and 65537 are supported"
+
+    # Restore the public key
+    key = forge.pki.setRsaPublicKey(
+      new BigInteger(n.toString('hex'), 16)
+      new BigInteger(e.toString(), 10)
+    )
+
+    # It will be difficult to retrieve the fingerprint later as it's based
+    # on the complete struct data, so let's just extend the key with it.
+    md = forge.md.md5.create()
+    md.update struct.toString('binary')
+    key.fingerprint = md.digest().toHex().match(/../g).join(':')
+
+    # Expose comment for the same reason
+    key.comment = comment
+
+    return key
+
+  @parsePublicKey = (buffer) ->
+    if match = RE.exec(buffer)
+      struct = new Buffer(match[1], 'base64')
+      comment = match[2]
+      return readPublicKeyFromStruct struct, comment
+    else
+      throw new Error "Unrecognizable public key format"
+
+module.exports = Auth

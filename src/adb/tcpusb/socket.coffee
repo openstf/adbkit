@@ -1,10 +1,13 @@
+crypto = require 'crypto'
 {EventEmitter} = require 'events'
 
 Promise = require 'bluebird'
+Forge = require 'node-forge'
 debug = require('debug')('adb:tcpusb:socket')
 
 Parser = require '../parser'
 Protocol = require '../protocol'
+Auth = require '../auth'
 
 class Socket extends EventEmitter
   A_SYNC = 0x434e5953
@@ -14,7 +17,14 @@ class Socket extends EventEmitter
   A_CLSE = 0x45534c43
   A_WRTE = 0x45545257
   A_AUTH = 0x48545541
+
   UINT32_MAX = 0xFFFFFFFF
+
+  AUTH_TOKEN = 1
+  AUTH_SIGNATURE = 2
+  AUTH_RSAPUBLICKEY = 3
+
+  TOKEN_LENGTH = 20
 
   constructor: (@client, @serial, @socket) ->
     @ended = false
@@ -26,6 +36,8 @@ class Socket extends EventEmitter
     @remoteId = new RollingCounter UINT32_MAX
     @services = new ServiceMap
     @remoteAddress = @socket.remoteAddress
+    @token = null
+    @signature = null
     this._inputLoop()
 
   end: ->
@@ -44,6 +56,10 @@ class Socket extends EventEmitter
         setImmediate this._inputLoop.bind this
       .catch Parser.PrematureEOFError, =>
         # This means `adb disconnect`
+        this.end()
+      .catch (err) =>
+        debug "Error: #{err.message}"
+        this.emit 'error', err
         this.end()
 
   _readMessage: ->
@@ -90,19 +106,28 @@ class Socket extends EventEmitter
 
   _handleConnectionMessage: (message) ->
     debug 'A_CNXN', message
-    @version = message.arg0
-    @maxPayload = message.arg1
-    @client.getProperties @serial
-      .then (properties) =>
-        @authorized = true
-        this._writeMessage A_CNXN, @version, @maxPayload,
-          'device::' +　("#{prop}=#{properties[prop]};" for prop in [
-            'ro.product.name'
-            'ro.product.model'
-            'ro.product.device'
-          ]).join ''
-      .catch (err) =>
-        this.emit 'error', err
+    this._createToken()
+      .then (@token) =>
+        this._writeMessage A_AUTH, AUTH_TOKEN, 0, @token
+
+  _handleAuthMessage: (message) ->
+    debug 'A_AUTH', message
+    switch message.arg0
+      when AUTH_SIGNATURE
+        @signature = message.data unless @signature
+        this._writeMessage A_AUTH, AUTH_TOKEN, 0, @token
+      when AUTH_RSAPUBLICKEY
+        key = Auth.parsePublicKey message.data
+        digest = @token.toString('binary')
+        sig = @signature.toString('binary')
+        if key.verify digest, sig
+          this._deviceId()
+            .then (id) =>
+              @authorized = true
+              this._writeMessage A_CNXN, @version, @maxPayload, "device::#{id}"
+        else
+          this.end()
+      else
         this.end()
 
   _handleOpenMessage: (message) ->
@@ -180,11 +205,6 @@ class Socket extends EventEmitter
       debug "A_WRTE to unknown socket pair #{localId}/#{remoteId}"
     true
 
-  _handleAuthMessage: (message) ->
-    debug 'A_AUTH', message
-    # We should never get this unless we send it first, and we don't
-    true
-
   _close: (remoteId, localId) ->
     if remote = @services.remove remoteId
       remote.end()
@@ -227,6 +247,18 @@ class Socket extends EventEmitter
   _magic: (command) ->
     # We need the full uint32 range, which ">>> 0" thankfully allows us to use
     (command ^ 0xffffffff) >>> 0
+
+  _createToken: ->
+    Promise.promisify(crypto.randomBytes)(TOKEN_LENGTH)
+
+  _deviceId: ->
+    @client.getProperties @serial
+      .then (properties) =>
+        ("#{prop}=#{properties[prop]};" for prop in [
+          'ro.product.name'
+          'ro.product.model'
+          'ro.product.device'
+        ]).join ''
 
   class RollingCounter
     constructor: (@max, @min = 1) ->

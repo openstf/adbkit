@@ -5,7 +5,7 @@ Promise = require 'bluebird'
 forge = require 'node-forge'
 
 pkg = require '../package'
-auth = require './adb/auth'
+Auth = require './adb/auth'
 
 Promise.longStackTraces()
 
@@ -13,19 +13,25 @@ program
   .version pkg.version
 
 program
-  .command 'convert-pubkey <file>'
+  .command 'pubkey-convert <file>'
   .option '-f, --format <format>', 'format (pem or openssh)', String, 'pem'
   .description 'Converts an ADB-generated public key into PEM format.'
   .action (file, options) ->
-    key = auth.parsePublicKey fs.readFileSync file
-    out = process.stdout
+    key = Auth.parsePublicKey fs.readFileSync file
     switch options.format.toLowerCase()
       when 'pem'
-        out.write forge.pki.publicKeyToPem(key).trim()
+        console.log forge.pki.publicKeyToPem(key).trim()
       when 'openssh'
-        out.write forge.ssh.publicKeyToOpenSSH(key, 'adbkey').trim()
+        console.log forge.ssh.publicKeyToOpenSSH(key, 'adbkey').trim()
       else
         console.error "Unsupported format '#{options.format}'"
         process.exit 1
+
+program
+  .command 'pubkey-fingerprint <file>'
+  .description 'Outputs the fingerprint of an ADB-generated public key.'
+  .action (file) ->
+    key = Auth.parsePublicKey fs.readFileSync file
+    console.log '%s %s', key.fingerprint, key.comment
 
 program.parse process.argv
