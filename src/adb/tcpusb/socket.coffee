@@ -28,7 +28,8 @@ class Socket extends EventEmitter
 
   TOKEN_LENGTH = 20
 
-  constructor: (@client, @serial, @socket) ->
+  constructor: (@client, @serial, @socket, @options = {}) ->
+    @options.auth or= Promise.resolve true
     @ended = false
     @parser = new Parser @socket
     @version = 1
@@ -116,19 +117,26 @@ class Socket extends EventEmitter
     debug 'A_AUTH', message
     switch message.arg0
       when AUTH_SIGNATURE
+        # Store first signature, ignore the rest
         @signature = message.data unless @signature
         this._writeMessage A_AUTH, AUTH_TOKEN, 0, @token
       when AUTH_RSAPUBLICKEY
-        key = Auth.parsePublicKey message.data
-        digest = @token.toString('binary')
-        sig = @signature.toString('binary')
-        if key.verify digest, sig
-          this._deviceId()
-            .then (id) =>
-              @authorized = true
-              this._writeMessage A_CNXN, @version, @maxPayload, "device::#{id}"
-        else
-          this.end()
+        Auth.parsePublicKey message.data
+          .then (key) =>
+            digest = @token.toString 'binary'
+            sig = @signature.toString 'binary'
+            if key.verify digest, sig
+              @options.auth key
+                .then =>
+                  this._deviceId()
+                    .then (id) =>
+                      @authorized = true
+                      this._writeMessage A_CNXN, @version, @maxPayload,
+                        "device::#{id}"
+                .catch (err) =>
+                  this.end()
+            else
+              this.end()
       else
         this.end()
 

@@ -4,7 +4,7 @@ Net = require 'net'
 Socket = require './socket'
 
 class Server extends EventEmitter
-  constructor: (@client, @serial) ->
+  constructor: (@client, @serial, @options) ->
     @connections = []
     @server = Net.createServer()
     @server.on 'error', (err) =>
@@ -14,7 +14,7 @@ class Server extends EventEmitter
     @server.on 'close', =>
       this.emit 'close'
     @server.on 'connection', (conn) =>
-      socket = new Socket @client, @serial, conn
+      socket = new Socket @client, @serial, conn, @options
       @connections.push socket
       this.emit 'connection', socket
 

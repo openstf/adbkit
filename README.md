@@ -233,6 +233,19 @@ Creates a client instance with the provided options. Note that this will not aut
     - **bin** As the sole exception, this option provides the path to the `adb` binary, used for starting the server locally if initial connection fails. Defaults to `'adb'`.
 * Returns: The client instance.
 
+#### adb.util.parsePublicKey(androidKey[, callback])
+
+Parses an Android-formatted mincrypt public key (e.g. `~/.android/adbkey.pub`).
+
+* **androidKey** The key String or [`Buffer`][node-buffer] to parse. Not a filename.
+* **callback(err, output)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+    - **key** The key as a [forge.pki](https://github.com/digitalbazaar/forge#rsa) public key. You may need [node-forge](https://github.com/digitalbazaar/forge) for complicated operations. Additionally the following properties are present:
+      * **fingerprint** The key fingerprint, like it would display on a device. Note that this is different than the one you'd get from `forge.ssh.getPublicKeyFingerprint(key)`, because the device fingerprint is based on the original format.
+      * **comment** The key comment, if any.
+* Returns: `Promise`
+* Resolves with: `key` (see callback)
+
 #### adb.util.readAll(stream[, callback])
 
 Takes a [`Stream`][node-stream] and reads everything it outputs until the stream ends. Then it resolves with the collected output. Convenient with `client.shell()`.

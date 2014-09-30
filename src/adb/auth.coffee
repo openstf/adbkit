@@ -1,3 +1,4 @@
+Promise = require 'bluebird'
 forge = require 'node-forge'
 BigInteger = forge.jsbn.BigInteger
 
@@ -68,11 +69,12 @@ class Auth
     return key
 
   @parsePublicKey = (buffer) ->
-    if match = RE.exec(buffer)
-      struct = new Buffer(match[1], 'base64')
-      comment = match[2]
-      return readPublicKeyFromStruct struct, comment
-    else
-      throw new Error "Unrecognizable public key format"
+    new Promise (resolve, reject) ->
+      if match = RE.exec(buffer)
+        struct = new Buffer(match[1], 'base64')
+        comment = match[2]
+        resolve readPublicKeyFromStruct struct, comment
+      else
+        reject new Error "Unrecognizable public key format"
 
 module.exports = Auth
