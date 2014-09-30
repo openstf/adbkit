@@ -51,8 +51,8 @@ class Client
     @options.port ||= 5037
     @options.bin ||= 'adb'
 
-  createTcpUsbBridge: (serial) ->
-    new TcpUsbServer this, serial
+  createTcpUsbBridge: (serial, options) ->
+    new TcpUsbServer this, serial, options
 
   connection: ->
     resolver = Promise.defer()
