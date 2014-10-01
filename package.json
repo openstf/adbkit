@@ -19,9 +19,6 @@
     "url": "http://www.cyberagent.co.jp/"
   },
   "main": "./index",
-  "bin": {
-    "adbkit": "./lib/cli"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/CyberAgent/adbkit.git"
