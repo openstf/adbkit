@@ -1,6 +1,6 @@
 {
   "name": "adbkit",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A pure Node.js client for the Android Debug Bridge.",
   "keywords": [
     "adb",
@@ -19,9 +19,6 @@
     "url": "http://www.cyberagent.co.jp/"
   },
   "main": "./index",
-  "bin": {
-    "adbkit": "./lib/cli"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/CyberAgent/adbkit.git"
