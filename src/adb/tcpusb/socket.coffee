@@ -121,7 +121,7 @@ class Socket extends EventEmitter
         @signature = message.data unless @signature
         this._writeMessage A_AUTH, AUTH_TOKEN, 0, @token
       when AUTH_RSAPUBLICKEY
-        Auth.parsePublicKey message.data
+        Auth.parsePublicKey message.data.slice(0, -1) # Skip NULL byte
           .then (key) =>
             digest = @token.toString 'binary'
             sig = @signature.toString 'binary'
