@@ -254,7 +254,7 @@ class Client
           else
             throw err
     tryConnect 1
-      .catch (err) ->
+      .catch (err) =>
         this.transport serial
       .then (transport) ->
         new MonkeyCommand transport
