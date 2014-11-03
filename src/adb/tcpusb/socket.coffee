@@ -263,7 +263,7 @@ class Socket extends EventEmitter
 
   _deviceId: ->
     @client.getProperties @serial
-      .then (properties) =>
+      .then (properties) ->
         ("#{prop}=#{properties[prop]};" for prop in [
           'ro.product.name'
           'ro.product.model'
