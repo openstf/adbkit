@@ -6,20 +6,6 @@ Most of the `adb` command line tool's functionality is supported (including push
 
 Internally, we use this library to drive a multitude of Android devices from a variety of manufacturers, so we can say with a fairly high degree of confidence that it will most likely work with your device(s), too.
 
-# Incompatible changes since 1.x.x
-
-Previously, we made extensive use of callbacks in almost every feature. While this normally works okay, ADB connections can be quite fickle, and it was starting to become difficult to handle every possible error. For example, we'd often fail to properly clean up after ourselves when a connection suddenly died in an unexpected place, causing memory and resource leaks.
-
-In version 2, we've replaced nearly all callbacks with [Promises](http://promisesaplus.com/) (using [Bluebird](https://github.com/petkaantonov/bluebird)), allowing for much more reliable error propagation and resource cleanup (thanks to `.finally()`). Additionally, many commands can now be cancelled on the fly, and although unimplemented at this point, we'll also be able to report progress on long-running commands without any changes to the API.
-
-Unfortunately, some API changes were required for this change. `client.framebuffer()`'s callback, for example, previously accepted more than one argument, which doesn't translate into Promises so well. Thankfully, it made sense to combine the arguments anyway, and we were able to do it quite cleanly.
-
-Furthermore, most API methods were returning the current instance for chaining purposes. While perhaps useful in some contexts, most of the time it probably didn't quite do what users expected, as chained calls were run in parallel rather than in serial fashion. Now every applicable API method returns a Promise, which is an incompatible but welcome change. This will also allow you to hook into `yield` and coroutines in Node 0.12.
-
-**However, all methods still accept (and will accept in the future) callbacks for those who prefer them.**
-
-Test coverage was also massively improved, although we've still got ways to go.
-
 ## Requirements
 
 * [Node.js][nodejs] >= 0.10
@@ -924,6 +910,20 @@ List of events:
 Cancels the transfer by ending the connection. Can be useful for reading endless streams of data, such as `/dev/urandom` or `/dev/zero`, perhaps for benchmarking use. Note that you must create a new sync connection if you wish to continue using the sync service.
 
 * Returns: The pullTransfer instance.
+
+# Incompatible changes in version 2.x
+
+Previously, we made extensive use of callbacks in almost every feature. While this normally works okay, ADB connections can be quite fickle, and it was starting to become difficult to handle every possible error. For example, we'd often fail to properly clean up after ourselves when a connection suddenly died in an unexpected place, causing memory and resource leaks.
+
+In version 2, we've replaced nearly all callbacks with [Promises](http://promisesaplus.com/) (using [Bluebird](https://github.com/petkaantonov/bluebird)), allowing for much more reliable error propagation and resource cleanup (thanks to `.finally()`). Additionally, many commands can now be cancelled on the fly, and although unimplemented at this point, we'll also be able to report progress on long-running commands without any changes to the API.
+
+Unfortunately, some API changes were required for this change. `client.framebuffer()`'s callback, for example, previously accepted more than one argument, which doesn't translate into Promises so well. Thankfully, it made sense to combine the arguments anyway, and we were able to do it quite cleanly.
+
+Furthermore, most API methods were returning the current instance for chaining purposes. While perhaps useful in some contexts, most of the time it probably didn't quite do what users expected, as chained calls were run in parallel rather than in serial fashion. Now every applicable API method returns a Promise, which is an incompatible but welcome change. This will also allow you to hook into `yield` and coroutines in Node 0.12.
+
+**However, all methods still accept (and will accept in the future) callbacks for those who prefer them.**
+
+Test coverage was also massively improved, although we've still got ways to go.
 
 ## More information
 
