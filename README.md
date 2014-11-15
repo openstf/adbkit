@@ -256,6 +256,67 @@ Deletes all data associated with a package from the device. This is roughly anal
 * Returns: `Promise`
 * Resolves with: `true`
 
+#### client.connect(host[, port]&#91;, callback])
+
+Connects to the given device, which must have its ADB daemon running in tcp mode (see `client.tcpip()`) and be accessible on the same network. Same as `adb connect <host>:<port>`.
+
+* **host** The target host. Can also contain the port, in which case the port argument is not used and can be skipped.
+* **port** Optional. The target port. Defaults to `5555`.
+* **callback(err, id)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+    - **id** The connected device ID. Can be used as `serial` in other commands.
+* Returns: `Promise`
+* Resolves with: `id` (see callback)
+
+##### Example - switch to TCP mode and set up a forward for Chrome devtools
+
+Note: be careful with using `client.listDevices()` together with `client.tcpip()` and other similar methods that modify the connection with ADB. You might have the same device twice in your device list (i.e. one device connected via both USB and TCP), which can cause havoc if run simultaneously.
+
+```javascript
+var Promise = require('bluebird')
+var client = require('adbkit').createClient()
+
+client.listDevices()
+  .then(function(devices) {
+    return Promise.map(devices, function(device) {
+      return client.tcpip(device.id)
+        .then(function(port) {
+          // Switching to TCP mode causes ADB to lose the device for a
+          // moment, so let's just wait till we get it back.
+          return client.waitForDevice(device.id).return(port)
+        })
+        .then(function(port) {
+          return client.getDHCPIpAddress(device.id)
+            .then(function(ip) {
+              return client.connect(ip, port)
+            })
+            .then(function(id) {
+              // It can take a moment for the connection to happen.
+              return client.waitForDevice(id)
+            })
+            .then(function(id) {
+              return client.forward(id, 'tcp:9222', 'localabstract:chrome_devtools_remote')
+                .then(function() {
+                  console.log('Setup devtools on "%s"', id)
+                })
+            })
+        })
+    })
+  })
+```
+
+#### client.disconnect(host[, port]&#91;, callback])
+
+Disconnects from the given device, which should have been connected via `client.connect()` or just `adb connect <host>:<port>`.
+
+* **host** The target host. Can also contain the port, in which case the port argument is not used and can be skipped. In other words you can just put the `id` you got from `client.connect()` here and it will be fine.
+* **port** Optional. The target port. Defaults to `5555`.
+* **callback(err, id)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+    - **id** The disconnected device ID. Will no longer be usable as a `serial` in other commands until you've connected again.
+* Returns: `Promise`
+* Resolves with: `id` (see callback)
+
 #### client.forward(serial, local, remote[, callback])
 
 Forwards socket connections from the ADB server host (local) to the device (remote). This is analogous to `adb forward <local> <remote>`. It's important to note that if you are connected to a remote ADB server, the forward will be created on that host.
@@ -313,6 +374,18 @@ Gets the device path of the device identified by the given serial number.
     - **path** The device path. This corresponds to the device path in `client.listDevicesWithPaths()`.
 * Returns: `Promise`
 * Resolves with: `path` (see callback)
+
+#### client.getDHCPIpAddress(serial[, iface]&#91;, callback])
+
+Attemps to retrieve the IP address of the device. Roughly analogous to `adb shell getprop dhcp.<iface>.ipaddress`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **iface** Optional. The network interface. Defaults to `'wlan0'`.
+* **callback(err, ip)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+    - **ip** The IP address as a `String`.
+* Returns: `Promise`
+* Resolves with: `ip` (see callback)
 
 #### client.getFeatures(serial[, callback])
 
@@ -720,6 +793,18 @@ Establishes a new Sync connection that can be used to push and pull files. This 
 * Returns: `Promise`
 * Resolves with: `sync` (see callback)
 
+#### client.tcpip(serial, port[, callback])
+
+Puts the device's ADB daemon into tcp mode, allowing you to use `adb connect` or `client.connect()` to connect to it. Note that the device will still be visible to ADB as a regular USB-connected device until you unplug it. Same as `adb tcpip <port>`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **port** Optional. The port the device should listen on. Defaults to `5555`.
+* **callback(err, port)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+    - **port** The port the device started listening on.
+* Returns: `Promise`
+* Resolves with: `port` (see callback)
+
 #### client.trackDevices([callback])
 
 Gets a device tracker. Events will be emitted when devices are added, removed, or their type changes (i.e. to/from `offline`). Note that the same events will be emitted for the initially connected devices also, so that you don't need to use both `client.listDevices()` and `client.trackDevices()`.
@@ -775,6 +860,16 @@ Uninstalls the package from the device. This is roughly analogous to `adb uninst
 * Returns: `Promise`
 * Resolves with: `true`
 
+#### client.usb(serial[, callback])
+
+Puts the device's ADB daemon back into USB mode. Reverses `client.tcpip()`. Same as `adb usb`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: `Promise`
+* Resolves with: `true`
+
 #### client.version([callback])
 
 Queries the ADB server for its version. This is mainly useful for backwards-compatibility purposes.
@@ -794,6 +889,17 @@ Waits until the device has finished booting. Note that the device must already b
     - **err** `null` if the device has completed booting, `Error` otherwise (can occur if the connection dies while checking).
 * Returns: `Promise`
 * Resolves with: `true`
+
+#### client.waitForDevice(serial[, callback])
+
+Waits until ADB can see the device. Note that you must know the serial in advance. Other than that, works like `adb -s serial wait-for-device`. If you're planning on reacting to random devices being plugged in and out, consider using `client.trackDevices()` instead.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, id)** Optional. Use this or the returned `Promise`.
+    - **err** `null` if the device has completed booting, `Error` otherwise (can occur if the connection dies while checking).
+    - **id** The device ID. Can be useful for chaining.
+* Returns: `Promise`
+* Resolves with: `id` (see callback)
 
 ### Sync
 
