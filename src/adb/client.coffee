@@ -9,8 +9,10 @@ Parser = require './parser'
 ProcStat = require './proc/stat'
 
 HostVersionCommand = require './command/host/version'
+HostConnectCommand = require './command/host/connect'
 HostDevicesCommand = require './command/host/devices'
 HostDevicesWithPathsCommand = require './command/host/deviceswithpaths'
+HostDisconnectCommand = require './command/host/disconnect'
 HostTrackDevicesCommand = require './command/host/trackdevices'
 HostKillCommand = require './command/host/kill'
 HostTransportCommand = require './command/host/transport'
@@ -34,8 +36,10 @@ StartActivityCommand = require './command/host-transport/startactivity'
 StartServiceCommand = require './command/host-transport/startservice'
 SyncCommand = require './command/host-transport/sync'
 TcpCommand = require './command/host-transport/tcp'
+TcpIpCommand = require './command/host-transport/tcpip'
 TrackJdwpCommand = require './command/host-transport/trackjdwp'
 UninstallCommand = require './command/host-transport/uninstall'
+UsbCommand = require './command/host-transport/usb'
 WaitBootCompleteCommand = require './command/host-transport/waitbootcomplete'
 
 ForwardCommand = require './command/host-serial/forward'
@@ -43,6 +47,7 @@ GetDevicePathCommand = require './command/host-serial/getdevicepath'
 GetSerialNoCommand = require './command/host-serial/getserialno'
 GetStateCommand = require './command/host-serial/getstate'
 ListForwardsCommand = require './command/host-serial/listforwards'
+WaitForDeviceCommand = require './command/host-serial/waitfordevice'
 
 TcpUsbServer = require './tcpusb/server'
 
@@ -71,6 +76,30 @@ class Client
       .then (conn) ->
         new HostVersionCommand conn
           .execute()
+      .nodeify callback
+
+  connect: (host, port = 5555, callback) ->
+    if typeof port is 'function'
+      callback = port
+      port = 5555
+    if host.indexOf(':') isnt -1
+      [host, port] = host.split ':', 2
+    this.connection()
+      .then (conn) ->
+        new HostConnectCommand conn
+          .execute host, port
+      .nodeify callback
+
+  disconnect: (host, port = 5555, callback) ->
+    if typeof port is 'function'
+      callback = port
+      port = 5555
+    if host.indexOf(':') isnt -1
+      [host, port] = host.split ':', 2
+    this.connection()
+      .then (conn) ->
+        new HostDisconnectCommand conn
+          .execute host, port
       .nodeify callback
 
   listDevices: (callback) ->
@@ -142,6 +171,15 @@ class Client
         new GetPackagesCommand transport
           .execute()
       .nodeify callback
+
+  getDHCPIpAddress: (serial, iface = 'wlan0', callback) ->
+    if typeof iface is 'function'
+      callback = iface
+      iface = 'wlan0'
+    this.getProperties(serial)
+      .then (properties) ->
+        return ip if ip = properties["dhcp.#{iface}.ipaddress"]
+        throw new Error "Unable to find ipaddress for '#{iface}'"
 
   forward: (serial, local, remote, callback) ->
     this.connection()
@@ -401,11 +439,35 @@ class Client
             sync.end()
       .nodeify callback
 
+  tcpip: (serial, port = 5555, callback) ->
+    if typeof port is 'function'
+      callback = port
+      port = 5555
+    this.transport serial
+      .then (transport) ->
+        new TcpIpCommand transport
+          .execute port
+      .nodeify callback
+
+  usb: (serial, callback) ->
+    this.transport serial
+      .then (transport) ->
+        new UsbCommand transport
+          .execute()
+      .nodeify callback
+
   waitBootComplete: (serial, callback) ->
     this.transport serial
       .then (transport) ->
         new WaitBootCompleteCommand transport
           .execute()
+      .nodeify callback
+
+  waitForDevice: (serial, callback) ->
+    this.connection()
+      .then (conn) ->
+        new WaitForDeviceCommand conn
+          .execute serial
       .nodeify callback
 
   NoUserOptionError = (err) ->
