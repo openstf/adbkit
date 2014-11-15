@@ -457,7 +457,7 @@ Note that if the call seems to stall, you may have to accept a dialog on the pho
 
 ##### Example - install an APK from a URL
 
-This example requires the [request](https://www.npmjs.org/package/request) module. It also doesn't do error any error handling (404 responses, timeouts etc).
+This example requires the [request](https://www.npmjs.org/package/request) module. It also doesn't do any error handling (404 responses, timeouts, invalid URLs etc).
 
 ```javascript
 var client = require('adbkit').createClient()
