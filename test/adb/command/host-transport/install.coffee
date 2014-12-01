@@ -11,7 +11,7 @@ InstallCommand =
 
 describe 'InstallCommand', ->
 
-  it "should send 'pm install -r <apk>'", (done) ->
+  it "should send 'pm install -d -r <apk>'", (done) ->
     conn = new MockConnection
     cmd = new InstallCommand conn
     conn.socket.on 'write', (chunk) ->

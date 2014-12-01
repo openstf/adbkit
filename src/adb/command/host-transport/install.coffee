@@ -3,7 +3,7 @@ Protocol = require '../../protocol'
 
 class InstallCommand extends Command
   execute: (apk) ->
-    this._send "shell:pm install -r '#{apk}'"
+    this._send "shell:pm install -d -r '#{apk}'"
     @parser.readAscii 4
       .then (reply) =>
         switch reply
