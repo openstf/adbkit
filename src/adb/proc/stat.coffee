@@ -1,9 +1,11 @@
 {EventEmitter} = require 'events'
 split = require 'split'
 
+Parser = require '../parser'
+
 class ProcStat extends EventEmitter
+  RE_CPULINE = /^cpu[0-9]+ .*$/mg
   RE_COLSEP = /\ +/g
-  RE_CPU = /^cpu[0-9]+$/
 
   constructor: (@sync) ->
     @interval = 1000
@@ -20,35 +22,37 @@ class ProcStat extends EventEmitter
     @sync = null
 
   update: ->
-    @sync.pull '/proc/stat', (err, stream) =>
-      return this._error err if err
-      this._parse stream
+    new Parser(@sync.pull '/proc/stat')
+      .readAll()
+      .then (out) =>
+        this._parse out
+      .catch (err) =>
+        this._error err
+        return
 
-  _parse: (stream) ->
+  _parse: (out) ->
     stats = this._emptyStats()
-    lines = stream.pipe split()
-    lines.on 'data', (line) =>
+    while match = RE_CPULINE.exec out
+      line = match[0]
       cols = line.split RE_COLSEP
       type = cols.shift()
-      return if @_ignore[type] is line
-      if RE_CPU.test type
-        total = 0
-        total += +val for val in cols
-        stats.cpus[type] =
-          line:      line
-          user:      +cols[0] or 0
-          nice:      +cols[1] or 0
-          system:    +cols[2] or 0
-          idle:      +cols[3] or 0
-          iowait:    +cols[4] or 0
-          irq:       +cols[5] or 0
-          softirq:   +cols[6] or 0
-          steal:     +cols[7] or 0
-          guest:     +cols[8] or 0
-          guestnice: +cols[9] or 0
-          total:     total
-    lines.on 'end', =>
-      this._set stats
+      continue if @_ignore[type] is line
+      total = 0
+      total += +val for val in cols
+      stats.cpus[type] =
+        line:      line
+        user:      +cols[0] or 0
+        nice:      +cols[1] or 0
+        system:    +cols[2] or 0
+        idle:      +cols[3] or 0
+        iowait:    +cols[4] or 0
+        irq:       +cols[5] or 0
+        softirq:   +cols[6] or 0
+        steal:     +cols[7] or 0
+        guest:     +cols[8] or 0
+        guestnice: +cols[9] or 0
+        total:     total
+    this._set stats
 
   _set: (stats) ->
     loads = {}
