@@ -455,6 +455,22 @@ Note that if the call seems to stall, you may have to accept a dialog on the pho
 * Returns: `Promise`
 * Resolves with: `true`
 
+##### Example - install an APK from a URL
+
+This example requires the [request](https://www.npmjs.org/package/request) module. It also doesn't do any error handling (404 responses, timeouts, invalid URLs etc).
+
+```javascript
+var client = require('adbkit').createClient()
+var request = require('request')
+var Readable = require('stream').Readable
+
+// The request module implements old-style streams, so we have to wrap it.
+client.install('<serial>', new Readable().wrap(request('http://example.org/app.apk')))
+  .then(function() {
+    console.log('Installed')
+  })
+```
+
 #### client.installRemote(serial, apk[, callback])
 
 Installs an APK file which must already be located on the device file system, and replaces any previously installed version. Useful if you've previously pushed the file to the device for some reason (perhaps to have direct access to `client.push()`'s transfer stats). This is roughly analogous to `adb shell pm install -r <apk>` followed by `adb shell rm -f <apk>`.
