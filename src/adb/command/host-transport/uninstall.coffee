@@ -3,19 +3,29 @@ Protocol = require '../../protocol'
 
 class UninstallCommand extends Command
   execute: (pkg) ->
-    this._send "shell:pm uninstall #{pkg} 2>/dev/null"
+    this._send "shell:pm uninstall #{pkg}"
     @parser.readAscii 4
       .then (reply) =>
         switch reply
           when Protocol.OKAY
-            @parser.readAscii 7
-              .then (reply) =>
-                switch reply
-                  # Either way, the package was uninstalled
-                  when 'Success', 'Failure'
-                    true
-                  else
-                    @parser.unexpected reply, "'Success' or 'Failure'"
+            @parser.searchLine /^(Success|Failure|Failure \[(.*?)\])$/
+              .then (match) ->
+                if match[1] is 'Success'
+                  true
+                else
+                  # Either way, the package was uninstalled or doesn't exist,
+                  # which is good enough for us. Here's how you might reject
+                  # instead:
+                  #
+                  # code = match[2] or "Unspecified reason"
+                  # err = new Error "#{apk} could not be installed [#{code}]"
+                  # err.code = code
+                  # throw err
+                  true
+              .finally =>
+                # Consume all remaining content to "naturally" close the
+                # connection.
+                @parser.readAll()
           when Protocol.FAIL
             @parser.readError()
           else
