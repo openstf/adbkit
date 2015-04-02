@@ -122,8 +122,10 @@ describe 'Sync', ->
             expect(transfer).to.be.an.instanceof PullTransfer
             transfer.on 'error', reject
             transfer.on 'readable', ->
-              expect(transfer.read().toString()).to.equal content
-              resolve()
+              while chunk = transfer.read()
+                expect(chunk).to.not.be.null
+                expect(chunk.toString()).to.equal content
+                return resolve()
           stream.write content
           stream.end()
       , done
