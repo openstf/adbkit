@@ -8,14 +8,15 @@ class Tracker extends EventEmitter
     @deviceList = []
     @deviceMap = {}
     @reader = this.read()
-      .catch Parser.PrematureEOFError, (err) =>
-        this.emit 'end'
-      .catch Promise.CancellationError, (err) =>
-        @command.connection.end()
-        this.emit 'end'
+      .catch Promise.CancellationError, ->
+        true
       .catch (err) =>
         this.emit 'error', err
-        this.emit 'end'
+        return
+      .finally =>
+        @command.parser.end()
+          .then =>
+            this.emit 'end'
 
   read: ->
     @command._readDevices()

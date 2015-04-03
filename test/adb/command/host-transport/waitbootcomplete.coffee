@@ -36,6 +36,8 @@ describe 'WaitBootCompleteCommand', ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeEnd()
     cmd.execute()
+      .then ->
+        done new Error 'Succeeded even though it should not'
       .catch Parser.PrematureEOFError, (err) ->
         done()
 

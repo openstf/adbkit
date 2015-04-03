@@ -143,9 +143,9 @@ describe 'Tracker', ->
   describe 'end()', ->
 
     it "should close the connection", (done) ->
-      Sinon.spy @conn, 'end'
+      Sinon.spy @conn.parser, 'end'
       @tracker.on 'end', =>
-        expect(@conn.end).to.have.been.calledOnce
+        expect(@conn.parser.end).to.have.been.calledOnce
         done()
       @tracker.end()
 
