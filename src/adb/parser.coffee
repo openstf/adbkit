@@ -29,6 +29,34 @@ class Parser
       Error.captureStackTrace this, Parser.UnexpectedDataError
 
   constructor: (@stream) ->
+    @ended = false
+
+  end: ->
+    return Promise.resolve(true) if @ended
+
+    resolver = Promise.defer()
+
+    tryRead = =>
+      while @stream.read()
+        continue
+      return
+
+    @stream.on 'readable', tryRead
+
+    @stream.on 'error', errorListener = (err) ->
+      resolver.reject err
+
+    @stream.on 'end', endListener = =>
+      @ended = true
+      resolver.resolve true
+
+    @stream.read(0)
+    @stream.end()
+
+    resolver.promise.cancellable().finally =>
+      @stream.removeListener 'readable', tryRead
+      @stream.removeListener 'error', errorListener
+      @stream.removeListener 'end', endListener
 
   raw: ->
     @stream
@@ -46,7 +74,8 @@ class Parser
     @stream.on 'error', errorListener = (err) ->
       resolver.reject err
 
-    @stream.on 'end', endListener = ->
+    @stream.on 'end', endListener = =>
+      @ended = true
       resolver.resolve all
 
     tryRead()
@@ -77,7 +106,8 @@ class Parser
       else
         resolver.resolve new Buffer 0
 
-    endListener = ->
+    endListener = =>
+      @ended = true
       resolver.reject new Parser.PrematureEOFError howMany
 
     errorListener = (err) ->
@@ -114,7 +144,8 @@ class Parser
       else
         resolver.resolve()
 
-    endListener = ->
+    endListener = =>
+      @ended = true
       resolver.reject new Parser.PrematureEOFError howMany
 
     errorListener = (err) ->

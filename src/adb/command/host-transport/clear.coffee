@@ -9,14 +9,15 @@ class ClearCommand extends Command
         switch reply
           when Protocol.OKAY
             @parser.searchLine /^(Success|Failed)$/
-              .then (result) =>
+              .finally =>
+                @parser.end()
+              .then (result) ->
                 switch result[0]
                   when 'Success'
                     true
                   when 'Failed'
                     # Unfortunately, the command may stall at this point and we
                     # have to kill the connection.
-                    @connection.end()
                     throw new Error "Package '#{pkg}' could not be cleared"
           when Protocol.FAIL
             @parser.readError()

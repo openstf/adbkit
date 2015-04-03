@@ -13,7 +13,7 @@ class WaitBootCompleteCommand extends Command
           when Protocol.OKAY
             @parser.searchLine /^1$/
               .finally =>
-                @connection.end()
+                @parser.end()
               .then ->
                 true
           when Protocol.FAIL

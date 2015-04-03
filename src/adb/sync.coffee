@@ -4,6 +4,7 @@ Promise = require 'bluebird'
 {EventEmitter} = require 'events'
 debug = require('debug')('adb:sync')
 
+Parser = require './parser'
 Protocol = require './protocol'
 Stats = require './sync/stats'
 Entry = require './sync/entry'
@@ -236,10 +237,12 @@ class Sync extends EventEmitter
 
   _readError: ->
     @parser.readBytes 4
-      .then (zero) =>
-        @parser.readAll()
+      .then (length) =>
+        @parser.readBytes length.readUInt32LE(0)
           .then (buf) ->
             Promise.reject new Parser.FailError buf.toString()
+      .finally =>
+        @parser.end()
 
   _sendCommandWithLength: (cmd, length) ->
     debug cmd unless cmd is Protocol.DATA

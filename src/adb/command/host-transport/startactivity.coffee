@@ -32,7 +32,7 @@ class StartActivityCommand extends Command
           when Protocol.OKAY
             @parser.searchLine RE_ERROR
               .finally =>
-                @connection.end()
+                @parser.end()
               .then (match) ->
                 throw new Error match[1]
               .catch Parser.PrematureEOFError, (err) ->
