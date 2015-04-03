@@ -22,7 +22,7 @@ class FrameBufferCommand extends Command
                     stream.meta = meta
                     stream
                   else
-                    stream = this._convert meta
+                    stream = this._convert meta, format
                     stream.meta = meta
                     stream
           when Protocol.FAIL
