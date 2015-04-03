@@ -18,4 +18,8 @@ class MockDuplex extends Stream.Duplex
     this.push null
     return
 
+  end: ->
+    this.causeEnd() # In order to better emulate socket streams
+    Stream.Duplex.prototype.end.apply this, arguments
+
 module.exports = MockDuplex

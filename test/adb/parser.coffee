@@ -9,6 +9,18 @@ Parser = require '../../src/adb/parser'
 
 describe 'Parser', ->
 
+  describe 'end()', ->
+
+    it "should end the stream and consume all remaining data", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      stream.write 'F'
+      stream.write 'O'
+      stream.write 'O'
+      parser.end()
+        .then ->
+          done()
+
   describe 'readAll()', ->
 
     it "should return a cancellable Promise", (done) ->

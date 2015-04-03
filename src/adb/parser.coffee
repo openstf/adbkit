@@ -30,6 +30,30 @@ class Parser
 
   constructor: (@stream) ->
 
+  end: ->
+    resolver = Promise.defer()
+
+    tryRead = =>
+      while @stream.read()
+        continue
+      return
+
+    @stream.on 'readable', tryRead
+
+    @stream.on 'error', errorListener = (err) ->
+      resolver.reject err
+
+    @stream.on 'end', endListener = ->
+      resolver.resolve true
+
+    @stream.read(0)
+    @stream.end()
+
+    resolver.promise.cancellable().finally =>
+      @stream.removeListener 'readable', tryRead
+      @stream.removeListener 'error', errorListener
+      @stream.removeListener 'end', endListener
+
   raw: ->
     @stream
 
