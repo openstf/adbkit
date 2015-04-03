@@ -12,18 +12,14 @@ class ScreencapCommand extends Command
       .then (reply) =>
         switch reply
           when Protocol.OKAY
-            resolver = Promise.defer()
-            out = @parser.raw().pipe new LineTransform
-
-            out.on 'readable', readableListener = ->
-              resolver.resolve out
-
-            out.on 'end', endListener = ->
-              resolver.reject new Error 'Unable to run screencap command'
-
-            resolver.promise.finally ->
-              out.removeListener 'end', endListener
-              out.removeListener 'readable', readableListener
+            transform = new LineTransform
+            @parser.readBytes 1
+              .then (chunk) =>
+                transform = new LineTransform
+                transform.write chunk
+                @parser.raw().pipe transform
+              .catch Parser.PrematureEOFError, ->
+                throw new Error 'No support for the screencap command'
           when Protocol.FAIL
             @parser.readError()
           else
