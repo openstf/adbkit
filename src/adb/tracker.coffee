@@ -10,6 +10,8 @@ class Tracker extends EventEmitter
     @reader = this.read()
       .catch Promise.CancellationError, ->
         true
+      .catch Parser.PrematureEOFError, ->
+        throw new Error 'Connection closed'
       .catch (err) =>
         this.emit 'error', err
         return

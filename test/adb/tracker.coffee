@@ -95,9 +95,10 @@ describe 'Tracker', ->
       removed: [device2]
     done()
 
-  it "should emit 'end' when connection ends", (done) ->
-    @tracker.on 'end', ->
-      done()
+  it "should emit 'error' and 'end' when connection ends", (done) ->
+    @tracker.on 'error', =>
+      @tracker.on 'end', ->
+        done()
     @writer.end()
 
   it "should read devices from socket", (done) ->
