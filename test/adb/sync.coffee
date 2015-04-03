@@ -130,6 +130,13 @@ describe 'Sync', ->
           stream.end()
       , done
 
+    it "should emit error for non-existing files", (done) ->
+      forEachSyncDevice (sync) ->
+        new Promise (resolve, reject) ->
+          transfer = sync.pull SURELY_NONEXISTING_PATH
+          transfer.on 'error', resolve
+      , done
+
     it "should return a PullTransfer instance", (done) ->
       forEachSyncDevice (sync) ->
         rval = sync.pull SURELY_EXISTING_FILE
