@@ -107,12 +107,13 @@ describe 'Parser', ->
           done()
       stream.end()
 
-  describe 'readByteFlow(maxHowMany)', ->
+  describe 'readByteFlow(maxHowMany, targetStream)', ->
 
     it "should return a cancellable Promise", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      promise = parser.readByteFlow 1
+      target = new Stream.PassThrough
+      promise = parser.readByteFlow 1, target
       expect(promise).to.be.an.instanceOf Promise
       expect(promise.isCancellable()).to.be.true
       promise.catch Promise.CancellationError, (err) ->
@@ -122,31 +123,34 @@ describe 'Parser', ->
     it "should read as many bytes as requested", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
-      parser.readByteFlow 4
-        .progressed (buf) ->
-          expect(buf.length).to.equal 4
-          expect(buf.toString()).to.equal 'OKAY'
+      target = new Stream.PassThrough
+      spy = Sinon.spy()
+      target.on 'data', spy
+      parser.readByteFlow 4, target
         .then ->
-          parser.readByteFlow 2
-            .progressed (buf) ->
-              expect(buf).to.have.length 2
-              expect(buf.toString()).to.equal 'FA'
+          parser.readByteFlow 2, target
             .then ->
+              expect(spy).to.have.been.calledTwice
+              expect(spy.firstCall.args).to.eql [new Buffer('OKAY')]
+              expect(spy.secondCall.args).to.eql [new Buffer('FA')]
               done()
+        .catch done
       stream.write 'OKAYFAIL'
 
     it "should progress with new/partial chunk until maxHowMany", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
+      target = new Stream.PassThrough
       spy = Sinon.spy()
-      parser.readByteFlow 3
-        .progressed spy
+      target.on 'data', spy
+      parser.readByteFlow 3, target
         .then ->
           expect(spy).to.have.been.calledThrice
           expect(spy).to.have.been.calledWith b1
           expect(spy).to.have.been.calledWith b2
           expect(spy.thirdCall.args).to.eql [new Buffer('E')]
           done()
+        .catch done
       b1 = new Buffer 'P'
       b2 = new Buffer 'I'
       b3 = new Buffer 'ES'
@@ -159,15 +163,17 @@ describe 'Parser', ->
     it "should resolve on last chunk", (done) ->
       stream = new Stream.PassThrough
       parser = new Parser stream
+      target = new Stream.PassThrough
       spy = Sinon.spy()
-      parser.readByteFlow 3
-        .progressed spy
+      target.on 'data', spy
+      parser.readByteFlow 3, target
         .then ->
           expect(spy).to.have.been.calledThrice
           expect(spy).to.have.been.calledWith b1
           expect(spy).to.have.been.calledWith b2
           expect(spy).to.have.been.calledWith b3
           done()
+        .catch done
       b1 = new Buffer 'P'
       b2 = new Buffer 'I'
       b3 = new Buffer 'E'
