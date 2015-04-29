@@ -124,10 +124,7 @@ class Parser
       @stream.removeListener 'error', errorListener
       @stream.removeListener 'end', endListener
 
-  # This is a bit of a hack right now, we're abusing promises like there was
-  # no tomorrow. Let's try to replace this with perhaps a custom transform
-  # stream at some point.
-  readByteFlow: (howMany) ->
+  readByteFlow: (howMany, targetStream) ->
     resolver = Promise.defer()
 
     tryRead = =>
@@ -137,10 +134,10 @@ class Parser
         while chunk = @stream.read(howMany) or @stream.read()
           howMany -= chunk.length
           if howMany is 0
-            resolver.progress chunk
+            targetStream.write chunk
             resolver.resolve()
             break
-          resolver.progress chunk
+          targetStream.write chunk
       else
         resolver.resolve()
 

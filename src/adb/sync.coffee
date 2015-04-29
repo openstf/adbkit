@@ -207,11 +207,8 @@ class Sync extends EventEmitter
               @parser.readBytes 4
                 .then (lengthData) =>
                   length = lengthData.readUInt32LE 0
-                  @parser.readByteFlow length
-                    .progressed (chunk) ->
-                      transfer.write chunk
-                    .then ->
-                      readNext()
+                  @parser.readByteFlow(length, transfer)
+                    .then readNext
             when Protocol.DONE
               @parser.readBytes 4
                 .then (zero) ->
