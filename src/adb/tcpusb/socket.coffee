@@ -165,6 +165,8 @@ class Socket extends EventEmitter
                 this._writeMessage A_WRTE, remoteId, localId, chunk
             out.on 'readable', maybeRead
             out.on 'end', resolve
+            out.on 'error', reject
+            maybeRead()
 
         parser.readAscii 4
           .then (reply) =>
