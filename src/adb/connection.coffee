@@ -4,6 +4,7 @@ debug = require('debug')('adb:connection')
 {execFile} = require 'child_process'
 
 Parser = require './parser'
+dump = require './dump'
 
 class Connection extends EventEmitter
   constructor: (@options) ->
@@ -33,7 +34,7 @@ class Connection extends EventEmitter
     return this
 
   write: (data, callback) ->
-    @socket.write data, callback
+    @socket.write dump(data), callback
     return this
 
   startServer: (callback) ->

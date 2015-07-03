@@ -5,6 +5,7 @@ Promise = require 'bluebird'
 forge = require 'node-forge'
 
 pkg = require '../package'
+Adb = require './adb'
 Auth = require './adb/auth'
 
 Promise.longStackTraces()
@@ -35,5 +36,16 @@ program
     Auth.parsePublicKey fs.readFileSync file
       .then (key) ->
         console.log '%s %s', key.fingerprint, key.comment
+
+program
+  .command 'usb-device-to-tcp <serial>'
+  .option '-p, --port <port>', 'port number', String, 6174
+  .description 'Provides an USB device over TCP using a translating proxy.'
+  .action (serial, options) ->
+    adb = Adb.createClient()
+    server = adb.createTcpUsbBridge(serial, auth: -> Promise.resolve())
+      .on 'listening', ->
+        console.info 'Connect with `adb connect localhost:%d`', options.port
+    server.listen options.port
 
 program.parse process.argv
