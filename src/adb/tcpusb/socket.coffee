@@ -59,6 +59,7 @@ class Socket extends EventEmitter
         setImmediate this._inputLoop.bind this
       .catch Parser.PrematureEOFError, =>
         # This means `adb disconnect`
+        debug "adb disconnect"
         this.end()
       .catch (err) =>
         debug "Error: #{err.message}"
@@ -121,7 +122,7 @@ class Socket extends EventEmitter
         @signature = message.data unless @signature
         this._writeMessage A_AUTH, AUTH_TOKEN, 0, @token
       when AUTH_RSAPUBLICKEY
-        Auth.parsePublicKey message.data.slice(0, -1) # Skip NULL byte
+        Auth.parsePublicKey this._skipNull(message.data)
           .then (key) =>
             digest = @token.toString 'binary'
             sig = @signature.toString 'binary'
@@ -145,49 +146,56 @@ class Socket extends EventEmitter
     debug 'A_OPEN', message
     localId = message.arg0
     remoteId = @remoteId.next()
-    service = message.data.slice 0, -1 # Discard null byte at end
-    command = service.toString().split(':', 1)[0]
+    service = this._skipNull(message.data)
+    debug "Calling #{service}"
+    this._writeHeader A_OKAY, remoteId, localId
     @client.transport @serial
       .then (transport) =>
         return if @ended
 
-        debug "Calling #{service}"
+        @services.insert remoteId, transport
+        debug "Handling #{@services.count} services simultaneously"
 
-        @services.put remoteId, transport
         transport.write Protocol.encodeData service
         parser = transport.parser
 
-        pump = =>
-          new Promise (resolve, reject) =>
-            out = parser.raw()
-            maybeRead = =>
-              while chunk = this._readChunk out
-                this._writeMessage A_WRTE, remoteId, localId, chunk
-            out.on 'readable', maybeRead
-            out.on 'end', resolve
-            out.on 'error', reject
-            maybeRead()
+        transport.on 'error', (err) ->
+          # No-op. This will be handled by the parser directly.
+          # @todo Investigate why this is even necessary in the first place
 
         parser.readAscii 4
           .then (reply) =>
             switch reply
               when Protocol.OKAY
-                this._writeHeader A_OKAY, remoteId, localId
-                pump()
+                return
               when Protocol.FAIL
                 parser.readError()
               else
                 parser.unexpected reply, 'OKAY or FAIL'
+          .then =>
+            new Promise (resolve, reject) =>
+              out = parser.raw()
+              maybeRead = =>
+                while chunk = this._readChunk out
+                  this._writeMessage A_WRTE, remoteId, localId, chunk
+              out.on 'readable', maybeRead
+              out.on 'end', resolve
+              out.on 'error', reject
+              maybeRead()
           .catch Parser.PrematureEOFError, ->
             true
           .finally =>
             this._close remoteId, localId
           .catch Parser.FailError, (err) =>
-            debug "Unable to open transport: #{err}"
+            debug "Unable to open service: #{err}"
             this.end()
 
-        # At this point we are ready to accept new messages, so let's return
-        return
+      .catch (err) =>
+        this._close remoteId, localId
+
+    # At this point we are ready to accept new messages, so let's return
+    # so that the input loop can continue.
+    return
 
   _handleOkayMessage: (message) ->
     return unless @authorized
@@ -219,6 +227,7 @@ class Socket extends EventEmitter
 
   _close: (remoteId, localId) ->
     if remote = @services.remove remoteId
+      debug "Handling #{@services.count} services simultaneously"
       remote.end()
       this._writeHeader A_CLSE, remoteId, localId
 
@@ -263,7 +272,11 @@ class Socket extends EventEmitter
   _createToken: ->
     Promise.promisify(crypto.randomBytes)(TOKEN_LENGTH)
 
+  _skipNull: (data) ->
+    data.slice 0, -1 # Discard null byte at end
+
   _deviceId: ->
+    debug "Loading device properties to form a standard device ID"
     @client.getProperties @serial
       .then (properties) ->
         ("#{prop}=#{properties[prop]};" for prop in [
