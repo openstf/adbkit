@@ -16,6 +16,8 @@ class Server extends EventEmitter
     @server.on 'connection', (conn) =>
       socket = new Socket @client, @serial, conn, @options
       @connections.push socket
+      socket.once 'end', =>
+        @connections = @connections.filter (val) -> val isnt socket
       this.emit 'connection', socket
 
   listen: ->
