@@ -169,6 +169,7 @@ class Socket extends EventEmitter
       debug "Received a packet to a service that may have been closed already"
 
   write: (chunk) ->
+    return if @ended
     @socket.write chunk
 
   _createToken: ->
