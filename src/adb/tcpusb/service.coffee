@@ -32,7 +32,7 @@ class Service extends EventEmitter
     @transport.end() if @transport
     return this if @ended
     debug 'O:A_CLSE'
-    @socket.write Packet.assemble(Packet.A_CLSE, @remoteId, @localId, null)
+    @socket.write Packet.assemble(Packet.A_CLSE, @localId, @remoteId, null)
     @transport = null
     @ended = true
     this.emit 'end'
@@ -66,7 +66,7 @@ class Service extends EventEmitter
             switch reply
               when Protocol.OKAY
                 debug 'O:A_OKAY'
-                @socket.write Packet.assemble(Packet.A_OKAY, @remoteId, @localId, null)
+                @socket.write Packet.assemble(Packet.A_OKAY, @localId, @remoteId, null)
               when Protocol.FAIL
                 @transport.parser.readError()
               else
@@ -94,7 +94,7 @@ class Service extends EventEmitter
     throw new Service.PrematurePacketError(packet) unless @transport
     @transport.write packet.data if packet.data
     debug 'O:A_OKAY'
-    @socket.write Packet.assemble(Packet.A_OKAY, @remoteId, @localId, null)
+    @socket.write Packet.assemble(Packet.A_OKAY, @localId, @remoteId, null)
 
   _handleClosePacket: (packet) ->
     debug 'I:A_CLSE', packet
@@ -106,7 +106,7 @@ class Service extends EventEmitter
     return if @needAck or @ended
     if chunk = this._readChunk(@transport.socket)
       debug 'O:A_WRTE'
-      @socket.write Packet.assemble(Packet.A_WRTE, @remoteId, @localId, chunk)
+      @socket.write Packet.assemble(Packet.A_WRTE, @localId, @remoteId, chunk)
       @needAck = true
 
   _readChunk: (stream) ->

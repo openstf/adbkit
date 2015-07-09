@@ -136,8 +136,8 @@ class Socket extends EventEmitter
 
   _handleOpenPacket: (packet) ->
     throw new Socket.UnauthorizedError() unless @authorized
-    localId = packet.arg0
-    remoteId = @remoteId.next()
+    remoteId = packet.arg0
+    localId = @remoteId.next()
     unless packet.data and packet.data.length >= 2
       throw new Error "Empty service name"
     name = this._skipNull(packet.data)
@@ -146,21 +146,21 @@ class Socket extends EventEmitter
     new Promise (resolve, reject) =>
       service.on 'error', reject
       service.on 'end', resolve
-      @services.insert remoteId, service
+      @services.insert localId, service
       debug "Handling #{@services.count} services simultaneously"
       service.handle packet
     .catch (err) =>
       true
     .finally =>
-      @services.remove remoteId
+      @services.remove localId
       debug "Handling #{@services.count} services simultaneously"
       service.end()
 
   _forwardServicePacket: (packet) ->
     throw new Socket.UnauthorizedError() unless @authorized
-    localId = packet.arg0
-    remoteId = packet.arg1
-    if service = @services.get remoteId
+    remoteId = packet.arg0
+    localId = packet.arg1
+    if service = @services.get localId
       service.handle packet
     else
       debug "Received a packet to a service that may have been closed already"
