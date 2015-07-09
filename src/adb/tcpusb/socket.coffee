@@ -29,6 +29,7 @@ class Socket extends EventEmitter
       Error.captureStackTrace this, Socket.UnauthorizedError
 
   UINT32_MAX = 0xFFFFFFFF
+  UINT16_MAX = 0xFFFF
 
   AUTH_TOKEN = 1
   AUTH_SIGNATURE = 2
@@ -95,6 +96,8 @@ class Socket extends EventEmitter
 
   _handleConnectionPacket: (packet) ->
     debug 'I:A_CNXN', packet
+    version = Packet.swap32(packet.arg0)
+    @maxPayload = Math.min UINT16_MAX, packet.arg1
     this._createToken()
       .then (@token) =>
         debug 'O:A_AUTH'
