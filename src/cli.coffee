@@ -47,6 +47,8 @@ program
     server = adb.createTcpUsbBridge(serial, auth: -> Promise.resolve())
       .on 'listening', ->
         console.info 'Connect with `adb connect localhost:%d`', options.port
+      .on 'error', (err) ->
+        console.error "An error occured: #{err.message}"
     server.listen options.port
 
 program
