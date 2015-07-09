@@ -7,6 +7,7 @@ forge = require 'node-forge'
 pkg = require '../package'
 Adb = require './adb'
 Auth = require './adb/auth'
+PacketReader = require './adb/tcpusb/packetreader'
 
 Promise.longStackTraces()
 
@@ -47,5 +48,13 @@ program
       .on 'listening', ->
         console.info 'Connect with `adb connect localhost:%d`', options.port
     server.listen options.port
+
+program
+  .command 'parse-tcp-packets <file>'
+  .description 'Parses ADB TCP packets from the given file.'
+  .action (file, options) ->
+    reader = new PacketReader fs.createReadStream(file)
+    reader.on 'packet', (packet) ->
+      console.log packet.toString()
 
 program.parse process.argv
