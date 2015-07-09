@@ -24,6 +24,7 @@ class Service extends EventEmitter
 
   constructor: (@client, @serial, @localId, @remoteId, @socket) ->
     super()
+    @opened = false
     @ended = false
     @transport = null
     @needAck = false
@@ -32,7 +33,8 @@ class Service extends EventEmitter
     @transport.end() if @transport
     return this if @ended
     debug 'O:A_CLSE'
-    @socket.write Packet.assemble(Packet.A_CLSE, @localId, @remoteId, null)
+    localId = if @opened then @localId else 0 # Zero can only mean a failed open
+    @socket.write Packet.assemble(Packet.A_CLSE, localId, @remoteId, null)
     @transport = null
     @ended = true
     this.emit 'end'
@@ -67,6 +69,7 @@ class Service extends EventEmitter
               when Protocol.OKAY
                 debug 'O:A_OKAY'
                 @socket.write Packet.assemble(Packet.A_OKAY, @localId, @remoteId, null)
+                @opened = true
               when Protocol.FAIL
                 @transport.parser.readError()
               else
