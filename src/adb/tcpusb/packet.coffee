@@ -40,7 +40,7 @@ class Packet
   @swap32: (n) ->
     buffer = new Buffer(4)
     buffer.writeUInt32LE(n, 0)
-    buffer.readUInt32LE(0)
+    buffer.readUInt32BE(0)
 
   constructor: (@command, @arg0, @arg1, @length, @check, @magic, @data = null) ->
 
