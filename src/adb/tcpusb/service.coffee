@@ -11,9 +11,9 @@ class Service extends EventEmitter
   class @PrematurePacketError extends Error
     constructor: (@packet) ->
       Error.call this
-      @name = 'PrematureActionError'
+      @name = 'PrematurePacketError'
       @message = "Premature packet"
-      Error.captureStackTrace this, Service.PrematureActionError
+      Error.captureStackTrace this, Service.PrematurePacketError
 
   class @LateTransportError extends Error
     constructor: ->
