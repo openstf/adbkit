@@ -152,7 +152,7 @@ class Socket extends EventEmitter
       @services.insert localId, service
       debug "Handling #{@services.count} services simultaneously"
       service.handle packet
-    .catch (err) =>
+    .catch (err) ->
       true
     .finally =>
       @services.remove localId

@@ -42,7 +42,7 @@ class Packet
     buffer.writeUInt32LE(n, 0)
     buffer.readUInt32BE(0)
 
-  constructor: (@command, @arg0, @arg1, @length, @check, @magic, @data = null) ->
+  constructor: (@command, @arg0, @arg1, @length, @check, @magic, @data) ->
 
   verifyChecksum: ->
     @check is Packet.checksum @data

@@ -62,13 +62,15 @@ class Service extends EventEmitter
     @client.transport @serial
       .then (@transport) =>
         throw new LateTransportError() if @ended
-        @transport.write Protocol.encodeData packet.data.slice(0, -1) # Discard null byte at end
+        @transport.write Protocol.encodeData \
+          packet.data.slice(0, -1) # Discard null byte at end
         @transport.parser.readAscii 4
           .then (reply) =>
             switch reply
               when Protocol.OKAY
                 debug 'O:A_OKAY'
-                @socket.write Packet.assemble(Packet.A_OKAY, @localId, @remoteId, null)
+                @socket.write \
+                  Packet.assemble(Packet.A_OKAY, @localId, @remoteId, null)
                 @opened = true
               when Protocol.FAIL
                 @transport.parser.readError()
