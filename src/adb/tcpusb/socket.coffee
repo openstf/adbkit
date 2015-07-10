@@ -8,19 +8,28 @@ debug = require('debug')('adb:tcpusb:socket')
 Parser = require '../parser'
 Protocol = require '../protocol'
 Auth = require '../auth'
+Packet = require './packet'
+PacketReader = require './packetreader'
+Service = require './service'
 ServiceMap = require './servicemap'
 RollingCounter = require './rollingcounter'
 
 class Socket extends EventEmitter
-  A_SYNC = 0x434e5953
-  A_CNXN = 0x4e584e43
-  A_OPEN = 0x4e45504f
-  A_OKAY = 0x59414b4f
-  A_CLSE = 0x45534c43
-  A_WRTE = 0x45545257
-  A_AUTH = 0x48545541
+  class @AuthError extends Error
+    constructor: (@message) ->
+      Error.call this
+      @name = 'AuthError'
+      Error.captureStackTrace this, Socket.AuthError
+
+  class @UnauthorizedError extends Error
+    constructor: ->
+      Error.call this
+      @name = 'UnauthorizedError'
+      @message = "Unauthorized access"
+      Error.captureStackTrace this, Socket.UnauthorizedError
 
   UINT32_MAX = 0xFFFFFFFF
+  UINT16_MAX = 0xFFFF
 
   AUTH_TOKEN = 1
   AUTH_SIGNATURE = 2
@@ -31,7 +40,8 @@ class Socket extends EventEmitter
   constructor: (@client, @serial, @socket, @options = {}) ->
     @options.auth or= Promise.resolve true
     @ended = false
-    @parser = new Parser @socket
+    @reader = new PacketReader @socket
+    @reader.on 'packet', this._handle.bind(this)
     @version = 1
     @maxPayload = 4096
     @authorized = false
@@ -41,233 +51,126 @@ class Socket extends EventEmitter
     @remoteAddress = @socket.remoteAddress
     @token = null
     @signature = null
-    this._inputLoop()
 
   end: ->
-    unless @ended
-      @socket.end()
-      @services.end()
-      this.emit 'end'
-      @ended = true
+    return this if @ended
+    @socket.end()
+    @services.end()
+    @ended = true
+    this.emit 'end'
     return this
 
-  _inputLoop: ->
-    this._readMessage()
-      .then (message) =>
-        this._route message
-      .then =>
-        setImmediate this._inputLoop.bind this
-      .catch Parser.PrematureEOFError, =>
-        # This means `adb disconnect`
-        debug "adb disconnect"
-        this.end()
-      .catch (err) =>
-        debug "Error: #{err.message}"
-        this.emit 'error', err
-        this.end()
+  _error: (err) ->
+    this.emit 'error', err
+    this.end()
 
-  _readMessage: ->
-    @parser.readBytes 24
-      .then (header) ->
-        command: header.readUInt32LE 0
-        arg0: header.readUInt32LE 4
-        arg1: header.readUInt32LE 8
-        length: header.readUInt32LE 12
-        check: header.readUInt32LE 16
-        magic: header.readUInt32LE 20
-      .then (message) =>
-        @parser.readBytes message.length
-          .then (data) ->
-            message.data = data
-            return message
-      .then (message) =>
-        this._validateMessage message
-
-  _route: (message) ->
+  _handle: (packet) ->
     return if @ended
-    this.emit 'userActivity', message
-    switch message.command
-      when A_SYNC
-        this._handleSyncMessage message
-      when A_CNXN
-        this._handleConnectionMessage message
-      when A_OPEN
-        this._handleOpenMessage message
-      when A_OKAY
-        this._handleOkayMessage message
-      when A_CLSE
-        this._handleCloseMessage message
-      when A_WRTE
-        this._handleWriteMessage message
-      when A_AUTH
-        this._handleAuthMessage message
-      else
-        this.emit 'error', new Error "Unknown command #{message.command}"
+    this.emit 'userActivity', packet
+    Promise.try =>
+      switch packet.command
+        when Packet.A_SYNC
+          this._handleSyncPacket packet
+        when Packet.A_CNXN
+          this._handleConnectionPacket packet
+        when Packet.A_OPEN
+          this._handleOpenPacket packet
+        when Packet.A_OKAY, Packet.A_WRTE, Packet.A_CLSE
+          this._forwardServicePacket packet
+        when Packet.A_AUTH
+          this._handleAuthPacket packet
+        else
+          throw new Error "Unknown command #{packet.command}"
+    .catch Socket.AuthError, =>
+      this.end()
+    .catch Socket.UnauthorizedError, =>
+      this.end()
+    .catch (err) =>
+      this._error err
 
-  _handleSyncMessage: (message) ->
+  _handleSyncPacket: (packet) ->
     # No need to do anything?
-    this._writeHeader A_SYNC, 1, @syncToken.next(), 0
+    debug 'I:A_SYNC'
+    debug 'O:A_SYNC'
+    this.write Packet.assemble(Packet.A_SYNC, 1, @syncToken.next(), null)
 
-  _handleConnectionMessage: (message) ->
-    debug 'A_CNXN', message
+  _handleConnectionPacket: (packet) ->
+    debug 'I:A_CNXN', packet
+    version = Packet.swap32(packet.arg0)
+    @maxPayload = Math.min UINT16_MAX, packet.arg1
     this._createToken()
       .then (@token) =>
-        this._writeMessage A_AUTH, AUTH_TOKEN, 0, @token
+        debug 'O:A_AUTH'
+        this.write Packet.assemble(Packet.A_AUTH, AUTH_TOKEN, 0, @token)
 
-  _handleAuthMessage: (message) ->
-    debug 'A_AUTH', message
-    switch message.arg0
+  _handleAuthPacket: (packet) ->
+    debug 'I:A_AUTH', packet
+    switch packet.arg0
       when AUTH_SIGNATURE
         # Store first signature, ignore the rest
-        @signature = message.data unless @signature
-        this._writeMessage A_AUTH, AUTH_TOKEN, 0, @token
+        @signature = packet.data unless @signature
+        debug 'O:A_AUTH'
+        this.write Packet.assemble(Packet.A_AUTH, AUTH_TOKEN, 0, @token)
       when AUTH_RSAPUBLICKEY
-        Auth.parsePublicKey this._skipNull(message.data)
+        unless @signature
+          throw new AuthError "Public key sent before signature"
+        unless packet.data and packet.data.length >= 2
+          throw new AuthError "Empty RSA public key"
+        Auth.parsePublicKey this._skipNull(packet.data)
           .then (key) =>
             digest = @token.toString 'binary'
             sig = @signature.toString 'binary'
-            if key.verify digest, sig
-              @options.auth key
-                .then =>
-                  this._deviceId()
-                    .then (id) =>
-                      @authorized = true
-                      this._writeMessage A_CNXN, @version, @maxPayload,
-                        "device::#{id}"
-                .catch (err) =>
-                  this.end()
-            else
-              this.end()
-      else
-        this.end()
-
-  _handleOpenMessage: (message) ->
-    return unless @authorized
-    debug 'A_OPEN', message
-    localId = message.arg0
-    remoteId = @remoteId.next()
-    service = this._skipNull(message.data)
-    debug "Calling #{service}"
-    this._writeHeader A_OKAY, remoteId, localId
-    @client.transport @serial
-      .then (transport) =>
-        return if @ended
-
-        @services.insert remoteId, transport
-        debug "Handling #{@services.count} services simultaneously"
-
-        transport.write Protocol.encodeData service
-        parser = transport.parser
-
-        transport.on 'error', (err) ->
-          # No-op. This will be handled by the parser directly.
-          # @todo Investigate why this is even necessary in the first place
-
-        parser.readAscii 4
-          .then (reply) =>
-            switch reply
-              when Protocol.OKAY
-                return
-              when Protocol.FAIL
-                parser.readError()
-              else
-                parser.unexpected reply, 'OKAY or FAIL'
+            unless key.verify digest, sig
+              throw new Socket.AuthError "Signature mismatch"
+            key
+          .then (key) =>
+            @options.auth key
+              .catch (err) ->
+                throw new Socket.AuthError "Rejected by user-defined handler"
           .then =>
-            new Promise (resolve, reject) =>
-              out = parser.raw()
-              maybeRead = =>
-                while chunk = this._readChunk out
-                  this._writeMessage A_WRTE, remoteId, localId, chunk
-              out.on 'readable', maybeRead
-              out.on 'end', resolve
-              out.on 'error', reject
-              maybeRead()
-          .catch Parser.PrematureEOFError, ->
-            true
-          .finally =>
-            this._close remoteId, localId
-          .catch Parser.FailError, (err) =>
-            debug "Unable to open service: #{err}"
-            this.end()
+            this._deviceId()
+          .then (id) =>
+            @authorized = true
+            debug 'O:A_CNXN'
+            this.write Packet.assemble(Packet.A_CNXN,
+              Packet.swap32(@version), @maxPayload, id)
+      else
+        throw new Error "Unknown authentication method #{packet.arg0}"
 
-      .catch (err) =>
-        this._close remoteId, localId
-
-    # At this point we are ready to accept new messages, so let's return
-    # so that the input loop can continue.
-    return
-
-  _handleOkayMessage: (message) ->
-    return unless @authorized
-    debug 'A_OKAY', message
-    # We should wait until an OKAY is received to WRTE more, but we don't
-    # really care about that.
-    localId = message.arg0
-    remoteId = message.arg1
-
-  _handleCloseMessage: (message) ->
-    return unless @authorized
-    debug 'A_CLSE', message
-    localId = message.arg0
-    remoteId = message.arg1
-    this._close remoteId, localId
-
-  _handleWriteMessage: (message) ->
-    return unless @authorized
-    debug 'A_WRTE', message
-    # @todo
-    localId = message.arg0
-    remoteId = message.arg1
-    if remote = @services.get remoteId
-      remote.write message.data
-      this._writeHeader A_OKAY, remoteId, localId
-    else
-      debug "A_WRTE to unknown socket pair #{localId}/#{remoteId}"
-    true
-
-  _close: (remoteId, localId) ->
-    if remote = @services.remove remoteId
+  _handleOpenPacket: (packet) ->
+    throw new Socket.UnauthorizedError() unless @authorized
+    remoteId = packet.arg0
+    localId = @remoteId.next()
+    unless packet.data and packet.data.length >= 2
+      throw new Error "Empty service name"
+    name = this._skipNull(packet.data)
+    debug "Calling #{name}"
+    service = new Service @client, @serial, localId, remoteId, this
+    new Promise (resolve, reject) =>
+      service.on 'error', reject
+      service.on 'end', resolve
+      @services.insert localId, service
       debug "Handling #{@services.count} services simultaneously"
-      remote.end()
-      this._writeHeader A_CLSE, remoteId, localId
+      service.handle packet
+    .catch (err) ->
+      true
+    .finally =>
+      @services.remove localId
+      debug "Handling #{@services.count} services simultaneously"
+      service.end()
 
-  _writeHeader: (command, arg0, arg1, length, checksum) ->
+  _forwardServicePacket: (packet) ->
+    throw new Socket.UnauthorizedError() unless @authorized
+    remoteId = packet.arg0
+    localId = packet.arg1
+    if service = @services.get localId
+      service.handle packet
+    else
+      debug "Received a packet to a service that may have been closed already"
+
+  write: (chunk) ->
     return if @ended
-    header = new Buffer 24
-    header.writeUInt32LE command, 0
-    header.writeUInt32LE arg0 || 0, 4
-    header.writeUInt32LE arg1 || 0, 8
-    header.writeUInt32LE length || 0, 12
-    header.writeUInt32LE checksum || 0, 16
-    header.writeUInt32LE this._magic(command), 20
-    @socket.write header
-
-  _writeMessage: (command, arg0, arg1, data) ->
-    return if @ended
-    data = new Buffer data unless Buffer.isBuffer data
-    this._writeHeader command, arg0, arg1, data.length, this._checksum data
-    @socket.write data
-
-  _validateMessage: (message) ->
-    unless message.magic is this._magic message.command
-      throw new Error "Command failed magic check"
-    unless message.check is this._checksum message.data
-      throw new Error "Message checksum doesn't match received message"
-    return message
-
-  _readChunk: (stream) ->
-    stream.read(@maxPayload) or stream.read()
-
-  _checksum: (data) ->
-    unless Buffer.isBuffer data
-      throw new Error "Unable to calculate checksum of non-Buffer"
-    sum = 0
-    sum += char for char in data
-    return sum
-
-  _magic: (command) ->
-    # We need the full uint32 range, which ">>> 0" thankfully allows us to use
-    (command ^ 0xffffffff) >>> 0
+    @socket.write chunk
 
   _createToken: ->
     Promise.promisify(crypto.randomBytes)(TOKEN_LENGTH)
@@ -279,10 +182,11 @@ class Socket extends EventEmitter
     debug "Loading device properties to form a standard device ID"
     @client.getProperties @serial
       .then (properties) ->
-        ("#{prop}=#{properties[prop]};" for prop in [
+        id = ("#{prop}=#{properties[prop]};" for prop in [
           'ro.product.name'
           'ro.product.model'
           'ro.product.device'
-        ]).join ''
+        ]).join('')
+        new Buffer "device::#{id}\0"
 
 module.exports = Socket
