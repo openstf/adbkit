@@ -34,7 +34,12 @@ class Service extends EventEmitter
     return this if @ended
     debug 'O:A_CLSE'
     localId = if @opened then @localId else 0 # Zero can only mean a failed open
-    @socket.write Packet.assemble(Packet.A_CLSE, localId, @remoteId, null)
+    try
+      # We may or may not have gotten here due to @socket ending, so write
+      # may fail.
+      @socket.write Packet.assemble(Packet.A_CLSE, localId, @remoteId, null)
+    catch err
+      # Let it go
     @transport = null
     @ended = true
     this.emit 'end'

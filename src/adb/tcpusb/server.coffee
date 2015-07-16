@@ -6,7 +6,7 @@ Socket = require './socket'
 class Server extends EventEmitter
   constructor: (@client, @serial, @options) ->
     @connections = []
-    @server = Net.createServer()
+    @server = Net.createServer allowHalfOpen: true
     @server.on 'error', (err) =>
       this.emit 'error', err
     @server.on 'listening', =>
@@ -17,8 +17,10 @@ class Server extends EventEmitter
       socket = new Socket @client, @serial, conn, @options
       @connections.push socket
       socket.on 'error', (err) =>
+        # 'conn' is guaranteed to get ended
         this.emit 'error', err
       socket.once 'end', =>
+        # 'conn' is guaranteed to get ended
         @connections = @connections.filter (val) -> val isnt socket
       this.emit 'connection', socket
 

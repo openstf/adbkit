@@ -41,7 +41,11 @@ class Socket extends EventEmitter
     @options.auth or= Promise.resolve true
     @ended = false
     @reader = new PacketReader @socket
-    @reader.on 'packet', this._handle.bind(this)
+      .on 'packet', this._handle.bind(this)
+      .on 'error', (err) =>
+        debug "PacketReader error: #{err.message}"
+        this.end()
+      .on 'end', this.end.bind(this)
     @version = 1
     @maxPayload = 4096
     @authorized = false
@@ -54,8 +58,9 @@ class Socket extends EventEmitter
 
   end: ->
     return this if @ended
-    @socket.end()
+    # End services first so that they can send a final payload before FIN.
     @services.end()
+    @socket.end()
     @ended = true
     this.emit 'end'
     return this
