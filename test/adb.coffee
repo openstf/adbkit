@@ -1,6 +1,6 @@
 {expect} = require 'chai'
 
-Adb = require '../'
+Adb = require '../src/adb'
 Client = require '../src/adb/client'
 Keycode = require '../src/adb/keycode'
 util = require '../src/adb/util'

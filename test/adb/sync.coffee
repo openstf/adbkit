@@ -6,7 +6,7 @@ Chai = require 'chai'
 Chai.use require 'sinon-chai'
 {expect, assert} = Chai
 
-Adb = require '../../'
+Adb = require '../../src/adb'
 Sync = require '../../src/adb/sync'
 Stats = require '../../src/adb/sync/stats'
 Entry = require '../../src/adb/sync/entry'
