@@ -40,6 +40,7 @@ class Socket extends EventEmitter
   constructor: (@client, @serial, @socket, @options = {}) ->
     @options.auth or= Promise.resolve true
     @ended = false
+    @socket.setNoDelay true
     @reader = new PacketReader @socket
       .on 'packet', this._handle.bind(this)
       .on 'error', (err) =>
