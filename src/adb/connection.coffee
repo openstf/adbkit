@@ -14,6 +14,7 @@ class Connection extends EventEmitter
 
   connect: ->
     @socket = Net.connect @options
+    @socket.setNoDelay true
     @parser = new Parser @socket
     @socket.on 'connect', =>
       this.emit 'connect'
