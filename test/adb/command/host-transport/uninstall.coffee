@@ -6,6 +6,7 @@ Chai.use require 'sinon-chai'
 
 MockConnection = require '../../../mock/connection'
 Protocol = require '../../../../src/adb/protocol'
+Parser = require '../../../../src/adb/parser'
 UninstallCommand =
   require '../../../../src/adb/command/host-transport/uninstall'
 
@@ -39,7 +40,8 @@ describe 'UninstallCommand', ->
       .then ->
         done()
 
-  it "should succeed even if command responds with 'Failure' w/ info", (done) ->
+  it "should succeed even if command responds with 'Failure'
+      with info in standard format", (done) ->
     conn = new MockConnection
     cmd = new UninstallCommand conn
     conn.socket.on 'write', (chunk) ->
@@ -51,6 +53,30 @@ describe 'UninstallCommand', ->
       conn.socket.causeEnd()
     cmd.execute 'foo'
       .then ->
+        done()
+
+  it "should succeed even if command responds with 'Failure'
+      with info info in weird format", (done) ->
+    conn = new MockConnection
+    cmd = new UninstallCommand conn
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Failure - not installed for 0\r\n'
+      conn.socket.causeEnd()
+    cmd.execute 'foo'
+      .then ->
+        done()
+
+  it "should reject with Parser.PrematureEOFError if stream ends
+      before match", (done) ->
+    conn = new MockConnection
+    cmd = new UninstallCommand conn
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Hello. Is it me you are looking for?\r\n'
+      conn.socket.causeEnd()
+    cmd.execute 'foo'
+      .catch Parser.PrematureEOFError, (err) ->
         done()
 
   it "should ignore any other data", (done) ->

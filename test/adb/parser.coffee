@@ -46,6 +46,16 @@ describe 'Parser', ->
       stream.write 'O'
       stream.end()
 
+    it "should resolve with an empty Buffer if the stream has already ended
+        and there's nothing more to read", (done) ->
+      stream = new Stream.PassThrough
+      parser = new Parser stream
+      parser.readAll()
+        .then (buf) ->
+          expect(buf.length).to.equal 0
+          done()
+      stream.end()
+
   describe 'readBytes(howMany)', ->
 
     it "should return a cancellable Promise", (done) ->

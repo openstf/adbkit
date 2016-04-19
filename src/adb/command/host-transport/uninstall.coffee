@@ -8,19 +8,13 @@ class UninstallCommand extends Command
       .then (reply) =>
         switch reply
           when Protocol.OKAY
-            @parser.searchLine /^(Success|Failure|Failure \[(.*?)\])$/
+            @parser.searchLine /^(Success|Failure.*)$/
               .then (match) ->
                 if match[1] is 'Success'
                   true
                 else
                   # Either way, the package was uninstalled or doesn't exist,
-                  # which is good enough for us. Here's how you might reject
-                  # instead:
-                  #
-                  # code = match[2] or "Unspecified reason"
-                  # err = new Error "#{apk} could not be installed [#{code}]"
-                  # err.code = code
-                  # throw err
+                  # which is good enough for us.
                   true
               .finally =>
                 # Consume all remaining content to "naturally" close the
