@@ -68,6 +68,7 @@ class Parser
     tryRead = =>
       while chunk = @stream.read()
         all = Buffer.concat [all, chunk]
+      resolver.resolve all if @ended
 
     @stream.on 'readable', tryRead
 
