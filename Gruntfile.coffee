@@ -4,6 +4,9 @@ module.exports = (grunt) ->
     pkg: require './package'
     coffee:
       src:
+        options:
+          bare: true
+          noHeader: true
         expand: true
         cwd: 'src'
         src: '**/*.coffee'
@@ -20,6 +23,8 @@ module.exports = (grunt) ->
     coffeelint:
       options:
         indentation:
+          level: 'ignore'
+        no_backticks:
           level: 'ignore'
       src:
         src: '<%= coffee.src.cwd %>/<%= coffee.src.src %>'

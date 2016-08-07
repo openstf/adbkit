@@ -1,5 +1,7 @@
-fs = require 'fs'
+`#!/usr/bin/env node
+`
 
+fs = require 'fs'
 program = require 'commander'
 Promise = require 'bluebird'
 forge = require 'node-forge'

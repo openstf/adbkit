@@ -9,6 +9,9 @@
     "logcat",
     "monkey"
   ],
+  "bin": {
+    "adbkit": "./lib/cli.js"
+  },
   "bugs": {
     "url": "https://github.com/CyberAgent/adbkit/issues"
   },
