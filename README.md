@@ -1063,7 +1063,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 See [LICENSE](LICENSE).
 
-Copyright © CyberAgent, Inc. All Rights Reserved.
+Copyright © The OpenSTF Project. All Rights Reserved.
 
 [nodejs]: <http://nodejs.org/>
 [coffeescript]: <http://coffeescript.org/>
