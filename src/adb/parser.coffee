@@ -98,12 +98,10 @@ class Parser
       if howMany
         if chunk = @stream.read howMany
           # If the stream ends while still having unread bytes, the read call
-          # will ignore the limit and just return what it's got. There seem
-          # to be some internal reasons for that madness but in the end it
-          # means that we've got to handle it. Undocumented wonderful behavior
-          # by the way.
+          # will ignore the limit and just return what it's got.
           howMany -= chunk.length
-          resolver.resolve chunk if howMany is 0
+          return resolver.resolve chunk if howMany is 0
+        resolver.reject new Parser.PrematureEOFError howMany if @ended
       else
         resolver.resolve new Buffer 0
 
@@ -134,11 +132,9 @@ class Parser
         # whatever is available, which will be less than the needed amount.
         while chunk = @stream.read(howMany) or @stream.read()
           howMany -= chunk.length
-          if howMany is 0
-            targetStream.write chunk
-            resolver.resolve()
-            break
           targetStream.write chunk
+          return resolver.resolve() if howMany is 0
+        resolver.reject new Parser.PrematureEOFError howMany if @ended
       else
         resolver.resolve()
 
