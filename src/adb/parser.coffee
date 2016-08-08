@@ -3,31 +3,6 @@ Promise = require 'bluebird'
 Protocol = require './protocol'
 
 class Parser
-  class @FailError extends Error
-    constructor: (message) ->
-      Error.call this
-      this.name = 'FailError'
-      this.message = "Failure: '#{message}'"
-      Error.captureStackTrace this, Parser.FailError
-
-  class @PrematureEOFError extends Error
-    constructor: (howManyMissing) ->
-      Error.call this
-      this.name = 'PrematureEOFError'
-      this.message = "Premature end of stream, needed #{howManyMissing}
-        more bytes"
-      this.missingBytes = howManyMissing
-      Error.captureStackTrace this, Parser.PrematureEOFError
-
-  class @UnexpectedDataError extends Error
-    constructor: (unexpected, expected) ->
-      Error.call this
-      this.name = 'UnexpectedDataError'
-      this.message = "Unexpected '#{unexpected}', was expecting #{expected}"
-      this.unexpected = unexpected
-      this.expected = expected
-      Error.captureStackTrace this, Parser.UnexpectedDataError
-
   constructor: (@stream) ->
     @ended = false
 
@@ -197,5 +172,30 @@ class Parser
 
   unexpected: (data, expected) ->
     Promise.reject new Parser.UnexpectedDataError data, expected
+
+class Parser.FailError extends Error
+  constructor: (message) ->
+    Error.call this
+    this.name = 'FailError'
+    this.message = "Failure: '#{message}'"
+    Error.captureStackTrace this, Parser.FailError
+
+class Parser.PrematureEOFError extends Error
+  constructor: (howManyMissing) ->
+    Error.call this
+    this.name = 'PrematureEOFError'
+    this.message = "Premature end of stream, needed #{howManyMissing}
+      more bytes"
+    this.missingBytes = howManyMissing
+    Error.captureStackTrace this, Parser.PrematureEOFError
+
+class Parser.UnexpectedDataError extends Error
+  constructor: (unexpected, expected) ->
+    Error.call this
+    this.name = 'UnexpectedDataError'
+    this.message = "Unexpected '#{unexpected}', was expecting #{expected}"
+    this.unexpected = unexpected
+    this.expected = expected
+    Error.captureStackTrace this, Parser.UnexpectedDataError
 
 module.exports = Parser

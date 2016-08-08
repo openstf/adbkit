@@ -15,19 +15,6 @@ ServiceMap = require './servicemap'
 RollingCounter = require './rollingcounter'
 
 class Socket extends EventEmitter
-  class @AuthError extends Error
-    constructor: (@message) ->
-      Error.call this
-      @name = 'AuthError'
-      Error.captureStackTrace this, Socket.AuthError
-
-  class @UnauthorizedError extends Error
-    constructor: ->
-      Error.call this
-      @name = 'UnauthorizedError'
-      @message = "Unauthorized access"
-      Error.captureStackTrace this, Socket.UnauthorizedError
-
   UINT32_MAX = 0xFFFFFFFF
   UINT16_MAX = 0xFFFF
 
@@ -194,5 +181,18 @@ class Socket extends EventEmitter
           'ro.product.device'
         ]).join('')
         new Buffer "device::#{id}\0"
+
+class Socket.AuthError extends Error
+  constructor: (@message) ->
+    Error.call this
+    @name = 'AuthError'
+    Error.captureStackTrace this, Socket.AuthError
+
+class Socket.UnauthorizedError extends Error
+  constructor: ->
+    Error.call this
+    @name = 'UnauthorizedError'
+    @message = "Unauthorized access"
+    Error.captureStackTrace this, Socket.UnauthorizedError
 
 module.exports = Socket
