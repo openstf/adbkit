@@ -8,7 +8,7 @@ class UninstallCommand extends Command
       .then (reply) =>
         switch reply
           when Protocol.OKAY
-            @parser.searchLine /^(Success|Failure.*)$/
+            @parser.searchLine /^(Success|Failure.*|.*Unknown package:.*)$/
               .then (match) ->
                 if match[1] is 'Success'
                   true
