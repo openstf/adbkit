@@ -16,7 +16,7 @@ describe 'InstallCommand', ->
     cmd = new InstallCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
-        Protocol.encodeData("shell:pm install -r 'foo'").toString()
+        Protocol.encodeData('shell:pm install -r "foo"').toString()
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead 'Success\r\n'
