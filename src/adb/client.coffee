@@ -43,10 +43,11 @@ UsbCommand = require './command/host-transport/usb'
 WaitBootCompleteCommand = require './command/host-transport/waitbootcomplete'
 
 ForwardCommand = require './command/host-serial/forward'
+ReverseCommand = require './command/host-serial/reverse'
+ListForwardsCommand = require './command/host-serial/listforwards'
 GetDevicePathCommand = require './command/host-serial/getdevicepath'
 GetSerialNoCommand = require './command/host-serial/getserialno'
 GetStateCommand = require './command/host-serial/getstate'
-ListForwardsCommand = require './command/host-serial/listforwards'
 WaitForDeviceCommand = require './command/host-serial/waitfordevice'
 
 TcpUsbServer = require './tcpusb/server'
@@ -194,6 +195,13 @@ class Client
         new ListForwardsCommand conn
           .execute serial
       .nodeify callback
+
+  reverse: (serial, remote, local, callback) ->
+    this.connection()
+      .then (conn) ->
+        new ReverseCommand conn
+          .execute serial, remote, local
+        .nodeify callback
 
   transport: (serial, callback) ->
     this.connection()
