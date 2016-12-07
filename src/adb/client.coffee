@@ -43,8 +43,9 @@ UsbCommand = require './command/host-transport/usb'
 WaitBootCompleteCommand = require './command/host-transport/waitbootcomplete'
 
 ForwardCommand = require './command/host-serial/forward'
-ReverseCommand = require './command/host-serial/reverse'
 ListForwardsCommand = require './command/host-serial/listforwards'
+ReverseCommand = require './command/host-serial/reverse'
+ListReversesCommand = require './command/host-serial/listreverses'
 GetDevicePathCommand = require './command/host-serial/getdevicepath'
 GetSerialNoCommand = require './command/host-serial/getserialno'
 GetStateCommand = require './command/host-serial/getstate'
@@ -202,6 +203,13 @@ class Client
         new ReverseCommand conn
           .execute serial, remote, local
         .nodeify callback
+
+  listReverses: (serial, callback) ->
+    this.connection()
+      .then (conn) ->
+        new ListReversesCommand conn
+          .execute serial
+      .nodeify callback
 
   transport: (serial, callback) ->
     this.connection()
