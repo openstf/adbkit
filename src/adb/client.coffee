@@ -198,17 +198,17 @@ class Client
       .nodeify callback
 
   reverse: (serial, remote, local, callback) ->
-    this.connection()
-      .then (conn) ->
-        new ReverseCommand conn
-          .execute serial, remote, local
+    this.transport serial
+      .then (transport) ->
+        new ReverseCommand transport
+          .execute remote, local
         .nodeify callback
 
   listReverses: (serial, callback) ->
-    this.connection()
-      .then (conn) ->
-        new ListReversesCommand conn
-          .execute serial
+    this.transport serial
+      .then (transport) ->
+        new ListReversesCommand transport
+          .execute()
       .nodeify callback
 
   transport: (serial, callback) ->

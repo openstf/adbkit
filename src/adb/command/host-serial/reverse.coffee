@@ -2,8 +2,8 @@ Command = require '../../command'
 Protocol = require '../../protocol'
 
 class ReverseCommand extends Command
-  execute: (serial, remote, local) ->
-    this._send "host-serial:#{serial}:reverse:#{remote};#{local}"
+  execute: (remote, local) ->
+    this._send "reverse:forward:#{remote};#{local}"
     @parser.readAscii 4
       .then (reply) =>
         switch reply

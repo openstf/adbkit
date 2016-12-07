@@ -2,8 +2,8 @@ Command = require '../../command'
 Protocol = require '../../protocol'
 
 class ListReversesCommand extends Command
-  execute: (serial) ->
-    this._send "host-serial:#{serial}:list-reverse"
+  execute: ->
+    this._send "reverse:list-forward"
     @parser.readAscii 4
       .then (reply) =>
         switch reply
@@ -21,7 +21,7 @@ class ListReversesCommand extends Command
     for reverse in value.toString().split '\n'
       if reverse
         [serial, remote, local] = reverse.split /\s+/
-        reverses.push serial: serial, remote: remote, local: local
+        reverses.push remote: remote, local: local
     return reverses
 
 module.exports = ListReversesCommand
