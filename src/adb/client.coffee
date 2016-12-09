@@ -24,12 +24,14 @@ GetPackagesCommand = require './command/host-transport/getpackages'
 GetPropertiesCommand = require './command/host-transport/getproperties'
 InstallCommand = require './command/host-transport/install'
 IsInstalledCommand = require './command/host-transport/isinstalled'
+ListReversesCommand = require './command/host-transport/listreverses'
 LocalCommand = require './command/host-transport/local'
 LogcatCommand = require './command/host-transport/logcat'
 LogCommand = require './command/host-transport/log'
 MonkeyCommand = require './command/host-transport/monkey'
 RebootCommand = require './command/host-transport/reboot'
 RemountCommand = require './command/host-transport/remount'
+ReverseCommand = require './command/host-transport/reverse'
 ScreencapCommand = require './command/host-transport/screencap'
 ShellCommand = require './command/host-transport/shell'
 StartActivityCommand = require './command/host-transport/startactivity'
@@ -193,6 +195,20 @@ class Client
       .then (conn) ->
         new ListForwardsCommand conn
           .execute serial
+      .nodeify callback
+
+  reverse: (serial, remote, local, callback) ->
+    this.transport serial
+      .then (transport) ->
+        new ReverseCommand transport
+          .execute remote, local
+        .nodeify callback
+
+  listReverses: (serial, callback) ->
+    this.transport serial
+      .then (transport) ->
+        new ListReversesCommand transport
+          .execute()
       .nodeify callback
 
   transport: (serial, callback) ->
