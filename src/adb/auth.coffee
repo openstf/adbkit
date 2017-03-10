@@ -18,7 +18,7 @@ The stucture of an ADB RSAPublicKey is as follows:
 
 ###
 class Auth
-  RE = /^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?) (.*)$/
+  RE = /^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?) (.*)\s*$/
 
   readPublicKeyFromStruct = (struct, comment) ->
     throw new Error "Invalid public key" unless struct.length
