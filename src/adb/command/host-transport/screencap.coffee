@@ -7,19 +7,22 @@ LineTransform = require '../../linetransform'
 
 class ScreencapCommand extends Command
   execute: ->
-    this._send 'shell:screencap -p 2>/dev/null'
+    this._send 'shell:echo && screencap -p 2>/dev/null'
     @parser.readAscii 4
       .then (reply) =>
         switch reply
           when Protocol.OKAY
             transform = new LineTransform
             @parser.readBytes 1
-              .then (chunk) =>
+            .then (chunk) =>
+              if chunk[0] is 0x0a
+                return @parser.raw()
+              else
+                @parser.readBytes(1)
                 transform = new LineTransform
-                transform.write chunk
                 @parser.raw().pipe transform
-              .catch Parser.PrematureEOFError, ->
-                throw new Error 'No support for the screencap command'
+            .catch Parser.PrematureEOFError, ->
+              throw new Error 'No support for the screencap command'
           when Protocol.FAIL
             @parser.readError()
           else
