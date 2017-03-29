@@ -17,6 +17,9 @@ MockConnection = require '../mock/connection'
 # This test suite is a bit special in that it requires a connected Android
 # device (or many devices). All will be tested.
 describe 'Sync', ->
+  # By default, skip tests that require a device.
+  dt = xit
+  dt = it if process.env.RUN_DEVICE_TESTS
 
   SURELY_EXISTING_FILE = '/system/build.prop'
   SURELY_EXISTING_PATH = '/'
@@ -95,7 +98,7 @@ describe 'Sync', ->
       expect(transfer).to.be.an.instanceof PushTransfer
       transfer.cancel()
 
-    it "should be able to push >65536 byte chunks without error", (done) ->
+    dt "should be able to push >65536 byte chunks without error", (done) ->
       forEachSyncDevice (sync) ->
         new Promise (resolve, reject) ->
           stream = new Stream.PassThrough
@@ -109,7 +112,7 @@ describe 'Sync', ->
 
   describe 'pull(path)', ->
 
-    it "should retrieve the same content pushStream() pushed", (done) ->
+    dt "should retrieve the same content pushStream() pushed", (done) ->
       forEachSyncDevice (sync) ->
         new Promise (resolve, reject) ->
           stream = new Stream.PassThrough
@@ -130,14 +133,14 @@ describe 'Sync', ->
           stream.end()
       , done
 
-    it "should emit error for non-existing files", (done) ->
+    dt "should emit error for non-existing files", (done) ->
       forEachSyncDevice (sync) ->
         new Promise (resolve, reject) ->
           transfer = sync.pull SURELY_NONEXISTING_PATH
           transfer.on 'error', resolve
       , done
 
-    it "should return a PullTransfer instance", (done) ->
+    dt "should return a PullTransfer instance", (done) ->
       forEachSyncDevice (sync) ->
         rval = sync.pull SURELY_EXISTING_FILE
         expect(rval).to.be.an.instanceof PullTransfer
@@ -146,7 +149,7 @@ describe 'Sync', ->
 
     describe 'Stream', ->
 
-      it "should emit 'end' when pull is done", (done) ->
+      dt "should emit 'end' when pull is done", (done) ->
         forEachSyncDevice (sync) ->
           new Promise (resolve, reject) ->
             transfer = sync.pull SURELY_EXISTING_FILE
@@ -157,14 +160,14 @@ describe 'Sync', ->
 
   describe 'stat(path)', ->
 
-    it "should return a Promise", (done) ->
+    dt "should return a Promise", (done) ->
       forEachSyncDevice (sync) ->
         rval = sync.stat SURELY_EXISTING_PATH
         expect(rval).to.be.an.instanceof Promise
         rval
       , done
 
-    it "should call with an ENOENT error if the path does not exist", (done) ->
+    dt "should call with an ENOENT error if the path does not exist", (done) ->
       forEachSyncDevice (sync) ->
         sync.stat SURELY_NONEXISTING_PATH
           .then (stats) ->
@@ -176,7 +179,7 @@ describe 'Sync', ->
             expect(err.path).to.equal SURELY_NONEXISTING_PATH
       , done
 
-    it "should call with an fs.Stats instance for an existing path", (done) ->
+    dt "should call with an fs.Stats instance for an existing path", (done) ->
       forEachSyncDevice (sync) ->
         sync.stat SURELY_EXISTING_PATH
           .then (stats) ->
@@ -189,7 +192,7 @@ describe 'Sync', ->
         expect(new Stats 0, 0, 0).to.be.an.instanceof Fs.Stats
         done()
 
-      it "should set the `.mode` property for isFile() etc", (done) ->
+      dt "should set the `.mode` property for isFile() etc", (done) ->
         forEachSyncDevice (sync) ->
           sync.stat SURELY_EXISTING_FILE
             .then (stats) ->
@@ -199,7 +202,7 @@ describe 'Sync', ->
               expect(stats.isDirectory()).to.be.false
         , done
 
-      it "should set the `.size` property", (done) ->
+      dt "should set the `.size` property", (done) ->
         forEachSyncDevice (sync) ->
           sync.stat SURELY_EXISTING_FILE
             .then (stats) ->
@@ -208,7 +211,7 @@ describe 'Sync', ->
               expect(stats.size).to.be.above 0
         , done
 
-      it "should set the `.mtime` property", (done) ->
+      dt "should set the `.mtime` property", (done) ->
         forEachSyncDevice (sync) ->
           sync.stat SURELY_EXISTING_FILE
             .then (stats) ->
@@ -222,7 +225,7 @@ describe 'Sync', ->
         expect(new Entry 'foo', 0, 0, 0).to.be.an.instanceof Stats
         done()
 
-      it "should set the `.name` property", (done) ->
+      dt "should set the `.name` property", (done) ->
         forEachSyncDevice (sync) ->
           sync.readdir SURELY_EXISTING_PATH
             .then (files) ->
@@ -232,7 +235,7 @@ describe 'Sync', ->
                 expect(file).to.be.an.instanceof Entry
         , done
 
-      it "should set the Stats properties", (done) ->
+      dt "should set the Stats properties", (done) ->
         forEachSyncDevice (sync) ->
           sync.readdir SURELY_EXISTING_PATH
             .then (files) ->
