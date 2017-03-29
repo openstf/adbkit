@@ -9,12 +9,12 @@ class LogcatCommand extends Command
     # all events on all devices.
     cmd = 'logcat -B *:I 2>/dev/null'
     cmd = "logcat -c 2>/dev/null && #{cmd}" if options.clear
-    this._send "shell:#{cmd}"
+    this._send "shell:echo && #{cmd}"
     @parser.readAscii 4
       .then (reply) =>
         switch reply
           when Protocol.OKAY
-            @parser.raw().pipe new LineTransform
+            @parser.raw().pipe new LineTransform autoDetect: true
           when Protocol.FAIL
             @parser.readError()
           else

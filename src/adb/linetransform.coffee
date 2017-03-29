@@ -1,9 +1,18 @@
 Stream = require 'stream'
 
 class LineTransform extends Stream.Transform
-  constructor: (options) ->
+  constructor: (options = {}) ->
     @savedR = null
+    @autoDetect = options.autoDetect or false
+    @checkedFirstByte = false
+    @transformNeeded = true
+    delete options.autoDetect
     super options
+
+  _nullTransform: (chunk, encoding, done) ->
+    this.push chunk
+    done()
+    return
 
   # Sadly, the ADB shell is not very smart. It automatically converts every
   # 0x0a ('\n') it can find to 0x0d 0x0a ('\r\n'). This also applies to binary
@@ -12,6 +21,10 @@ class LineTransform extends Stream.Transform
   # or something similar. On the up side, it really does do this for all line
   # feeds, so a simple transform works fine.
   _transform: (chunk, encoding, done) ->
+    unless @checkedFirstByte
+      @transformNeeded = false if chunk[0] is 0x0a
+      @checkedFirstByte = true
+    return this._nullTransform(chunk, encoding, done) unless @transformNeeded
     lo = 0
     hi = 0
     if @savedR

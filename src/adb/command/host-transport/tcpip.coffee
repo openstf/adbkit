@@ -1,6 +1,5 @@
 Command = require '../../command'
 Protocol = require '../../protocol'
-LineTransform = require '../../linetransform'
 
 class TcpIpCommand extends Command
   RE_OK = /restarting in/
