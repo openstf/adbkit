@@ -57,7 +57,7 @@ describe 'LogcatCommand', ->
     cmd = new LogcatCommand conn
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'foo\r\n'
+      conn.socket.causeRead '\r\nfoo\r\n'
       conn.socket.causeEnd()
     cmd.execute()
       .then (stream) ->
@@ -77,5 +77,5 @@ describe 'LogcatCommand', ->
       .then (stream) ->
         new Parser(stream).readAll()
       .then (out) ->
-        expect(out.toString()).to.equal '\nfoo\r\n'
+        expect(out.toString()).to.equal 'foo\r\n'
         done()

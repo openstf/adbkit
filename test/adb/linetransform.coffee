@@ -18,9 +18,50 @@ describe 'LineTransform', ->
       duplex = new MockDuplex
       transform = new LineTransform autoDetect: true
       transform.on 'data', (data) ->
-        expect(data.toString()).to.equal '\nbar\r\n'
+        expect(data.toString()).to.equal 'bar\r\n'
         done()
       duplex.pipe transform
+      duplex.causeRead '\nbar\r\n'
+      duplex.causeEnd()
+
+    it "should not include initial 0x0a", (done) ->
+      duplex = new MockDuplex
+      transform = new LineTransform autoDetect: true
+      buffer = new Buffer ''
+      transform.on 'data', (data) ->
+        buffer = Buffer.concat [buffer, data]
+      transform.on 'end', ->
+        expect(buffer.toString()).to.equal 'bar\r\n'
+        done()
+      duplex.pipe transform
+      duplex.causeRead '\nbar\r\n'
+      duplex.causeEnd()
+
+    it "should not include initial 0x0d 0x0a", (done) ->
+      duplex = new MockDuplex
+      transform = new LineTransform autoDetect: true
+      buffer = new Buffer ''
+      transform.on 'data', (data) ->
+        buffer = Buffer.concat [buffer, data]
+      transform.on 'end', ->
+        expect(buffer.toString()).to.equal 'bar\n'
+        done()
+      duplex.pipe transform
+      duplex.causeRead '\r\nbar\r\n'
+      duplex.causeEnd()
+
+    it "should not include initial 0x0d 0x0a even if in separate
+        chunks", (done) ->
+      duplex = new MockDuplex
+      transform = new LineTransform autoDetect: true
+      buffer = new Buffer ''
+      transform.on 'data', (data) ->
+        buffer = Buffer.concat [buffer, data]
+      transform.on 'end', ->
+        expect(buffer.toString()).to.equal 'bar\n'
+        done()
+      duplex.pipe transform
+      duplex.causeRead '\r'
       duplex.causeRead '\nbar\r\n'
       duplex.causeEnd()
 
@@ -31,7 +72,7 @@ describe 'LineTransform', ->
       transform.on 'data', (data) ->
         buffer = Buffer.concat [buffer, data]
       transform.on 'end', ->
-        expect(buffer.toString()).to.equal '\nbar\nfoo'
+        expect(buffer.toString()).to.equal 'bar\nfoo'
         done()
       duplex.pipe transform
       duplex.causeRead '\r\nbar\r\nfoo'

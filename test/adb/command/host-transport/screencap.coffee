@@ -19,7 +19,7 @@ describe 'ScreencapCommand', ->
         Protocol.encodeData('shell:echo && screencap -p 2>/dev/null').toString()
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'legit image'
+      conn.socket.causeRead '\r\nlegit image'
       conn.socket.causeEnd()
     cmd.execute()
       .then (stream) ->
@@ -30,7 +30,7 @@ describe 'ScreencapCommand', ->
     cmd = new ScreencapCommand conn
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'legit image'
+      conn.socket.causeRead '\r\nlegit image'
       conn.socket.causeEnd()
     cmd.execute()
       .then (stream) ->
@@ -54,7 +54,7 @@ describe 'ScreencapCommand', ->
     cmd = new ScreencapCommand conn
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'foo\r\n'
+      conn.socket.causeRead '\r\nfoo\r\n'
       conn.socket.causeEnd()
     cmd.execute()
       .then (stream) ->
@@ -74,5 +74,5 @@ describe 'ScreencapCommand', ->
       .then (stream) ->
         new Parser(stream).readAll()
       .then (out) ->
-        expect(out.toString()).to.equal '\nfoo\r\n'
+        expect(out.toString()).to.equal 'foo\r\n'
         done()
