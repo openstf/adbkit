@@ -4,7 +4,6 @@ class LineTransform extends Stream.Transform
   constructor: (options = {}) ->
     @savedR = null
     @autoDetect = options.autoDetect or false
-    @checkedFirstByte = false
     @transformNeeded = true
     delete options.autoDetect
     super options
@@ -21,9 +20,9 @@ class LineTransform extends Stream.Transform
   # or something similar. On the up side, it really does do this for all line
   # feeds, so a simple transform works fine.
   _transform: (chunk, encoding, done) ->
-    unless @checkedFirstByte
+    if @autoDetect
       @transformNeeded = false if chunk[0] is 0x0a
-      @checkedFirstByte = true
+      @autoDetect = false
     return this._nullTransform(chunk, encoding, done) unless @transformNeeded
     lo = 0
     hi = 0
