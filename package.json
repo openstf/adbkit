@@ -13,7 +13,7 @@
     "adbkit": "./bin/adbkit"
   },
   "bugs": {
-    "url": "https://github.com/CyberAgent/adbkit/issues"
+    "url": "https://github.com/openstf/adbkit/issues"
   },
   "license": "Apache-2.0",
   "author": {
@@ -24,7 +24,7 @@
   "main": "./index",
   "repository": {
     "type": "git",
-    "url": "https://github.com/CyberAgent/adbkit.git"
+    "url": "https://github.com/openstf/adbkit.git"
   },
   "scripts": {
     "postpublish": "grunt clean",
