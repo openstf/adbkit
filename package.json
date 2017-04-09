@@ -10,7 +10,7 @@
     "monkey"
   ],
   "bin": {
-    "adbkit": "./lib/cli.js"
+    "adbkit": "./bin/adbkit"
   },
   "bugs": {
     "url": "https://github.com/CyberAgent/adbkit/issues"
