@@ -106,9 +106,9 @@ class Socket extends EventEmitter
         this.write Packet.assemble(Packet.A_AUTH, AUTH_TOKEN, 0, @token)
       when AUTH_RSAPUBLICKEY
         unless @signature
-          throw new AuthError "Public key sent before signature"
+          throw new Socket.AuthError "Public key sent before signature"
         unless packet.data and packet.data.length >= 2
-          throw new AuthError "Empty RSA public key"
+          throw new Socket.AuthError "Empty RSA public key"
         Auth.parsePublicKey this._skipNull(packet.data)
           .then (key) =>
             digest = @token.toString 'binary'
