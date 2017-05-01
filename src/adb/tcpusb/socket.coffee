@@ -93,6 +93,7 @@ class Socket extends EventEmitter
     @maxPayload = Math.min UINT16_MAX, packet.arg1
     this._createToken()
       .then (@token) =>
+        debug "Created challenge '#{@token.toString('base64')}'"
         debug 'O:A_AUTH'
         this.write Packet.assemble(Packet.A_AUTH, AUTH_TOKEN, 0, @token)
 
@@ -101,6 +102,7 @@ class Socket extends EventEmitter
     switch packet.arg0
       when AUTH_SIGNATURE
         # Store first signature, ignore the rest
+        debug "Received signature '#{packet.data.toString('base64')}'"
         @signature = packet.data unless @signature
         debug 'O:A_AUTH'
         this.write Packet.assemble(Packet.A_AUTH, AUTH_TOKEN, 0, @token)
@@ -109,16 +111,20 @@ class Socket extends EventEmitter
           throw new Socket.AuthError "Public key sent before signature"
         unless packet.data and packet.data.length >= 2
           throw new Socket.AuthError "Empty RSA public key"
+        debug "Received RSA public key '#{packet.data.toString('base64')}'"
         Auth.parsePublicKey this._skipNull(packet.data)
           .then (key) =>
             digest = @token.toString 'binary'
             sig = @signature.toString 'binary'
             unless key.verify digest, sig
+              debug "Signature mismatch"
               throw new Socket.AuthError "Signature mismatch"
+            debug "Signature verified"
             key
           .then (key) =>
             @options.auth key
               .catch (err) ->
+                debug "Connection rejected by user-defined auth handler"
                 throw new Socket.AuthError "Rejected by user-defined handler"
           .then =>
             this._deviceId()
