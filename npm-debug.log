@@ -1,0 +1,398 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node', '/usr/local/bin/npm', 'install' ]
+2 info using npm@3.10.10
+3 info using node@v6.10.3
+4 silly loadCurrentTree Starting
+5 silly install loadCurrentTree
+6 silly install readLocalPackageData
+7 silly install normalizeTree
+8 silly loadCurrentTree Finishing
+9 silly loadIdealTree Starting
+10 silly install loadIdealTree
+11 silly cloneCurrentTree Starting
+12 silly install cloneCurrentTreeToIdealTree
+13 silly cloneCurrentTree Finishing
+14 silly loadShrinkwrap Starting
+15 silly install loadShrinkwrap
+16 silly loadShrinkwrap Finishing
+17 silly loadAllDepsIntoIdealTree Starting
+18 silly install loadAllDepsIntoIdealTree
+19 silly loadAllDepsIntoIdealTree Finishing
+20 silly loadIdealTree Finishing
+21 silly currentTree adbkit@2.9.2
+21 silly currentTree ├── abbrev@1.1.0
+21 silly currentTree ├── adbkit-logcat@1.1.0
+21 silly currentTree ├── adbkit-monkey@1.0.1
+21 silly currentTree ├── ansi-regex@2.1.1
+21 silly currentTree ├── ansi-styles@2.2.1
+21 silly currentTree ├─┬ argparse@0.1.16
+21 silly currentTree │ └── underscore.string@2.4.0
+21 silly currentTree ├── assertion-error@1.0.0
+21 silly currentTree ├── async@0.2.10
+21 silly currentTree ├── balanced-match@1.0.0
+21 silly currentTree ├── bench@0.3.6
+21 silly currentTree ├── bluebird@2.9.34
+21 silly currentTree ├── brace-expansion@1.1.8
+21 silly currentTree ├── chai@2.2.0
+21 silly currentTree ├── chalk@1.1.3
+21 silly currentTree ├── coffee-script@1.9.3
+21 silly currentTree ├── coffeelint-stylish@0.1.2
+21 silly currentTree ├── coffeelint@1.9.7
+21 silly currentTree ├── colors@0.6.2
+21 silly currentTree ├── commander@2.9.0
+21 silly currentTree ├── concat-map@0.0.1
+21 silly currentTree ├── dateformat@1.0.2-1.2.3
+21 silly currentTree ├── debug@2.6.8
+21 silly currentTree ├── deep-eql@0.1.3
+21 silly currentTree ├── diff@1.4.0
+21 silly currentTree ├── escape-string-regexp@1.0.5
+21 silly currentTree ├── esprima@1.0.4
+21 silly currentTree ├── eventemitter2@0.4.14
+21 silly currentTree ├── exit@0.1.2
+21 silly currentTree ├── faye-websocket@0.4.4
+21 silly currentTree ├─┬ findup-sync@0.1.3
+21 silly currentTree │ ├── glob@3.2.11
+21 silly currentTree │ ├── lodash@2.4.2
+21 silly currentTree │ └── minimatch@0.3.0
+21 silly currentTree ├── formatio@1.1.1
+21 silly currentTree ├── gaze@0.5.2
+21 silly currentTree ├── getobject@0.1.0
+21 silly currentTree ├── glob@4.5.3
+21 silly currentTree ├─┬ globule@0.1.0
+21 silly currentTree │ ├── glob@3.1.21
+21 silly currentTree │ ├── inherits@1.0.2
+21 silly currentTree │ ├── lodash@1.0.2
+21 silly currentTree │ └── minimatch@0.2.14
+21 silly currentTree ├── graceful-fs@1.2.3
+21 silly currentTree ├── graceful-readlink@1.0.1
+21 silly currentTree ├── growl@1.8.1
+21 silly currentTree ├─┬ grunt-cli@0.1.13
+21 silly currentTree │ └── resolve@0.3.1
+21 silly currentTree ├── grunt-coffeelint@0.0.13
+21 silly currentTree ├── grunt-contrib-clean@0.6.0
+21 silly currentTree ├─┬ grunt-contrib-coffee@0.13.0
+21 silly currentTree │ ├── ansi-regex@0.2.1
+21 silly currentTree │ ├── ansi-styles@1.1.0
+21 silly currentTree │ ├── chalk@0.5.1
+21 silly currentTree │ ├── has-ansi@0.1.0
+21 silly currentTree │ ├── lodash@3.10.1
+21 silly currentTree │ ├── strip-ansi@0.3.0
+21 silly currentTree │ └── supports-color@0.2.0
+21 silly currentTree ├─┬ grunt-contrib-watch@0.6.1
+21 silly currentTree │ └── lodash@2.4.2
+21 silly currentTree ├── grunt-exec@0.4.7
+21 silly currentTree ├─┬ grunt-jsonlint@1.0.8
+21 silly currentTree │ └── strip-json-comments@2.0.1
+21 silly currentTree ├─┬ grunt-legacy-log-utils@0.1.1
+21 silly currentTree │ ├── lodash@2.4.2
+21 silly currentTree │ └── underscore.string@2.3.3
+21 silly currentTree ├─┬ grunt-legacy-log@0.1.3
+21 silly currentTree │ ├── lodash@2.4.2
+21 silly currentTree │ └── underscore.string@2.3.3
+21 silly currentTree ├─┬ grunt-legacy-util@0.2.0
+21 silly currentTree │ └── async@0.1.22
+21 silly currentTree ├─┬ grunt-notify@0.4.5
+21 silly currentTree │ └── which@1.2.14
+21 silly currentTree ├─┬ grunt@0.4.5
+21 silly currentTree │ ├── async@0.1.22
+21 silly currentTree │ ├── coffee-script@1.3.3
+21 silly currentTree │ ├── glob@3.1.21
+21 silly currentTree │ ├── inherits@1.0.2
+21 silly currentTree │ └── minimatch@0.2.14
+21 silly currentTree ├── has-ansi@2.0.0
+21 silly currentTree ├── has-color@0.1.7
+21 silly currentTree ├── hooker@0.2.3
+21 silly currentTree ├── iconv-lite@0.2.11
+21 silly currentTree ├── ignore@2.2.19
+21 silly currentTree ├── inflight@1.0.6
+21 silly currentTree ├── inherits@2.0.3
+21 silly currentTree ├── isexe@2.0.0
+21 silly currentTree ├─┬ jade@0.26.3
+21 silly currentTree │ ├── commander@0.6.1
+21 silly currentTree │ └── mkdirp@0.3.0
+21 silly currentTree ├── js-yaml@2.0.5
+21 silly currentTree ├── jsonlint@1.6.2
+21 silly currentTree ├── JSV@4.0.2
+21 silly currentTree ├── lodash@0.9.2
+21 silly currentTree ├── lolex@1.1.0
+21 silly currentTree ├── lru-cache@2.7.3
+21 silly currentTree ├── minimatch@2.0.10
+21 silly currentTree ├── minimist@0.0.10
+21 silly currentTree ├─┬ mkdirp@0.5.0
+21 silly currentTree │ └── minimist@0.0.8
+21 silly currentTree ├─┬ mocha@2.2.5
+21 silly currentTree │ ├── commander@2.3.0
+21 silly currentTree │ ├── debug@2.0.0
+21 silly currentTree │ ├── escape-string-regexp@1.0.2
+21 silly currentTree │ ├── glob@3.2.3
+21 silly currentTree │ ├── graceful-fs@2.0.3
+21 silly currentTree │ ├── minimatch@0.2.14
+21 silly currentTree │ ├── ms@0.6.2
+21 silly currentTree │ └── supports-color@1.2.1
+21 silly currentTree ├── ms@2.0.0
+21 silly currentTree ├── node-forge@0.6.49
+21 silly currentTree ├─┬ nomnom@1.8.1
+21 silly currentTree │ ├── ansi-styles@1.0.0
+21 silly currentTree │ ├── chalk@0.4.0
+21 silly currentTree │ ├── strip-ansi@0.1.1
+21 silly currentTree │ └── underscore@1.6.0
+21 silly currentTree ├── nopt@1.0.10
+21 silly currentTree ├─┬ noptify@0.0.3
+21 silly currentTree │ └── nopt@2.0.0
+21 silly currentTree ├── once@1.4.0
+21 silly currentTree ├── optimist@0.6.1
+21 silly currentTree ├── qs@0.5.6
+21 silly currentTree ├── resolve@0.6.3
+21 silly currentTree ├── rimraf@2.2.8
+21 silly currentTree ├── samsam@1.1.3
+21 silly currentTree ├── semver@5.3.0
+21 silly currentTree ├── sigmund@1.0.1
+21 silly currentTree ├── sinon-chai@2.7.0
+21 silly currentTree ├── sinon@1.14.1
+21 silly currentTree ├── split@0.3.3
+21 silly currentTree ├── stack-parser@0.0.1
+21 silly currentTree ├── strip-ansi@3.0.1
+21 silly currentTree ├── strip-json-comments@1.0.4
+21 silly currentTree ├── supports-color@2.0.0
+21 silly currentTree ├── text-table@0.2.0
+21 silly currentTree ├── through@2.3.8
+21 silly currentTree ├─┬ tiny-lr-fork@0.0.5
+21 silly currentTree │ └── debug@0.7.4
+21 silly currentTree ├── type-detect@0.1.1
+21 silly currentTree ├── underscore.string@2.2.1
+21 silly currentTree ├── underscore@1.7.0
+21 silly currentTree ├── uri-path@0.0.2
+21 silly currentTree ├─┬ util@0.10.3
+21 silly currentTree │ └── inherits@2.0.1
+21 silly currentTree ├── which@1.0.9
+21 silly currentTree ├── wordwrap@0.0.3
+21 silly currentTree └── wrappy@1.0.2
+22 silly idealTree adbkit@2.9.2
+22 silly idealTree ├── abbrev@1.1.0
+22 silly idealTree ├── adbkit-logcat@1.1.0
+22 silly idealTree ├── adbkit-monkey@1.0.1
+22 silly idealTree ├── ansi-regex@2.1.1
+22 silly idealTree ├── ansi-styles@2.2.1
+22 silly idealTree ├─┬ argparse@0.1.16
+22 silly idealTree │ └── underscore.string@2.4.0
+22 silly idealTree ├── assertion-error@1.0.0
+22 silly idealTree ├── async@0.2.10
+22 silly idealTree ├── balanced-match@1.0.0
+22 silly idealTree ├── bench@0.3.6
+22 silly idealTree ├── bluebird@2.9.34
+22 silly idealTree ├── brace-expansion@1.1.8
+22 silly idealTree ├── chai@2.2.0
+22 silly idealTree ├── chalk@1.1.3
+22 silly idealTree ├── coffee-script@1.9.3
+22 silly idealTree ├── coffeelint-stylish@0.1.2
+22 silly idealTree ├── coffeelint@1.9.7
+22 silly idealTree ├── colors@0.6.2
+22 silly idealTree ├── commander@2.9.0
+22 silly idealTree ├── concat-map@0.0.1
+22 silly idealTree ├── dateformat@1.0.2-1.2.3
+22 silly idealTree ├── debug@2.6.8
+22 silly idealTree ├── deep-eql@0.1.3
+22 silly idealTree ├── diff@1.4.0
+22 silly idealTree ├── escape-string-regexp@1.0.5
+22 silly idealTree ├── esprima@1.0.4
+22 silly idealTree ├── eventemitter2@0.4.14
+22 silly idealTree ├── exit@0.1.2
+22 silly idealTree ├── faye-websocket@0.4.4
+22 silly idealTree ├─┬ findup-sync@0.1.3
+22 silly idealTree │ ├── glob@3.2.11
+22 silly idealTree │ ├── lodash@2.4.2
+22 silly idealTree │ └── minimatch@0.3.0
+22 silly idealTree ├── formatio@1.1.1
+22 silly idealTree ├── gaze@0.5.2
+22 silly idealTree ├── getobject@0.1.0
+22 silly idealTree ├── glob@4.5.3
+22 silly idealTree ├─┬ globule@0.1.0
+22 silly idealTree │ ├── glob@3.1.21
+22 silly idealTree │ ├── inherits@1.0.2
+22 silly idealTree │ ├── lodash@1.0.2
+22 silly idealTree │ └── minimatch@0.2.14
+22 silly idealTree ├── graceful-fs@1.2.3
+22 silly idealTree ├── graceful-readlink@1.0.1
+22 silly idealTree ├── growl@1.8.1
+22 silly idealTree ├─┬ grunt-cli@0.1.13
+22 silly idealTree │ └── resolve@0.3.1
+22 silly idealTree ├── grunt-coffeelint@0.0.13
+22 silly idealTree ├── grunt-contrib-clean@0.6.0
+22 silly idealTree ├─┬ grunt-contrib-coffee@0.13.0
+22 silly idealTree │ ├── ansi-regex@0.2.1
+22 silly idealTree │ ├── ansi-styles@1.1.0
+22 silly idealTree │ ├── chalk@0.5.1
+22 silly idealTree │ ├── has-ansi@0.1.0
+22 silly idealTree │ ├── lodash@3.10.1
+22 silly idealTree │ ├── strip-ansi@0.3.0
+22 silly idealTree │ └── supports-color@0.2.0
+22 silly idealTree ├─┬ grunt-contrib-watch@0.6.1
+22 silly idealTree │ └── lodash@2.4.2
+22 silly idealTree ├── grunt-exec@0.4.7
+22 silly idealTree ├─┬ grunt-jsonlint@1.0.8
+22 silly idealTree │ └── strip-json-comments@2.0.1
+22 silly idealTree ├─┬ grunt-legacy-log-utils@0.1.1
+22 silly idealTree │ ├── lodash@2.4.2
+22 silly idealTree │ └── underscore.string@2.3.3
+22 silly idealTree ├─┬ grunt-legacy-log@0.1.3
+22 silly idealTree │ ├── lodash@2.4.2
+22 silly idealTree │ └── underscore.string@2.3.3
+22 silly idealTree ├─┬ grunt-legacy-util@0.2.0
+22 silly idealTree │ └── async@0.1.22
+22 silly idealTree ├─┬ grunt-notify@0.4.5
+22 silly idealTree │ └── which@1.2.14
+22 silly idealTree ├─┬ grunt@0.4.5
+22 silly idealTree │ ├── async@0.1.22
+22 silly idealTree │ ├── coffee-script@1.3.3
+22 silly idealTree │ ├── glob@3.1.21
+22 silly idealTree │ ├── inherits@1.0.2
+22 silly idealTree │ └── minimatch@0.2.14
+22 silly idealTree ├── has-ansi@2.0.0
+22 silly idealTree ├── has-color@0.1.7
+22 silly idealTree ├── hooker@0.2.3
+22 silly idealTree ├── iconv-lite@0.2.11
+22 silly idealTree ├── ignore@2.2.19
+22 silly idealTree ├── inflight@1.0.6
+22 silly idealTree ├── inherits@2.0.3
+22 silly idealTree ├── isexe@2.0.0
+22 silly idealTree ├─┬ jade@0.26.3
+22 silly idealTree │ ├── commander@0.6.1
+22 silly idealTree │ └── mkdirp@0.3.0
+22 silly idealTree ├── js-yaml@2.0.5
+22 silly idealTree ├── jsonlint@1.6.2
+22 silly idealTree ├── JSV@4.0.2
+22 silly idealTree ├── lodash@0.9.2
+22 silly idealTree ├── lolex@1.1.0
+22 silly idealTree ├── lru-cache@2.7.3
+22 silly idealTree ├── minimatch@2.0.10
+22 silly idealTree ├── minimist@0.0.10
+22 silly idealTree ├─┬ mkdirp@0.5.0
+22 silly idealTree │ └── minimist@0.0.8
+22 silly idealTree ├─┬ mocha@2.2.5
+22 silly idealTree │ ├── commander@2.3.0
+22 silly idealTree │ ├── debug@2.0.0
+22 silly idealTree │ ├── escape-string-regexp@1.0.2
+22 silly idealTree │ ├── glob@3.2.3
+22 silly idealTree │ ├── graceful-fs@2.0.3
+22 silly idealTree │ ├── minimatch@0.2.14
+22 silly idealTree │ ├── ms@0.6.2
+22 silly idealTree │ └── supports-color@1.2.1
+22 silly idealTree ├── ms@2.0.0
+22 silly idealTree ├── node-forge@0.6.49
+22 silly idealTree ├─┬ nomnom@1.8.1
+22 silly idealTree │ ├── ansi-styles@1.0.0
+22 silly idealTree │ ├── chalk@0.4.0
+22 silly idealTree │ ├── strip-ansi@0.1.1
+22 silly idealTree │ └── underscore@1.6.0
+22 silly idealTree ├── nopt@1.0.10
+22 silly idealTree ├─┬ noptify@0.0.3
+22 silly idealTree │ └── nopt@2.0.0
+22 silly idealTree ├── once@1.4.0
+22 silly idealTree ├── optimist@0.6.1
+22 silly idealTree ├── qs@0.5.6
+22 silly idealTree ├── resolve@0.6.3
+22 silly idealTree ├── rimraf@2.2.8
+22 silly idealTree ├── samsam@1.1.3
+22 silly idealTree ├── semver@5.3.0
+22 silly idealTree ├── sigmund@1.0.1
+22 silly idealTree ├── sinon-chai@2.7.0
+22 silly idealTree ├── sinon@1.14.1
+22 silly idealTree ├── split@0.3.3
+22 silly idealTree ├── stack-parser@0.0.1
+22 silly idealTree ├── strip-ansi@3.0.1
+22 silly idealTree ├── strip-json-comments@1.0.4
+22 silly idealTree ├── supports-color@2.0.0
+22 silly idealTree ├── text-table@0.2.0
+22 silly idealTree ├── through@2.3.8
+22 silly idealTree ├─┬ tiny-lr-fork@0.0.5
+22 silly idealTree │ └── debug@0.7.4
+22 silly idealTree ├── type-detect@0.1.1
+22 silly idealTree ├── underscore.string@2.2.1
+22 silly idealTree ├── underscore@1.7.0
+22 silly idealTree ├── uri-path@0.0.2
+22 silly idealTree ├─┬ util@0.10.3
+22 silly idealTree │ └── inherits@2.0.1
+22 silly idealTree ├── which@1.0.9
+22 silly idealTree ├── wordwrap@0.0.3
+22 silly idealTree └── wrappy@1.0.2
+23 silly generateActionsToTake Starting
+24 silly install generateActionsToTake
+25 silly generateActionsToTake Finishing
+26 silly diffTrees action count 0
+27 silly decomposeActions action count 0
+28 silly runTopLevelLifecycles Starting
+29 silly install runPreinstallTopLevelLifecycles
+30 silly preinstall adbkit@2.9.2 /Users/redgell/Development/adbkit/adbkit-2472e744
+31 info lifecycle adbkit@2.9.2~preinstall: adbkit@2.9.2
+32 silly lifecycle adbkit@2.9.2~preinstall: no script for preinstall, continuing
+33 silly executeActions Starting
+34 silly install executeActions
+35 silly doSerial global-install 0
+36 silly doParallel fetch 0
+37 verbose correctMkdir /Users/redgell/.npm/_locks correctMkdir not in flight; initializing
+38 verbose lock using /Users/redgell/.npm/_locks/staging-d12eb182f7b8411a.lock for /Users/redgell/Development/adbkit/node_modules/.staging
+39 silly doParallel extract 0
+40 silly doParallel preinstall 0
+41 silly doReverseSerial remove 0
+42 silly doSerial move 0
+43 silly doSerial finalize 0
+44 silly doSerial build 0
+45 silly doSerial global-link 0
+46 silly doParallel update-linked 0
+47 silly doSerial install 0
+48 silly doSerial postinstall 0
+49 verbose unlock done using /Users/redgell/.npm/_locks/staging-d12eb182f7b8411a.lock for /Users/redgell/Development/adbkit/node_modules/.staging
+50 silly executeActions Finishing
+51 silly rollbackFailedOptional Starting
+52 silly rollbackFailedOptional Finishing
+53 silly install runPostinstallTopLevelLifecycles
+54 silly build adbkit@2.9.2
+55 info linkStuff adbkit@2.9.2
+56 silly linkStuff adbkit@2.9.2 has /Users/redgell/Development as its parent node_modules
+57 verbose linkBins adbkit@2.9.2
+58 verbose linkMans adbkit@2.9.2
+59 silly install adbkit@2.9.2 /Users/redgell/Development/adbkit/adbkit-2472e744
+60 info lifecycle adbkit@2.9.2~install: adbkit@2.9.2
+61 silly lifecycle adbkit@2.9.2~install: no script for install, continuing
+62 silly postinstall adbkit@2.9.2 /Users/redgell/Development/adbkit/adbkit-2472e744
+63 info lifecycle adbkit@2.9.2~postinstall: adbkit@2.9.2
+64 silly lifecycle adbkit@2.9.2~postinstall: no script for postinstall, continuing
+65 silly prepublish adbkit@2.9.2 /Users/redgell/Development/adbkit/adbkit-2472e744
+66 info lifecycle adbkit@2.9.2~prepublish: adbkit@2.9.2
+67 verbose lifecycle adbkit@2.9.2~prepublish: unsafe-perm in lifecycle true
+68 verbose lifecycle adbkit@2.9.2~prepublish: PATH: /usr/local/lib/node_modules/npm/bin/node-gyp-bin:/Users/redgell/Development/adbkit/node_modules/.bin:/Users/redgell/Downloads/google-cloud-sdk/bin:/Users/redgell/.fastlane/bin:./:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/TeX/texbin:/home/bitnami/android-sdk-linux/tools:/home/bitnami/android-sdk-linux/platform-tools:/Users/redgell/Library/Android/sdk/tools:/Users/redgell/Library/Android/sdk/platform-tools:/Users/redgell/work/bin
+69 verbose lifecycle adbkit@2.9.2~prepublish: CWD: /Users/redgell/Development/adbkit
+70 silly lifecycle adbkit@2.9.2~prepublish: Args: [ '-c', 'grunt test coffee' ]
+71 silly lifecycle adbkit@2.9.2~prepublish: Returned: code: 3  signal: null
+72 info lifecycle adbkit@2.9.2~prepublish: Failed to exec prepublish script
+73 verbose stack Error: adbkit@2.9.2 prepublish: `grunt test coffee`
+73 verbose stack Exit status 3
+73 verbose stack     at EventEmitter.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/lifecycle.js:255:16)
+73 verbose stack     at emitTwo (events.js:106:13)
+73 verbose stack     at EventEmitter.emit (events.js:191:7)
+73 verbose stack     at ChildProcess.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/spawn.js:40:14)
+73 verbose stack     at emitTwo (events.js:106:13)
+73 verbose stack     at ChildProcess.emit (events.js:191:7)
+73 verbose stack     at maybeClose (internal/child_process.js:886:16)
+73 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:226:5)
+74 verbose pkgid adbkit@2.9.2
+75 verbose cwd /Users/redgell/Development/adbkit
+76 error Darwin 17.0.0
+77 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "install"
+78 error node v6.10.3
+79 error npm  v3.10.10
+80 error code ELIFECYCLE
+81 error adbkit@2.9.2 prepublish: `grunt test coffee`
+81 error Exit status 3
+82 error Failed at the adbkit@2.9.2 prepublish script 'grunt test coffee'.
+82 error Make sure you have the latest version of node.js and npm installed.
+82 error If you do, this is most likely a problem with the adbkit package,
+82 error not with npm itself.
+82 error Tell the author that this fails on your system:
+82 error     grunt test coffee
+82 error You can get information on how to open an issue for this project with:
+82 error     npm bugs adbkit
+82 error Or if that isn't available, you can get their info via:
+82 error     npm owner ls adbkit
+82 error There is likely additional logging output above.
+83 verbose exit [ 1, true ]

@@ -246,7 +246,7 @@ class Client
       .then (transport) ->
         new RootCommand transport
           .execute()
-      .nodeify callback  
+      .nodeify callback
 
   trackJdwp: (serial, callback) ->
     this.transport serial
