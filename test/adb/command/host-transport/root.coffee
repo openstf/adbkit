@@ -6,13 +6,13 @@ Chai.use require 'sinon-chai'
 
 MockConnection = require '../../../mock/connection'
 Protocol = require '../../../../src/adb/protocol'
-UsbCommand = require '../../../../src/adb/command/host-transport/root'
+RootCommand = require '../../../../src/adb/command/host-transport/root'
 
 describe 'RootCommand', ->
 
   it "should send 'root:'", (done) ->
     conn = new MockConnection
-    cmd = new UsbCommand conn
+    cmd = new RootComand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData('root:').toString()
@@ -27,7 +27,7 @@ describe 'RootCommand', ->
 
   it "should reject on unexpected reply", (done) ->
     conn = new MockConnection
-    cmd = new UsbCommand conn
+    cmd = new RootCommand conn
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead "adbd cannot run as root in production builds\n"
