@@ -722,6 +722,16 @@ Reverses socket connections from the device (remote) to the ADB server host (loc
 * Returns: `Promise`
 * Resolves with: `true`
 
+#### client.root(serial[, callback])
+
+Puts the device into root mode which may be needed by certain shell commands.  A remount is generally required after a successful root call. **Note that this will only work if your device supports this feature. Production devices almost never do.**
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: `Promise`
+* Resolves with: `true`
+
 #### client.screencap(serial[, callback])
 
 Takes a screenshot in PNG format using the built-in `screencap` utility. This is analogous to `adb shell screencap -p`. Sadly, the utility is not available on most Android `<=2.3` devices, but a silent fallback to the `client.framebuffer()` command in PNG mode is attempted, so you should have its dependencies installed just in case.

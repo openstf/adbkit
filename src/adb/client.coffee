@@ -31,6 +31,7 @@ LogCommand = require './command/host-transport/log'
 MonkeyCommand = require './command/host-transport/monkey'
 RebootCommand = require './command/host-transport/reboot'
 RemountCommand = require './command/host-transport/remount'
+RootCommand = require './command/host-transport/root'
 ReverseCommand = require './command/host-transport/reverse'
 ScreencapCommand = require './command/host-transport/screencap'
 ShellCommand = require './command/host-transport/shell'
@@ -237,6 +238,13 @@ class Client
     this.transport serial
       .then (transport) ->
         new RemountCommand transport
+          .execute()
+      .nodeify callback
+      
+   root: (serial, callback) ->
+    this.transport serial
+      .then (transport) ->
+        new RootCommand transport
           .execute()
       .nodeify callback
 
