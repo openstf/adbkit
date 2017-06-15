@@ -12,7 +12,7 @@ describe 'RootCommand', ->
 
   it "should send 'root:'", (done) ->
     conn = new MockConnection
-    cmd = new RootComand conn
+    cmd = new RootCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
         Protocol.encodeData('root:').toString()
