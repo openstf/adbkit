@@ -7,7 +7,9 @@ Parser = require './parser'
 dump = require './dump'
 
 class Connection extends EventEmitter
-  constructor: (@options) ->
+  constructor: (options) ->
+    super()
+    @options = options
     @socket = null
     @parser = null
     @triedStarting = false

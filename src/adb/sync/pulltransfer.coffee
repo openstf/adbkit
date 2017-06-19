@@ -2,9 +2,9 @@ Stream = require 'stream'
 
 class PullTransfer extends Stream.PassThrough
   constructor: ->
+    super()
     @stats =
       bytesTransferred: 0
-    super()
 
   cancel: ->
     this.emit 'cancel'

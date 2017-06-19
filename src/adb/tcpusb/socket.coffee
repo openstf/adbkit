@@ -24,7 +24,12 @@ class Socket extends EventEmitter
 
   TOKEN_LENGTH = 20
 
-  constructor: (@client, @serial, @socket, @options = {}) ->
+  constructor: (client, serial, socket, options = {}) ->
+    super()
+    @client = client
+    @serial = serial
+    @socket = socket
+    @options = options
     @options.auth or= Promise.resolve true
     @ended = false
     @socket.setNoDelay true
@@ -189,13 +194,16 @@ class Socket extends EventEmitter
         new Buffer "device::#{id}\0"
 
 class Socket.AuthError extends Error
-  constructor: (@message) ->
+  constructor: (message) ->
+    super() # TODO check sanity
     Error.call this
     @name = 'AuthError'
+    @message = message
     Error.captureStackTrace this, Socket.AuthError
 
 class Socket.UnauthorizedError extends Error
   constructor: ->
+    super() # TODO check sanity
     Error.call this
     @name = 'UnauthorizedError'
     @message = "Unauthorized access"

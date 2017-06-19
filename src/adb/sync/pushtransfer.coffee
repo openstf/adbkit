@@ -2,6 +2,7 @@
 
 class PushTransfer extends EventEmitter
   constructor: ->
+    super()
     @_stack = []
     @stats =
       bytesTransferred: 0

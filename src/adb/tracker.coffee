@@ -4,7 +4,9 @@ Promise = require 'bluebird'
 Parser = require './parser'
 
 class Tracker extends EventEmitter
-  constructor: (@command) ->
+  constructor: (command) ->
+    super()
+    @command = command
     @deviceList = []
     @deviceMap = {}
     @reader = this.read()

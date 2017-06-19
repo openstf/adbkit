@@ -19,7 +19,9 @@ class Sync extends EventEmitter
   @temp: (path) ->
     "#{TEMP_PATH}/#{Path.basename path}"
 
-  constructor: (@connection) ->
+  constructor: (connection) ->
+    super()
+    @connection = connection
     @parser = @connection.parser
 
   stat: (path, callback) ->

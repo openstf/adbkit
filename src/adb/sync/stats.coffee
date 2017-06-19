@@ -20,7 +20,10 @@ class Stats extends Fs.Stats
   @S_IRWXG  = 0o0070   # mask for group permissions
   @S_IRGRP  = 0o0040   # group has read permission
 
-  constructor: (@mode, @size, mtime) ->
+  constructor: (mode, size, mtime) ->
+    super()
+    @mode = mode
+    @size = size
     @mtime = new Date mtime * 1000
 
 module.exports = Stats

@@ -2,7 +2,9 @@ Assert = require 'assert'
 Stream = require 'stream'
 
 class RgbTransform extends Stream.Transform
-  constructor: (@meta, options) ->
+  constructor: (meta, options) ->
+    super options
+    @meta = meta
     @_buffer = new Buffer ''
     Assert.ok (@meta.bpp is 24 or @meta.bpp is 32),
       'Only 24-bit and 32-bit raw images with 8-bits per color are supported'
@@ -11,7 +13,6 @@ class RgbTransform extends Stream.Transform
     @_b_pos = @meta.blue_offset / 8
     @_a_pos = @meta.alpha_offset / 8
     @_pixel_bytes = @meta.bpp / 8
-    super options
 
   _transform: (chunk, encoding, done) ->
     if @_buffer.length

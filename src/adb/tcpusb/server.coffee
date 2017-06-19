@@ -4,7 +4,11 @@ Net = require 'net'
 Socket = require './socket'
 
 class Server extends EventEmitter
-  constructor: (@client, @serial, @options) ->
+  constructor: (client, serial, options) ->
+    super()
+    @client = client
+    @serial = serial
+    @options = options
     @connections = []
     @server = Net.createServer allowHalfOpen: true
     @server.on 'error', (err) =>

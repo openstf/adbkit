@@ -175,6 +175,7 @@ class Parser
 
 class Parser.FailError extends Error
   constructor: (message) ->
+    super() # TODO check sanity
     Error.call this
     this.name = 'FailError'
     this.message = "Failure: '#{message}'"
@@ -182,6 +183,7 @@ class Parser.FailError extends Error
 
 class Parser.PrematureEOFError extends Error
   constructor: (howManyMissing) ->
+    super() # TODO check sanity
     Error.call this
     this.name = 'PrematureEOFError'
     this.message = "Premature end of stream, needed #{howManyMissing}
@@ -191,6 +193,7 @@ class Parser.PrematureEOFError extends Error
 
 class Parser.UnexpectedDataError extends Error
   constructor: (unexpected, expected) ->
+    super() # TODO check sanity
     Error.call this
     this.name = 'UnexpectedDataError'
     this.message = "Unexpected '#{unexpected}', was expecting #{expected}"

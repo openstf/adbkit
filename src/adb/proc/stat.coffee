@@ -7,7 +7,9 @@ class ProcStat extends EventEmitter
   RE_CPULINE = /^cpu[0-9]+ .*$/mg
   RE_COLSEP = /\ +/g
 
-  constructor: (@sync) ->
+  constructor: (sync) ->
+    super()
+    @sync = sync
     @interval = 1000
     @stats = this._emptyStats()
     @_ignore = {}

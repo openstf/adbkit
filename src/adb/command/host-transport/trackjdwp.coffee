@@ -20,7 +20,9 @@ class TrackJdwpCommand extends Command
             @parser.unexpected reply, 'OKAY or FAIL'
 
   class Tracker extends EventEmitter
-    constructor: (@command) ->
+    constructor: (command) ->
+      super()
+      @command = command
       @pids = []
       @pidMap = Object.create null
       @reader = this.read()

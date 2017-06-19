@@ -2,12 +2,13 @@ Stream = require 'stream'
 
 class LineTransform extends Stream.Transform
   constructor: (options = {}) ->
-    @savedR = null
-    @autoDetect = options.autoDetect or false
-    @transformNeeded = true
-    @skipBytes = 0
+    autoDetect = options.autoDetect or false
     delete options.autoDetect
     super options
+    @savedR = null
+    @autoDetect = autoDetect
+    @transformNeeded = true
+    @skipBytes = 0
 
   _nullTransform: (chunk, encoding, done) ->
     this.push chunk
