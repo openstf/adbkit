@@ -1,6 +1,8 @@
-const Path = require('path');
+// TODO: This file was created by bulk-decaffeinate.
+// Sanity-check the conversion and remove this comment.
+const Path = require('path')
 
 module.exports = (() => { switch (Path.extname(__filename)) {
-  case '.coffee': return require('./src/adb');
-  default: return require('./lib/adb');
-} })();
+case '.coffee': return require('./src/adb')
+default: return require('./lib/adb')
+  } })()

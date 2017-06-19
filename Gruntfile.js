@@ -1,3 +1,5 @@
+// TODO: This file was created by bulk-decaffeinate.
+// Sanity-check the conversion and remove this comment.
 module.exports = function(grunt) {
 
   grunt.initConfig({
@@ -95,18 +97,18 @@ module.exports = function(grunt) {
         dest: 'src/adb/keycode.coffee'
       }
     }
-  });
+  })
 
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-coffee');
-  grunt.loadNpmTasks('grunt-coffeelint');
-  grunt.loadNpmTasks('grunt-jsonlint');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-notify');
-  grunt.loadNpmTasks('grunt-exec');
-  grunt.loadTasks('./tasks');
+  grunt.loadNpmTasks('grunt-contrib-clean')
+  grunt.loadNpmTasks('grunt-contrib-coffee')
+  grunt.loadNpmTasks('grunt-coffeelint')
+  grunt.loadNpmTasks('grunt-jsonlint')
+  grunt.loadNpmTasks('grunt-contrib-watch')
+  grunt.loadNpmTasks('grunt-notify')
+  grunt.loadNpmTasks('grunt-exec')
+  grunt.loadTasks('./tasks')
 
-  grunt.registerTask('test', ['jsonlint', 'coffeelint', 'exec:mocha']);
-  grunt.registerTask('build', ['coffee']);
-  return grunt.registerTask('default', ['test']);
-};
+  grunt.registerTask('test', ['jsonlint', 'coffeelint', 'exec:mocha'])
+  grunt.registerTask('build', ['coffee'])
+  return grunt.registerTask('default', ['test'])
+}

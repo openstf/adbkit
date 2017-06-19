@@ -1,41 +1,47 @@
-const debug = require('debug')('adb:command');
+/* eslint-disable
+    no-undef,
+    no-unused-vars,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
+const debug = require('debug')('adb:command')
 
-const Parser = require('./parser');
-const Protocol = require('./protocol');
+const Parser = require('./parser')
+const Protocol = require('./protocol')
 
 var Command = (function() {
-  let RE_SQUOT = undefined;
-  let RE_ESCAPE = undefined;
+  let RE_SQUOT = undefined
+  let RE_ESCAPE = undefined
   Command = class Command {
     static initClass() {
-      RE_SQUOT = /'/g;
-      RE_ESCAPE = /([$`\\!"])/g;
+      RE_SQUOT = /'/g
+      RE_ESCAPE = /([$`\\!"])/g
     }
 
     constructor(connection) {
-      this.connection = connection;
-      this.parser = this.connection.parser;
-      this.protocol = Protocol;
+      this.connection = connection
+      this.parser = this.connection.parser
+      this.protocol = Protocol
     }
 
     execute() {
-      throw new Exception('Missing implementation');
+      throw new Exception('Missing implementation')
     }
 
     _send(data) {
-      const encoded = Protocol.encodeData(data);
-      debug(`Send '${encoded}'`);
-      this.connection.write(encoded);
-      return this;
+      const encoded = Protocol.encodeData(data)
+      debug(`Send '${encoded}'`)
+      this.connection.write(encoded)
+      return this
     }
 
     // Note that this is just for convenience, not security.
     _escape(arg) {
       switch (typeof arg) {
-        case 'number':
-          return arg;
-        default:
-          return `'${arg.toString().replace(RE_SQUOT, "'\"'\"'")}'`;
+      case 'number':
+        return arg
+      default:
+        return `'${arg.toString().replace(RE_SQUOT, '\'"\'"\'')}'`
       }
     }
 
@@ -46,15 +52,15 @@ var Command = (function() {
     // why we now use double quotes here.
     _escapeCompat(arg) {
       switch (typeof arg) {
-        case 'number':
-          return arg;
-        default:
-          return `"${arg.toString().replace(RE_ESCAPE, '\\$1')}"`;
+      case 'number':
+        return arg
+      default:
+        return `"${arg.toString().replace(RE_ESCAPE, '\\$1')}"`
       }
     }
-  };
-  Command.initClass();
-  return Command;
-})();
+  }
+  Command.initClass()
+  return Command
+})()
 
-module.exports = Command;
+module.exports = Command

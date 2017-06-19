@@ -1,46 +1,52 @@
-const Stream = require('stream');
-const Sinon = require('sinon');
-const Chai = require('chai');
-Chai.use(require('sinon-chai'));
-const {expect} = Chai;
+/* eslint-disable
+    no-unused-vars,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
+/* eslint-env mocha */
+const Stream = require('stream')
+const Sinon = require('sinon')
+const Chai = require('chai')
+Chai.use(require('sinon-chai'))
+const {expect} = Chai
 
-const MockConnection = require('../../../mock/connection');
-const Protocol = require('../../../../src/adb/protocol');
-const UsbCommand = require('../../../../src/adb/command/host-transport/usb');
+const MockConnection = require('../../../mock/connection')
+const Protocol = require('../../../../src/adb/protocol')
+const UsbCommand = require('../../../../src/adb/command/host-transport/usb')
 
 describe('UsbCommand', function() {
 
-  it("should send 'usb:'", function(done) {
-    const conn = new MockConnection;
-    const cmd = new UsbCommand(conn);
+  it('should send \'usb:\'', function(done) {
+    const conn = new MockConnection
+    const cmd = new UsbCommand(conn)
     conn.socket.on('write', chunk =>
       expect(chunk.toString()).to.equal( 
         Protocol.encodeData('usb:').toString())
-    );
+    )
     setImmediate(function() {
-      conn.socket.causeRead(Protocol.OKAY);
-      conn.socket.causeRead("restarting in USB mode\n");
-      return conn.socket.causeEnd();
-    });
+      conn.socket.causeRead(Protocol.OKAY)
+      conn.socket.causeRead('restarting in USB mode\n')
+      return conn.socket.causeEnd()
+    })
     return cmd.execute()
       .then(function(val) {
-        expect(val).to.be.true;
-        return done();
-    });
-  });
+        expect(val).to.be.true
+        return done()
+      })
+  })
 
-  return it("should reject on unexpected reply", function(done) {
-    const conn = new MockConnection;
-    const cmd = new UsbCommand(conn);
+  return it('should reject on unexpected reply', function(done) {
+    const conn = new MockConnection
+    const cmd = new UsbCommand(conn)
     setImmediate(function() {
-      conn.socket.causeRead(Protocol.OKAY);
-      conn.socket.causeRead("invalid port\n");
-      return conn.socket.causeEnd();
-    });
+      conn.socket.causeRead(Protocol.OKAY)
+      conn.socket.causeRead('invalid port\n')
+      return conn.socket.causeEnd()
+    })
     return cmd.execute()
       .catch(function(err) {
-        expect(err.message).to.eql('invalid port');
-        return done();
-    });
-  });
-});
+        expect(err.message).to.eql('invalid port')
+        return done()
+      })
+  })
+})

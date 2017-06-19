@@ -1,56 +1,62 @@
-const {EventEmitter} = require('events');
-const split = require('split');
+/* eslint-disable
+    no-unused-vars,
+    no-useless-escape,
+*/
+// TODO: This file was created by bulk-decaffeinate.
+// Fix any style issues and re-enable lint.
+const {EventEmitter} = require('events')
+const split = require('split')
 
-const Parser = require('../parser');
+const Parser = require('../parser')
 
 var ProcStat = (function() {
-  let RE_CPULINE = undefined;
-  let RE_COLSEP = undefined;
+  let RE_CPULINE = undefined
+  let RE_COLSEP = undefined
   ProcStat = class ProcStat extends EventEmitter {
     static initClass() {
-      RE_CPULINE = /^cpu[0-9]+ .*$/mg;
-      RE_COLSEP = /\ +/g;
+      RE_CPULINE = /^cpu[0-9]+ .*$/mg
+      RE_COLSEP = /\ +/g
     }
 
     constructor(sync) {
-      super();
-      this.sync = sync;
-      this.interval = 1000;
-      this.stats = this._emptyStats();
-      this._ignore = {};
+      super()
+      this.sync = sync
+      this.interval = 1000
+      this.stats = this._emptyStats()
+      this._ignore = {}
       this._timer = setInterval(() => {
-        return this.update();
+        return this.update()
       }
-      , this.interval);
-      this.update();
+        , this.interval)
+      this.update()
     }
 
     end() {
-      clearInterval(this._timer);
-      this.sync.end();
-      return this.sync = null;
+      clearInterval(this._timer)
+      this.sync.end()
+      return this.sync = null
     }
 
     update() {
       return new Parser(this.sync.pull('/proc/stat'))
         .readAll()
         .then(out => {
-          return this._parse(out);
-      }).catch(err => {
-          this._error(err);
-      });
+          return this._parse(out)
+        }).catch(err => {
+          this._error(err)
+        })
     }
 
     _parse(out) {
-      let match;
-      const stats = this._emptyStats();
+      let match
+      const stats = this._emptyStats()
       while ((match = RE_CPULINE.exec(out))) {
-        const line = match[0];
-        const cols = line.split(RE_COLSEP);
-        const type = cols.shift();
-        if (this._ignore[type] === line) { continue; }
-        let total = 0;
-        for (let val of cols) { total += +val; }
+        const line = match[0]
+        const cols = line.split(RE_COLSEP)
+        const type = cols.shift()
+        if (this._ignore[type] === line) { continue }
+        let total = 0
+        for (let val of cols) { total += +val }
         stats.cpus[type] = {
           line,
           user:      +cols[0] || 0,
@@ -64,24 +70,24 @@ var ProcStat = (function() {
           guest:     +cols[8] || 0,
           guestnice: +cols[9] || 0,
           total
-        };
+        }
       }
-      return this._set(stats);
+      return this._set(stats)
     }
 
     _set(stats) {
-      const loads = {};
-      let found = false;
+      const loads = {}
+      let found = false
       for (let id in stats.cpus) {
-        const cur = stats.cpus[id];
-        const old = this.stats.cpus[id];
-        if (!old) { continue; }
-        const ticks = cur.total - old.total;
+        const cur = stats.cpus[id]
+        const old = this.stats.cpus[id]
+        if (!old) { continue }
+        const ticks = cur.total - old.total
         if (ticks > 0) {
-          found = true;
+          found = true
           // Calculate percentages for everything. For ease of formatting,
           // let's do `x / y * 100` as `100 / y * x`.
-          const m = 100 / ticks;
+          const m = 100 / ticks
           loads[id] = {
             user:      Math.floor(m * (cur.user - old.user)),
             nice:      Math.floor(m * (cur.nice - old.nice)),
@@ -94,7 +100,7 @@ var ProcStat = (function() {
             guest:     Math.floor(m * (cur.guest - old.guest)),
             guestnice: Math.floor(m * (cur.guestnice - old.guestnice)),
             total:     100
-          };
+          }
         } else {
           // The CPU is either offline (nothing was done) or it mysteriously
           // warped back in time (idle stat dropped significantly), causing the
@@ -102,24 +108,24 @@ var ProcStat = (function() {
           // Galaxy S4 so far. Either way we don't want those anomalies in our
           // stats. We'll also ignore the line in the next cycle. This doesn't
           // completely eliminate the anomalies, but it helps.
-          this._ignore[id] = cur.line;
-          delete stats.cpus[id];
+          this._ignore[id] = cur.line
+          delete stats.cpus[id]
         }
       }
-      if (found) { this.emit('load', loads); }
-      return this.stats = stats;
+      if (found) { this.emit('load', loads) }
+      return this.stats = stats
     }
 
     _error(err) {
-      return this.emit('error', err);
+      return this.emit('error', err)
     }
 
     _emptyStats() {
-      return {cpus: {}};
+      return {cpus: {}}
     }
-  };
-  ProcStat.initClass();
-  return ProcStat;
-})();
+  }
+  ProcStat.initClass()
+  return ProcStat
+})()
 
-module.exports = ProcStat;
+module.exports = ProcStat

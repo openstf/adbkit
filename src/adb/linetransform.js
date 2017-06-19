@@ -1,19 +1,21 @@
-const Stream = require('stream');
+// TODO: This file was created by bulk-decaffeinate.
+// Sanity-check the conversion and remove this comment.
+const Stream = require('stream')
 
 class LineTransform extends Stream.Transform {
   constructor(options = {}) {
-    const autoDetect = options.autoDetect || false;
-    delete options.autoDetect;
-    super(options);
-    this.savedR = null;
-    this.autoDetect = autoDetect;
-    this.transformNeeded = true;
-    this.skipBytes = 0;
+    const autoDetect = options.autoDetect || false
+    delete options.autoDetect
+    super(options)
+    this.savedR = null
+    this.autoDetect = autoDetect
+    this.transformNeeded = true
+    this.skipBytes = 0
   }
 
   _nullTransform(chunk, encoding, done) {
-    this.push(chunk);
-    done();
+    this.push(chunk)
+    done()
   }
 
   // Sadly, the ADB shell is not very smart. It automatically converts every
@@ -28,61 +30,61 @@ class LineTransform extends Stream.Transform {
     // either one or two bytes. The autodetection runs only once.
     if (this.autoDetect) {
       if (chunk[0] === 0x0a) {
-        this.transformNeeded = false;
-        this.skipBytes = 1;
+        this.transformNeeded = false
+        this.skipBytes = 1
       } else {
-        this.skipBytes = 2;
+        this.skipBytes = 2
       }
-      this.autoDetect = false;
+      this.autoDetect = false
     }
 
     // It's technically possible that we may receive the first two bytes
     // in two separate chunks. That's why the autodetect bytes are skipped
     // here, separately.
     if (this.skipBytes) {
-      const skip = Math.min(chunk.length, this.skipBytes);
-      chunk = chunk.slice(skip);
-      this.skipBytes -= skip;
+      const skip = Math.min(chunk.length, this.skipBytes)
+      chunk = chunk.slice(skip)
+      this.skipBytes -= skip
     }
 
     // It's possible that skipping bytes has created an empty chunk.
-    if (!chunk.length) { return done(); }
+    if (!chunk.length) { return done() }
 
     // At this point all bytes that needed to be skipped should have been
     // skipped. If transform is not needed, shortcut to null transform.
-    if (!this.transformNeeded) { return this._nullTransform(chunk, encoding, done); }
+    if (!this.transformNeeded) { return this._nullTransform(chunk, encoding, done) }
 
     // Ok looks like we're transforming.
-    let lo = 0;
-    let hi = 0;
+    let lo = 0
+    let hi = 0
     if (this.savedR) {
-      if (chunk[0] !== 0x0a) { this.push(this.savedR); }
-      this.savedR = null;
+      if (chunk[0] !== 0x0a) { this.push(this.savedR) }
+      this.savedR = null
     }
-    const last = chunk.length - 1;
+    const last = chunk.length - 1
     while (hi <= last) {
       if (chunk[hi] === 0x0d) {
         if (hi === last) {
-          this.savedR = chunk.slice(last);
-          break; // Stop hi from incrementing, we want to skip the last byte.
+          this.savedR = chunk.slice(last)
+          break // Stop hi from incrementing, we want to skip the last byte.
         } else if (chunk[hi + 1] === 0x0a) {
-          this.push(chunk.slice(lo, hi));
-          lo = hi + 1;
+          this.push(chunk.slice(lo, hi))
+          lo = hi + 1
         }
       }
-      hi += 1;
+      hi += 1
     }
     if (hi !== lo) {
-      this.push(chunk.slice(lo, hi));
+      this.push(chunk.slice(lo, hi))
     }
-    done();
+    done()
   }
 
   // When the stream ends on an '\r', output it as-is (assume binary data).
   _flush(done) {
-    if (this.savedR) { this.push(this.savedR); }
-    return done();
+    if (this.savedR) { this.push(this.savedR) }
+    return done()
   }
 }
 
-module.exports = LineTransform;
+module.exports = LineTransform
