@@ -1,18 +1,22 @@
-Command = require '../../command'
-Protocol = require '../../protocol'
-Sync = require '../../sync'
+const Command = require('../../command');
+const Protocol = require('../../protocol');
+const Sync = require('../../sync');
 
-class SyncCommand extends Command
-  execute: ->
-    this._send 'sync:'
-    @parser.readAscii 4
-      .then (reply) =>
-        switch reply
-          when Protocol.OKAY
-            new Sync @connection
-          when Protocol.FAIL
-            @parser.readError()
-          else
-            @parser.unexpected reply, 'OKAY or FAIL'
+class SyncCommand extends Command {
+  execute() {
+    this._send('sync:');
+    return this.parser.readAscii(4)
+      .then(reply => {
+        switch (reply) {
+          case Protocol.OKAY:
+            return new Sync(this.connection);
+          case Protocol.FAIL:
+            return this.parser.readError();
+          default:
+            return this.parser.unexpected(reply, 'OKAY or FAIL');
+        }
+    });
+  }
+}
 
-module.exports = SyncCommand
+module.exports = SyncCommand;

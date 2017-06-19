@@ -1,11 +1,14 @@
-Stats = require './stats'
+const Stats = require('./stats');
 
-class Entry extends Stats
-  constructor: (name, mode, size, mtime) ->
-    super mode, size, mtime
-    @name = name
+class Entry extends Stats {
+  constructor(name, mode, size, mtime) {
+    super(mode, size, mtime);
+    this.name = name;
+  }
 
-  toString: ->
-    @name
+  toString() {
+    return this.name;
+  }
+}
 
-module.exports = Entry
+module.exports = Entry;

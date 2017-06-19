@@ -1,204 +1,254 @@
-Promise = require 'bluebird'
+const Promise = require('bluebird');
 
-Protocol = require './protocol'
+const Protocol = require('./protocol');
 
-class Parser
-  constructor: (@stream) ->
-    @ended = false
+class Parser {
+  constructor(stream) {
+    this.stream = stream;
+    this.ended = false;
+  }
 
-  end: ->
-    return Promise.resolve(true) if @ended
+  end() {
+    let endListener, errorListener;
+    if (this.ended) { return Promise.resolve(true); }
 
-    resolver = Promise.defer()
+    const resolver = Promise.defer();
 
-    tryRead = =>
-      while @stream.read()
-        continue
-      return
+    const tryRead = () => {
+      while (this.stream.read()) {
+        continue;
+      }
+    };
 
-    @stream.on 'readable', tryRead
+    this.stream.on('readable', tryRead);
 
-    @stream.on 'error', errorListener = (err) ->
-      resolver.reject err
+    this.stream.on('error', (errorListener = err => resolver.reject(err))
+    );
 
-    @stream.on 'end', endListener = =>
-      @ended = true
-      resolver.resolve true
+    this.stream.on('end', (endListener = () => {
+      this.ended = true;
+      return resolver.resolve(true);
+    })
+    );
 
-    @stream.read(0)
-    @stream.end()
+    this.stream.read(0);
+    this.stream.end();
 
-    resolver.promise.cancellable().finally =>
-      @stream.removeListener 'readable', tryRead
-      @stream.removeListener 'error', errorListener
-      @stream.removeListener 'end', endListener
+    return resolver.promise.cancellable().finally(() => {
+      this.stream.removeListener('readable', tryRead);
+      this.stream.removeListener('error', errorListener);
+      return this.stream.removeListener('end', endListener);
+    });
+  }
 
-  raw: ->
-    @stream
+  raw() {
+    return this.stream;
+  }
 
-  readAll: ->
-    all = new Buffer 0
-    resolver = Promise.defer()
+  readAll() {
+    let endListener, errorListener;
+    let all = new Buffer(0);
+    const resolver = Promise.defer();
 
-    tryRead = =>
-      while chunk = @stream.read()
-        all = Buffer.concat [all, chunk]
-      resolver.resolve all if @ended
+    const tryRead = () => {
+      let chunk;
+      while ((chunk = this.stream.read())) {
+        all = Buffer.concat([all, chunk]);
+      }
+      if (this.ended) { return resolver.resolve(all); }
+    };
 
-    @stream.on 'readable', tryRead
+    this.stream.on('readable', tryRead);
 
-    @stream.on 'error', errorListener = (err) ->
-      resolver.reject err
+    this.stream.on('error', (errorListener = err => resolver.reject(err))
+    );
 
-    @stream.on 'end', endListener = =>
-      @ended = true
-      resolver.resolve all
+    this.stream.on('end', (endListener = () => {
+      this.ended = true;
+      return resolver.resolve(all);
+    })
+    );
 
-    tryRead()
+    tryRead();
 
-    resolver.promise.cancellable().finally =>
-      @stream.removeListener 'readable', tryRead
-      @stream.removeListener 'error', errorListener
-      @stream.removeListener 'end', endListener
+    return resolver.promise.cancellable().finally(() => {
+      this.stream.removeListener('readable', tryRead);
+      this.stream.removeListener('error', errorListener);
+      return this.stream.removeListener('end', endListener);
+    });
+  }
 
-  readAscii: (howMany) ->
-    this.readBytes howMany
-      .then (chunk) ->
-        chunk.toString 'ascii'
+  readAscii(howMany) {
+    return this.readBytes(howMany)
+      .then(chunk => chunk.toString('ascii'));
+  }
 
-  readBytes: (howMany) ->
-    resolver = Promise.defer()
+  readBytes(howMany) {
+    const resolver = Promise.defer();
 
-    tryRead = =>
-      if howMany
-        if chunk = @stream.read howMany
-          # If the stream ends while still having unread bytes, the read call
-          # will ignore the limit and just return what it's got.
-          howMany -= chunk.length
-          return resolver.resolve chunk if howMany is 0
-        resolver.reject new Parser.PrematureEOFError howMany if @ended
-      else
-        resolver.resolve new Buffer 0
+    const tryRead = () => {
+      if (howMany) {
+        let chunk;
+        if (chunk = this.stream.read(howMany)) {
+          // If the stream ends while still having unread bytes, the read call
+          // will ignore the limit and just return what it's got.
+          howMany -= chunk.length;
+          if (howMany === 0) { return resolver.resolve(chunk); }
+        }
+        if (this.ended) { return resolver.reject(new Parser.PrematureEOFError(howMany)); }
+      } else {
+        return resolver.resolve(new Buffer(0));
+      }
+    };
 
-    endListener = =>
-      @ended = true
-      resolver.reject new Parser.PrematureEOFError howMany
+    const endListener = () => {
+      this.ended = true;
+      return resolver.reject(new Parser.PrematureEOFError(howMany));
+    };
 
-    errorListener = (err) ->
-      resolver.reject err
+    const errorListener = err => resolver.reject(err);
 
-    @stream.on 'readable', tryRead
-    @stream.on 'error', errorListener
-    @stream.on 'end', endListener
+    this.stream.on('readable', tryRead);
+    this.stream.on('error', errorListener);
+    this.stream.on('end', endListener);
 
-    tryRead()
+    tryRead();
 
-    resolver.promise.cancellable().finally =>
-      @stream.removeListener 'readable', tryRead
-      @stream.removeListener 'error', errorListener
-      @stream.removeListener 'end', endListener
+    return resolver.promise.cancellable().finally(() => {
+      this.stream.removeListener('readable', tryRead);
+      this.stream.removeListener('error', errorListener);
+      return this.stream.removeListener('end', endListener);
+    });
+  }
 
-  readByteFlow: (howMany, targetStream) ->
-    resolver = Promise.defer()
+  readByteFlow(howMany, targetStream) {
+    const resolver = Promise.defer();
 
-    tryRead = =>
-      if howMany
-        # Try to get the exact amount we need first. If unsuccessful, take
-        # whatever is available, which will be less than the needed amount.
-        while chunk = @stream.read(howMany) or @stream.read()
-          howMany -= chunk.length
-          targetStream.write chunk
-          return resolver.resolve() if howMany is 0
-        resolver.reject new Parser.PrematureEOFError howMany if @ended
-      else
-        resolver.resolve()
+    const tryRead = () => {
+      if (howMany) {
+        // Try to get the exact amount we need first. If unsuccessful, take
+        // whatever is available, which will be less than the needed amount.
+        let chunk;
+        while ((chunk = this.stream.read(howMany) || this.stream.read())) {
+          howMany -= chunk.length;
+          targetStream.write(chunk);
+          if (howMany === 0) { return resolver.resolve(); }
+        }
+        if (this.ended) { return resolver.reject(new Parser.PrematureEOFError(howMany)); }
+      } else {
+        return resolver.resolve();
+      }
+    };
 
-    endListener = =>
-      @ended = true
-      resolver.reject new Parser.PrematureEOFError howMany
+    const endListener = () => {
+      this.ended = true;
+      return resolver.reject(new Parser.PrematureEOFError(howMany));
+    };
 
-    errorListener = (err) ->
-      resolver.reject err
+    const errorListener = err => resolver.reject(err);
 
-    @stream.on 'readable', tryRead
-    @stream.on 'error', errorListener
-    @stream.on 'end', endListener
+    this.stream.on('readable', tryRead);
+    this.stream.on('error', errorListener);
+    this.stream.on('end', endListener);
 
-    tryRead()
+    tryRead();
 
-    resolver.promise.cancellable().finally =>
-      @stream.removeListener 'readable', tryRead
-      @stream.removeListener 'error', errorListener
-      @stream.removeListener 'end', endListener
+    return resolver.promise.cancellable().finally(() => {
+      this.stream.removeListener('readable', tryRead);
+      this.stream.removeListener('error', errorListener);
+      return this.stream.removeListener('end', endListener);
+    });
+  }
 
-  readError: ->
-    this.readValue()
-      .then (value) ->
-        Promise.reject new Parser.FailError value.toString()
+  readError() {
+    return this.readValue()
+      .then(value => Promise.reject(new Parser.FailError(value.toString())));
+  }
 
-  readValue: ->
-    this.readAscii 4
-      .then (value) =>
-        length = Protocol.decodeLength value
-        this.readBytes length
+  readValue() {
+    return this.readAscii(4)
+      .then(value => {
+        const length = Protocol.decodeLength(value);
+        return this.readBytes(length);
+    });
+  }
 
-  readUntil: (code) ->
-    skipped = new Buffer 0
-    read = =>
-      this.readBytes 1
-        .then (chunk) ->
-          if chunk[0] is code
-            skipped
-          else
-            skipped = Buffer.concat [skipped, chunk]
-            read()
-    read()
+  readUntil(code) {
+    let skipped = new Buffer(0);
+    var read = () => {
+      return this.readBytes(1)
+        .then(function(chunk) {
+          if (chunk[0] === code) {
+            return skipped;
+          } else {
+            skipped = Buffer.concat([skipped, chunk]);
+            return read();
+          }
+      });
+    };
+    return read();
+  }
 
-  searchLine: (re) ->
-    this.readLine()
-      .then (line) =>
-        if match = re.exec line
-          match
-        else
-          this.searchLine re
+  searchLine(re) {
+    return this.readLine()
+      .then(line => {
+        let match;
+        if ((match = re.exec(line))) {
+          return match;
+        } else {
+          return this.searchLine(re);
+        }
+    });
+  }
 
-  readLine: ->
-    this.readUntil 0x0a # '\n'
-      .then (line) ->
-        if line[line.length - 1] is 0x0d # '\r'
-          line.slice 0, -1
-        else
-          line
+  readLine() {
+    return this.readUntil(0x0a) // '\n'
+      .then(function(line) {
+        if (line[line.length - 1] === 0x0d) { // '\r'
+          return line.slice(0, -1);
+        } else {
+          return line;
+        }
+    });
+  }
 
-  unexpected: (data, expected) ->
-    Promise.reject new Parser.UnexpectedDataError data, expected
+  unexpected(data, expected) {
+    return Promise.reject(new Parser.UnexpectedDataError(data, expected));
+  }
+}
 
-class Parser.FailError extends Error
-  constructor: (message) ->
-    super() # TODO check sanity
-    Error.call this
-    this.name = 'FailError'
-    this.message = "Failure: '#{message}'"
-    Error.captureStackTrace this, Parser.FailError
+Parser.FailError = class FailError extends Error {
+  constructor(message) {
+    super(); // TODO check sanity
+    Error.call(this);
+    this.name = 'FailError';
+    this.message = `Failure: '${message}'`;
+    Error.captureStackTrace(this, Parser.FailError);
+  }
+};
 
-class Parser.PrematureEOFError extends Error
-  constructor: (howManyMissing) ->
-    super() # TODO check sanity
-    Error.call this
-    this.name = 'PrematureEOFError'
-    this.message = "Premature end of stream, needed #{howManyMissing}
-      more bytes"
-    this.missingBytes = howManyMissing
-    Error.captureStackTrace this, Parser.PrematureEOFError
+Parser.PrematureEOFError = class PrematureEOFError extends Error {
+  constructor(howManyMissing) {
+    super(); // TODO check sanity
+    Error.call(this);
+    this.name = 'PrematureEOFError';
+    this.message = `Premature end of stream, needed ${howManyMissing} \
+more bytes`;
+    this.missingBytes = howManyMissing;
+    Error.captureStackTrace(this, Parser.PrematureEOFError);
+  }
+};
 
-class Parser.UnexpectedDataError extends Error
-  constructor: (unexpected, expected) ->
-    super() # TODO check sanity
-    Error.call this
-    this.name = 'UnexpectedDataError'
-    this.message = "Unexpected '#{unexpected}', was expecting #{expected}"
-    this.unexpected = unexpected
-    this.expected = expected
-    Error.captureStackTrace this, Parser.UnexpectedDataError
+Parser.UnexpectedDataError = class UnexpectedDataError extends Error {
+  constructor(unexpected, expected) {
+    super(); // TODO check sanity
+    Error.call(this);
+    this.name = 'UnexpectedDataError';
+    this.message = `Unexpected '${unexpected}', was expecting ${expected}`;
+    this.unexpected = unexpected;
+    this.expected = expected;
+    Error.captureStackTrace(this, Parser.UnexpectedDataError);
+  }
+};
 
-module.exports = Parser
+module.exports = Parser;

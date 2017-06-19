@@ -1,38 +1,46 @@
-Stream = require 'stream'
-Sinon = require 'sinon'
-Chai = require 'chai'
-Chai.use require 'sinon-chai'
-{expect} = Chai
+const Stream = require('stream');
+const Sinon = require('sinon');
+const Chai = require('chai');
+Chai.use(require('sinon-chai'));
+const {expect} = Chai;
 
-MockConnection = require '../../../mock/connection'
-Protocol = require '../../../../src/adb/protocol'
-UsbCommand = require '../../../../src/adb/command/host-transport/usb'
+const MockConnection = require('../../../mock/connection');
+const Protocol = require('../../../../src/adb/protocol');
+const UsbCommand = require('../../../../src/adb/command/host-transport/usb');
 
-describe 'UsbCommand', ->
+describe('UsbCommand', function() {
 
-  it "should send 'usb:'", (done) ->
-    conn = new MockConnection
-    cmd = new UsbCommand conn
-    conn.socket.on 'write', (chunk) ->
-      expect(chunk.toString()).to.equal \
-        Protocol.encodeData('usb:').toString()
-    setImmediate ->
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead "restarting in USB mode\n"
-      conn.socket.causeEnd()
-    cmd.execute()
-      .then (val) ->
-        expect(val).to.be.true
-        done()
+  it("should send 'usb:'", function(done) {
+    const conn = new MockConnection;
+    const cmd = new UsbCommand(conn);
+    conn.socket.on('write', chunk =>
+      expect(chunk.toString()).to.equal( 
+        Protocol.encodeData('usb:').toString())
+    );
+    setImmediate(function() {
+      conn.socket.causeRead(Protocol.OKAY);
+      conn.socket.causeRead("restarting in USB mode\n");
+      return conn.socket.causeEnd();
+    });
+    return cmd.execute()
+      .then(function(val) {
+        expect(val).to.be.true;
+        return done();
+    });
+  });
 
-  it "should reject on unexpected reply", (done) ->
-    conn = new MockConnection
-    cmd = new UsbCommand conn
-    setImmediate ->
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead "invalid port\n"
-      conn.socket.causeEnd()
-    cmd.execute()
-      .catch (err) ->
-        expect(err.message).to.eql 'invalid port'
-        done()
+  return it("should reject on unexpected reply", function(done) {
+    const conn = new MockConnection;
+    const cmd = new UsbCommand(conn);
+    setImmediate(function() {
+      conn.socket.causeRead(Protocol.OKAY);
+      conn.socket.causeRead("invalid port\n");
+      return conn.socket.causeEnd();
+    });
+    return cmd.execute()
+      .catch(function(err) {
+        expect(err.message).to.eql('invalid port');
+        return done();
+    });
+  });
+});

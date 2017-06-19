@@ -1,24 +1,37 @@
-Command = require '../../command'
-Protocol = require '../../protocol'
+const Command = require('../../command');
+const Protocol = require('../../protocol');
 
-class UsbCommand extends Command
-  RE_OK = /restarting in/
+var UsbCommand = (function() {
+  let RE_OK = undefined;
+  UsbCommand = class UsbCommand extends Command {
+    static initClass() {
+      RE_OK = /restarting in/;
+    }
 
-  execute: ->
-    this._send 'usb:'
-    @parser.readAscii 4
-      .then (reply) =>
-        switch reply
-          when Protocol.OKAY
-            @parser.readAll()
-              .then (value) ->
-                if RE_OK.test(value)
-                  true
-                else
-                  throw new Error value.toString().trim()
-          when Protocol.FAIL
-            @parser.readError()
-          else
-            @parser.unexpected reply, 'OKAY or FAIL'
+    execute() {
+      this._send('usb:');
+      return this.parser.readAscii(4)
+        .then(reply => {
+          switch (reply) {
+            case Protocol.OKAY:
+              return this.parser.readAll()
+                .then(function(value) {
+                  if (RE_OK.test(value)) {
+                    return true;
+                  } else {
+                    throw new Error(value.toString().trim());
+                  }
+              });
+            case Protocol.FAIL:
+              return this.parser.readError();
+            default:
+              return this.parser.unexpected(reply, 'OKAY or FAIL');
+          }
+      });
+    }
+  };
+  UsbCommand.initClass();
+  return UsbCommand;
+})();
 
-module.exports = UsbCommand
+module.exports = UsbCommand;

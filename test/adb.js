@@ -1,24 +1,29 @@
-{expect} = require 'chai'
+const {expect} = require('chai');
 
-Adb = require '../src/adb'
-Client = require '../src/adb/client'
-Keycode = require '../src/adb/keycode'
-util = require '../src/adb/util'
+const Adb = require('../src/adb');
+const Client = require('../src/adb/client');
+const Keycode = require('../src/adb/keycode');
+const util = require('../src/adb/util');
 
-describe 'Adb', ->
+describe('Adb', function() {
 
-  it "should expose Keycode", (done) ->
-    expect(Adb).to.have.property 'Keycode'
-    expect(Adb.Keycode).to.equal Keycode
-    done()
+  it("should expose Keycode", function(done) {
+    expect(Adb).to.have.property('Keycode');
+    expect(Adb.Keycode).to.equal(Keycode);
+    return done();
+  });
 
-  it "should expose util", (done) ->
-    expect(Adb).to.have.property 'util'
-    expect(Adb.util).to.equal util
-    done()
+  it("should expose util", function(done) {
+    expect(Adb).to.have.property('util');
+    expect(Adb.util).to.equal(util);
+    return done();
+  });
 
-  describe '@createClient(options)', ->
+  return describe('@createClient(options)', () =>
 
-    it "should return a Client instance", (done) ->
-      expect(Adb.createClient()).to.be.an.instanceOf Client
-      done()
+    it("should return a Client instance", function(done) {
+      expect(Adb.createClient()).to.be.an.instanceOf(Client);
+      return done();
+    })
+  );
+});

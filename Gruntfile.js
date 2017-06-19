@@ -1,82 +1,112 @@
-module.exports = (grunt) ->
+module.exports = function(grunt) {
 
-  grunt.initConfig
-    pkg: require './package'
-    coffee:
-      src:
-        options:
-          bare: true
+  grunt.initConfig({
+    pkg: require('./package'),
+    coffee: {
+      src: {
+        options: {
+          bare: true,
           noHeader: true
-        expand: true
-        cwd: 'src'
-        src: '**/*.coffee'
-        dest: 'lib'
+        },
+        expand: true,
+        cwd: 'src',
+        src: '**/*.coffee',
+        dest: 'lib',
         ext: '.js'
-      index:
-        src: 'index.coffee'
+      },
+      index: {
+        src: 'index.coffee',
         dest: 'index.js'
-    clean:
-      lib:
+      }
+    },
+    clean: {
+      lib: {
         src: 'lib'
-      index:
+      },
+      index: {
         src: 'index.js'
-    coffeelint:
-      options:
-        indentation:
+      }
+    },
+    coffeelint: {
+      options: {
+        indentation: {
           level: 'ignore'
-        no_backticks:
+        },
+        no_backticks: {
           level: 'ignore'
-      src:
+        }
+      },
+      src: {
         src: '<%= coffee.src.cwd %>/<%= coffee.src.src %>'
-      index:
+      },
+      index: {
         src: '<%= coffee.index.src %>'
-      test:
+      },
+      test: {
         src: 'test/**/*.coffee'
-      tasks:
+      },
+      tasks: {
         src: 'tasks/**/*.coffee'
-      gruntfile:
+      },
+      gruntfile: {
         src: 'Gruntfile.coffee'
-    jsonlint:
-      packagejson:
+      }
+    },
+    jsonlint: {
+      packagejson: {
         src: 'package.json'
-    watch:
-      src:
-        files: '<%= coffee.src.cwd %>/<%= coffee.src.src %>'
+      }
+    },
+    watch: {
+      src: {
+        files: '<%= coffee.src.cwd %>/<%= coffee.src.src %>',
         tasks: ['coffeelint:src', 'test']
-      index:
-        files: '<%= coffee.index.src %>'
+      },
+      index: {
+        files: '<%= coffee.index.src %>',
         tasks: ['coffeelint:index', 'test']
-      test:
+      },
+      test: {
         files: '<%= coffeelint.test.src %>',
         tasks: ['coffeelint:test', 'test']
-      gruntfile:
-        files: '<%= coffeelint.gruntfile.src %>'
+      },
+      gruntfile: {
+        files: '<%= coffeelint.gruntfile.src %>',
         tasks: ['coffeelint:gruntfile']
-      packagejson:
-        files: '<%= jsonlint.packagejson.src %>'
+      },
+      packagejson: {
+        files: '<%= jsonlint.packagejson.src %>',
         tasks: ['jsonlint:packagejson']
-    exec:
-      mocha:
+      }
+    },
+    exec: {
+      mocha: {
         options: [
-          '--compilers coffee:coffee-script/register'
-          '--reporter spec'
-          '--colors'
+          '--compilers coffee:coffee-script/register',
+          '--reporter spec',
+          '--colors',
           '--recursive'
         ],
         cmd: './node_modules/.bin/mocha <%= exec.mocha.options.join(" ") %>'
-    keycode:
-      generate:
+      }
+    },
+    keycode: {
+      generate: {
         dest: 'src/adb/keycode.coffee'
+      }
+    }
+  });
 
-  grunt.loadNpmTasks 'grunt-contrib-clean'
-  grunt.loadNpmTasks 'grunt-contrib-coffee'
-  grunt.loadNpmTasks 'grunt-coffeelint'
-  grunt.loadNpmTasks 'grunt-jsonlint'
-  grunt.loadNpmTasks 'grunt-contrib-watch'
-  grunt.loadNpmTasks 'grunt-notify'
-  grunt.loadNpmTasks 'grunt-exec'
-  grunt.loadTasks './tasks'
+  grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-coffee');
+  grunt.loadNpmTasks('grunt-coffeelint');
+  grunt.loadNpmTasks('grunt-jsonlint');
+  grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-notify');
+  grunt.loadNpmTasks('grunt-exec');
+  grunt.loadTasks('./tasks');
 
-  grunt.registerTask 'test', ['jsonlint', 'coffeelint', 'exec:mocha']
-  grunt.registerTask 'build', ['coffee']
-  grunt.registerTask 'default', ['test']
+  grunt.registerTask('test', ['jsonlint', 'coffeelint', 'exec:mocha']);
+  grunt.registerTask('build', ['coffee']);
+  return grunt.registerTask('default', ['test']);
+};

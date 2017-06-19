@@ -1,17 +1,21 @@
-Stream = require 'stream'
+const Stream = require('stream');
 
-class PullTransfer extends Stream.PassThrough
-  constructor: ->
-    super()
-    @stats =
-      bytesTransferred: 0
+class PullTransfer extends Stream.PassThrough {
+  constructor() {
+    super();
+    this.stats =
+      {bytesTransferred: 0};
+  }
 
-  cancel: ->
-    this.emit 'cancel'
+  cancel() {
+    return this.emit('cancel');
+  }
 
-  write: (chunk, encoding, callback) ->
-    @stats.bytesTransferred += chunk.length
-    this.emit 'progress', @stats
-    super chunk, encoding, callback
+  write(chunk, encoding, callback) {
+    this.stats.bytesTransferred += chunk.length;
+    this.emit('progress', this.stats);
+    return super.write(chunk, encoding, callback);
+  }
+}
 
-module.exports = PullTransfer
+module.exports = PullTransfer;

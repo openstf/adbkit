@@ -1,61 +1,73 @@
-{EventEmitter} = require 'events'
-Promise = require 'bluebird'
+const {EventEmitter} = require('events');
+const Promise = require('bluebird');
 
-Parser = require './parser'
+const Parser = require('./parser');
 
-class Tracker extends EventEmitter
-  constructor: (command) ->
-    super()
-    @command = command
-    @deviceList = []
-    @deviceMap = {}
-    @reader = this.read()
-      .catch Promise.CancellationError, ->
-        true
-      .catch Parser.PrematureEOFError, ->
-        throw new Error 'Connection closed'
-      .catch (err) =>
-        this.emit 'error', err
-        return
-      .finally =>
-        @command.parser.end()
-          .then =>
-            this.emit 'end'
+class Tracker extends EventEmitter {
+  constructor(command) {
+    super();
+    this.command = command;
+    this.deviceList = [];
+    this.deviceMap = {};
+    this.reader = this.read()
+      .catch(Promise.CancellationError, () => true).catch(Parser.PrematureEOFError, function() {
+        throw new Error('Connection closed');
+      }).catch(err => {
+        this.emit('error', err);
+        
+      }).finally(() => {
+        return this.command.parser.end()
+          .then(() => {
+            return this.emit('end');
+        });
+    });
+  }
 
-  read: ->
-    @command._readDevices()
+  read() {
+    return this.command._readDevices()
       .cancellable()
-      .then (list) =>
-        this.update list
-        this.read()
+      .then(list => {
+        this.update(list);
+        return this.read();
+    });
+  }
 
-  update: (newList) ->
-    changeSet =
-      removed: []
-      changed: []
+  update(newList) {
+    const changeSet = {
+      removed: [],
+      changed: [],
       added: []
-    newMap = {}
-    for device in newList
-      oldDevice = @deviceMap[device.id]
-      if oldDevice
-        unless oldDevice.type is device.type
-          changeSet.changed.push device
-          this.emit 'change', device, oldDevice
-      else
-        changeSet.added.push device
-        this.emit 'add', device
-      newMap[device.id] = device
-    for device in @deviceList
-      unless newMap[device.id]
-        changeSet.removed.push device
-        this.emit 'remove', device
-    this.emit 'changeSet', changeSet
-    @deviceList = newList
-    @deviceMap = newMap
-    return this
+    };
+    const newMap = {};
+    for (var device of newList) {
+      const oldDevice = this.deviceMap[device.id];
+      if (oldDevice) {
+        if (oldDevice.type !== device.type) {
+          changeSet.changed.push(device);
+          this.emit('change', device, oldDevice);
+        }
+      } else {
+        changeSet.added.push(device);
+        this.emit('add', device);
+      }
+      newMap[device.id] = device;
+    }
+    for (device of this.deviceList) {
+      if (!newMap[device.id]) {
+        changeSet.removed.push(device);
+        this.emit('remove', device);
+      }
+    }
+    this.emit('changeSet', changeSet);
+    this.deviceList = newList;
+    this.deviceMap = newMap;
+    return this;
+  }
 
-  end: ->
-    @reader.cancel()
-    return this
+  end() {
+    this.reader.cancel();
+    return this;
+  }
+}
 
-module.exports = Tracker
+module.exports = Tracker;

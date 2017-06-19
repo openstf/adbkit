@@ -1,159 +1,194 @@
-Stream = require 'stream'
-Sinon = require 'sinon'
-Chai = require 'chai'
-Chai.use require 'sinon-chai'
-{expect} = require 'chai'
+const Stream = require('stream');
+const Sinon = require('sinon');
+const Chai = require('chai');
+Chai.use(require('sinon-chai'));
+const {expect} = require('chai');
 
-Parser = require '../../src/adb/parser'
-Tracker = require '../../src/adb/tracker'
-Protocol = require '../../src/adb/protocol'
-HostTrackDevicesCommand = require '../../src/adb/command/host/trackdevices'
+const Parser = require('../../src/adb/parser');
+const Tracker = require('../../src/adb/tracker');
+const Protocol = require('../../src/adb/protocol');
+const HostTrackDevicesCommand = require('../../src/adb/command/host/trackdevices');
 
-describe 'Tracker', ->
+describe('Tracker', function() {
 
-  beforeEach ->
-    @writer = new Stream.PassThrough
-    @conn =
-      parser: new Parser @writer
-      end: ->
-    @cmd = new HostTrackDevicesCommand @conn
-    @tracker = new Tracker @cmd
+  beforeEach(function() {
+    this.writer = new Stream.PassThrough;
+    this.conn = {
+      parser: new Parser(this.writer),
+      end() {}
+    };
+    this.cmd = new HostTrackDevicesCommand(this.conn);
+    return this.tracker = new Tracker(this.cmd);
+  });
 
-  it "should emit 'add' when a device is added", (done) ->
-    spy = Sinon.spy()
-    @tracker.on 'add', spy
-    device1 =
+  it("should emit 'add' when a device is added", function(done) {
+    const spy = Sinon.spy();
+    this.tracker.on('add', spy);
+    const device1 = {
       id: 'a',
       type: 'device'
-    device2 =
+    };
+    const device2 = {
       id: 'b',
       type: 'device'
-    @tracker.update [device1, device2]
-    expect(spy).to.have.been.calledTwice
-    expect(spy).to.have.been.calledWith device1
-    expect(spy).to.have.been.calledWith device2
-    done()
+    };
+    this.tracker.update([device1, device2]);
+    expect(spy).to.have.been.calledTwice;
+    expect(spy).to.have.been.calledWith(device1);
+    expect(spy).to.have.been.calledWith(device2);
+    return done();
+  });
 
-  it "should emit 'remove' when a device is removed", (done) ->
-    spy = Sinon.spy()
-    @tracker.on 'remove', spy
-    device1 =
+  it("should emit 'remove' when a device is removed", function(done) {
+    const spy = Sinon.spy();
+    this.tracker.on('remove', spy);
+    const device1 = {
       id: 'a',
       type: 'device'
-    device2 =
+    };
+    const device2 = {
       id: 'b',
       type: 'device'
-    @tracker.update [device1, device2]
-    @tracker.update [device1]
-    expect(spy).to.have.been.calledOnce
-    expect(spy).to.have.been.calledWith device2
-    done()
+    };
+    this.tracker.update([device1, device2]);
+    this.tracker.update([device1]);
+    expect(spy).to.have.been.calledOnce;
+    expect(spy).to.have.been.calledWith(device2);
+    return done();
+  });
 
-  it "should emit 'change' when a device changes", (done) ->
-    spy = Sinon.spy()
-    @tracker.on 'change', spy
-    deviceOld =
+  it("should emit 'change' when a device changes", function(done) {
+    const spy = Sinon.spy();
+    this.tracker.on('change', spy);
+    const deviceOld = {
       id: 'a',
       type: 'device'
-    deviceNew =
+    };
+    const deviceNew = {
       id: 'a',
       type: 'offline'
-    @tracker.update [deviceOld]
-    @tracker.update [deviceNew]
-    expect(spy).to.have.been.calledOnce
-    expect(spy).to.have.been.calledWith deviceNew, deviceOld
-    done()
+    };
+    this.tracker.update([deviceOld]);
+    this.tracker.update([deviceNew]);
+    expect(spy).to.have.been.calledOnce;
+    expect(spy).to.have.been.calledWith(deviceNew, deviceOld);
+    return done();
+  });
 
-  it "should emit 'changeSet' with all changes", (done) ->
-    spy = Sinon.spy()
-    @tracker.on 'changeSet', spy
-    device1 =
+  it("should emit 'changeSet' with all changes", function(done) {
+    const spy = Sinon.spy();
+    this.tracker.on('changeSet', spy);
+    const device1 = {
       id: 'a',
       type: 'device'
-    device2 =
+    };
+    const device2 = {
       id: 'b',
       type: 'device'
-    device3 =
+    };
+    const device3 = {
       id: 'c',
       type: 'device'
-    device3New =
+    };
+    const device3New = {
       id: 'c',
       type: 'offline'
-    device4 =
+    };
+    const device4 = {
       id: 'd',
       type: 'offline'
-    @tracker.update [device1, device2, device3]
-    @tracker.update [device1, device3New, device4]
-    expect(spy).to.have.been.calledTwice
-    expect(spy).to.have.been.calledWith
-      added: [device1, device2, device3]
-      changed: []
-      removed: []
-    expect(spy).to.have.been.calledWith
-      added: [device4]
-      changed: [device3New]
-      removed: [device2]
-    done()
+    };
+    this.tracker.update([device1, device2, device3]);
+    this.tracker.update([device1, device3New, device4]);
+    expect(spy).to.have.been.calledTwice;
+    expect(spy).to.have.been.calledWith({
+      added: [device1, device2, device3],
+      changed: [],
+      removed: []});
+    expect(spy).to.have.been.calledWith({
+      added: [device4],
+      changed: [device3New],
+      removed: [device2]});
+    return done();
+  });
 
-  it "should emit 'error' and 'end' when connection ends", (done) ->
-    @tracker.on 'error', =>
-      @tracker.on 'end', ->
-        done()
-    @writer.end()
+  it("should emit 'error' and 'end' when connection ends", function(done) {
+    this.tracker.on('error', () => {
+      return this.tracker.on('end', () => done());
+    });
+    return this.writer.end();
+  });
 
-  it "should read devices from socket", (done) ->
-    spy = Sinon.spy()
-    @tracker.on 'changeSet', spy
-    device1 =
+  it("should read devices from socket", function(done) {
+    const spy = Sinon.spy();
+    this.tracker.on('changeSet', spy);
+    const device1 = {
       id: 'a',
       type: 'device'
-    device2 =
+    };
+    const device2 = {
       id: 'b',
       type: 'device'
-    device3 =
+    };
+    const device3 = {
       id: 'c',
       type: 'device'
-    device3New =
+    };
+    const device3New = {
       id: 'c',
       type: 'offline'
-    device4 =
+    };
+    const device4 = {
       id: 'd',
       type: 'offline'
-    @writer.write Protocol.encodeData """
-      a\tdevice
-      b\tdevice
-      c\tdevice
-      """
-    @writer.write Protocol.encodeData """
-      a\tdevice
-      c\toffline
-      d\toffline
-      """
-    setImmediate ->
-      expect(spy).to.have.been.calledTwice
-      expect(spy).to.have.been.calledWith
-        added: [device1, device2, device3]
-        changed: []
-        removed: []
-      expect(spy).to.have.been.calledWith
-        added: [device4]
-        changed: [device3New]
-        removed: [device2]
-      done()
+    };
+    this.writer.write(Protocol.encodeData(`\
+a\tdevice
+b\tdevice
+c\tdevice\
+`
+    )
+    );
+    this.writer.write(Protocol.encodeData(`\
+a\tdevice
+c\toffline
+d\toffline\
+`
+    )
+    );
+    return setImmediate(function() {
+      expect(spy).to.have.been.calledTwice;
+      expect(spy).to.have.been.calledWith({
+        added: [device1, device2, device3],
+        changed: [],
+        removed: []});
+      expect(spy).to.have.been.calledWith({
+        added: [device4],
+        changed: [device3New],
+        removed: [device2]});
+      return done();
+    });
+  });
 
-  describe 'end()', ->
+  return describe('end()', function() {
 
-    it "should close the connection", (done) ->
-      Sinon.spy @conn.parser, 'end'
-      @tracker.on 'end', =>
-        expect(@conn.parser.end).to.have.been.calledOnce
-        done()
-      @tracker.end()
+    it("should close the connection", function(done) {
+      Sinon.spy(this.conn.parser, 'end');
+      this.tracker.on('end', () => {
+        expect(this.conn.parser.end).to.have.been.calledOnce;
+        return done();
+      });
+      return this.tracker.end();
+    });
 
-    it "should not cause an error to be emit", (done) ->
-      spy = Sinon.spy()
-      @tracker.on 'error', spy
-      @tracker.on 'end', ->
-        expect(spy).to.not.have.been.called
-        done()
-      @tracker.end()
+    return it("should not cause an error to be emit", function(done) {
+      const spy = Sinon.spy();
+      this.tracker.on('error', spy);
+      this.tracker.on('end', function() {
+        expect(spy).to.not.have.been.called;
+        return done();
+      });
+      return this.tracker.end();
+    });
+  });
+});

@@ -1,9 +1,14 @@
-class RollingCounter
-  constructor: (@max, @min = 1) ->
-    @now = @min
+class RollingCounter {
+  constructor(max, min = 1) {
+    this.max = max;
+    this.min = min;
+    this.now = this.min;
+  }
 
-  next: ->
-    @now = @min unless @now < @max
-    return ++@now
+  next() {
+    if (!(this.now < this.max)) { this.now = this.min; }
+    return ++this.now;
+  }
+}
 
-module.exports = RollingCounter
+module.exports = RollingCounter;

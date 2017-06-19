@@ -1,42 +1,47 @@
-Assert = require 'assert'
-Stream = require 'stream'
+const Assert = require('assert');
+const Stream = require('stream');
 
-class RgbTransform extends Stream.Transform
-  constructor: (meta, options) ->
-    super options
-    @meta = meta
-    @_buffer = new Buffer ''
-    Assert.ok (@meta.bpp is 24 or @meta.bpp is 32),
-      'Only 24-bit and 32-bit raw images with 8-bits per color are supported'
-    @_r_pos = @meta.red_offset / 8
-    @_g_pos = @meta.green_offset / 8
-    @_b_pos = @meta.blue_offset / 8
-    @_a_pos = @meta.alpha_offset / 8
-    @_pixel_bytes = @meta.bpp / 8
+class RgbTransform extends Stream.Transform {
+  constructor(meta, options) {
+    super(options);
+    this.meta = meta;
+    this._buffer = new Buffer('');
+    Assert.ok(((this.meta.bpp === 24) || (this.meta.bpp === 32)),
+      'Only 24-bit and 32-bit raw images with 8-bits per color are supported');
+    this._r_pos = this.meta.red_offset / 8;
+    this._g_pos = this.meta.green_offset / 8;
+    this._b_pos = this.meta.blue_offset / 8;
+    this._a_pos = this.meta.alpha_offset / 8;
+    this._pixel_bytes = this.meta.bpp / 8;
+  }
 
-  _transform: (chunk, encoding, done) ->
-    if @_buffer.length
-      @_buffer = Buffer.concat [@_buffer, chunk], @_buffer.length + chunk.length
-    else
-      @_buffer = chunk
-    sourceCursor = 0
-    targetCursor = 0
-    target = if @_pixel_bytes is 3 \
-      then @_buffer
-      else new Buffer Math.max 4, chunk.length / @_pixel_bytes * 3
-    while @_buffer.length - sourceCursor >= @_pixel_bytes
-      r = @_buffer[sourceCursor + @_r_pos]
-      g = @_buffer[sourceCursor + @_g_pos]
-      b = @_buffer[sourceCursor + @_b_pos]
-      target[targetCursor + 0] = r
-      target[targetCursor + 1] = g
-      target[targetCursor + 2] = b
-      sourceCursor += @_pixel_bytes
-      targetCursor += 3
-    if targetCursor
-      this.push target.slice 0, targetCursor
-      @_buffer = @_buffer.slice sourceCursor
-    done()
-    return
+  _transform(chunk, encoding, done) {
+    if (this._buffer.length) {
+      this._buffer = Buffer.concat([this._buffer, chunk], this._buffer.length + chunk.length);
+    } else {
+      this._buffer = chunk;
+    }
+    let sourceCursor = 0;
+    let targetCursor = 0;
+    const target = this._pixel_bytes === 3 
+      ? this._buffer
+      : new Buffer(Math.max(4, (chunk.length / this._pixel_bytes) * 3));
+    while ((this._buffer.length - sourceCursor) >= this._pixel_bytes) {
+      const r = this._buffer[sourceCursor + this._r_pos];
+      const g = this._buffer[sourceCursor + this._g_pos];
+      const b = this._buffer[sourceCursor + this._b_pos];
+      target[targetCursor + 0] = r;
+      target[targetCursor + 1] = g;
+      target[targetCursor + 2] = b;
+      sourceCursor += this._pixel_bytes;
+      targetCursor += 3;
+    }
+    if (targetCursor) {
+      this.push(target.slice(0, targetCursor));
+      this._buffer = this._buffer.slice(sourceCursor);
+    }
+    done();
+  }
+}
 
-module.exports = RgbTransform
+module.exports = RgbTransform;

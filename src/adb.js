@@ -1,15 +1,17 @@
-Client = require './adb/client'
-Keycode = require './adb/keycode'
-util = require './adb/util'
+const Client = require('./adb/client');
+const Keycode = require('./adb/keycode');
+const util = require('./adb/util');
 
-class Adb
-  @createClient: (options = {}) ->
-    options.host ||= process.env.ADB_HOST
-    options.port ||= process.env.ADB_PORT
-    new Client options
+class Adb {
+  static createClient(options = {}) {
+    if (!options.host) { options.host = process.env.ADB_HOST; }
+    if (!options.port) { options.port = process.env.ADB_PORT; }
+    return new Client(options);
+  }
+}
 
-Adb.Keycode = Keycode
+Adb.Keycode = Keycode;
 
-Adb.util = util
+Adb.util = util;
 
-module.exports = Adb
+module.exports = Adb;

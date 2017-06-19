@@ -1,81 +1,91 @@
-Stream = require 'stream'
-Promise = require 'bluebird'
-Sinon = require 'sinon'
-Chai = require 'chai'
-Chai.use require 'sinon-chai'
-{expect} = Chai
+const Stream = require('stream');
+const Promise = require('bluebird');
+const Sinon = require('sinon');
+const Chai = require('chai');
+Chai.use(require('sinon-chai'));
+const {expect} = Chai;
 
-MockConnection = require '../../../mock/connection'
-Protocol = require '../../../../src/adb/protocol'
-Parser = require '../../../../src/adb/parser'
-LogcatCommand = require '../../../../src/adb/command/host-transport/logcat'
+const MockConnection = require('../../../mock/connection');
+const Protocol = require('../../../../src/adb/protocol');
+const Parser = require('../../../../src/adb/parser');
+const LogcatCommand = require('../../../../src/adb/command/host-transport/logcat');
 
-describe 'LogcatCommand', ->
+describe('LogcatCommand', function() {
 
-  it "should send 'echo && logcat -B *:I'", (done) ->
-    conn = new MockConnection
-    cmd = new LogcatCommand conn
-    conn.socket.on 'write', (chunk) ->
-      expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:echo &&
-          logcat -B *:I 2>/dev/null').toString()
-    setImmediate ->
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeEnd()
-    cmd.execute()
-      .then (stream) ->
-        done()
+  it("should send 'echo && logcat -B *:I'", function(done) {
+    const conn = new MockConnection;
+    const cmd = new LogcatCommand(conn);
+    conn.socket.on('write', chunk =>
+      expect(chunk.toString()).to.equal( 
+        Protocol.encodeData(`shell:echo && \
+logcat -B *:I 2>/dev/null`).toString()
+      )
+    );
+    setImmediate(function() {
+      conn.socket.causeRead(Protocol.OKAY);
+      return conn.socket.causeEnd();
+    });
+    return cmd.execute()
+      .then(stream => done());
+  });
 
-  it "should send 'echo && logcat -c && logcat -B *:I' if options.clear
-      is set", (done) ->
-    conn = new MockConnection
-    cmd = new LogcatCommand conn
-    conn.socket.on 'write', (chunk) ->
-      expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:echo && logcat -c 2>/dev/null &&
-          logcat -B *:I 2>/dev/null').toString()
-    setImmediate ->
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeEnd()
-    cmd.execute clear: true
-      .then (stream) ->
-        done()
+  it(`should send 'echo && logcat -c && logcat -B *:I' if options.clear \
+is set`, function(done) {
+    const conn = new MockConnection;
+    const cmd = new LogcatCommand(conn);
+    conn.socket.on('write', chunk =>
+      expect(chunk.toString()).to.equal( 
+        Protocol.encodeData(`shell:echo && logcat -c 2>/dev/null && \
+logcat -B *:I 2>/dev/null`).toString()
+      )
+    );
+    setImmediate(function() {
+      conn.socket.causeRead(Protocol.OKAY);
+      return conn.socket.causeEnd();
+    });
+    return cmd.execute({clear: true})
+      .then(stream => done());
+  });
 
-  it "should resolve with the logcat stream", (done) ->
-    conn = new MockConnection
-    cmd = new LogcatCommand conn
-    setImmediate ->
-      conn.socket.causeRead Protocol.OKAY
-    cmd.execute()
-      .then (stream) ->
-        stream.end()
-        expect(stream).to.be.an.instanceof Stream.Readable
-        done()
+  it("should resolve with the logcat stream", function(done) {
+    const conn = new MockConnection;
+    const cmd = new LogcatCommand(conn);
+    setImmediate(() => conn.socket.causeRead(Protocol.OKAY));
+    return cmd.execute()
+      .then(function(stream) {
+        stream.end();
+        expect(stream).to.be.an.instanceof(Stream.Readable);
+        return done();
+    });
+  });
 
-  it "should perform CRLF transformation by default", (done) ->
-    conn = new MockConnection
-    cmd = new LogcatCommand conn
-    setImmediate ->
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead '\r\nfoo\r\n'
-      conn.socket.causeEnd()
-    cmd.execute()
-      .then (stream) ->
-        new Parser(stream).readAll()
-      .then (out) ->
-        expect(out.toString()).to.equal 'foo\n'
-        done()
+  it("should perform CRLF transformation by default", function(done) {
+    const conn = new MockConnection;
+    const cmd = new LogcatCommand(conn);
+    setImmediate(function() {
+      conn.socket.causeRead(Protocol.OKAY);
+      conn.socket.causeRead('\r\nfoo\r\n');
+      return conn.socket.causeEnd();
+    });
+    return cmd.execute()
+      .then(stream => new Parser(stream).readAll()).then(function(out) {
+        expect(out.toString()).to.equal('foo\n');
+        return done();
+    });
+  });
 
-  it "should not perform CRLF transformation if not needed", (done) ->
-    conn = new MockConnection
-    cmd = new LogcatCommand conn
-    setImmediate ->
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead '\nfoo\r\n'
-      conn.socket.causeEnd()
-    cmd.execute()
-      .then (stream) ->
-        new Parser(stream).readAll()
-      .then (out) ->
-        expect(out.toString()).to.equal 'foo\r\n'
-        done()
+  return it("should not perform CRLF transformation if not needed", function(done) {
+    const conn = new MockConnection;
+    const cmd = new LogcatCommand(conn);
+    setImmediate(function() {
+      conn.socket.causeRead(Protocol.OKAY);
+      conn.socket.causeRead('\nfoo\r\n');
+      return conn.socket.causeEnd();
+    });
+    return cmd.execute()
+      .then(stream => new Parser(stream).readAll()).then(function(out) {
+        expect(out.toString()).to.equal('foo\r\n');
+        return done();
+    });
+  });
+});

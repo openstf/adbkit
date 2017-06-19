@@ -1,24 +1,32 @@
-class Protocol
-  @OKAY = 'OKAY'
-  @FAIL = 'FAIL'
-  @STAT = 'STAT'
-  @LIST = 'LIST'
-  @DENT = 'DENT'
-  @RECV = 'RECV'
-  @DATA = 'DATA'
-  @DONE = 'DONE'
-  @SEND = 'SEND'
-  @QUIT = 'QUIT'
+class Protocol {
+  static initClass() {
+    this.OKAY = 'OKAY';
+    this.FAIL = 'FAIL';
+    this.STAT = 'STAT';
+    this.LIST = 'LIST';
+    this.DENT = 'DENT';
+    this.RECV = 'RECV';
+    this.DATA = 'DATA';
+    this.DONE = 'DONE';
+    this.SEND = 'SEND';
+    this.QUIT = 'QUIT';
+  }
 
-  @decodeLength: (length) ->
-    parseInt length, 16
+  static decodeLength(length) {
+    return parseInt(length, 16);
+  }
 
-  @encodeLength: (length) ->
-    ('0000' + length.toString 16).slice(-4).toUpperCase()
+  static encodeLength(length) {
+    return (`0000${length.toString(16)}`).slice(-4).toUpperCase();
+  }
 
-  @encodeData: (data) ->
-    unless Buffer.isBuffer data
-      data = new Buffer data
-    Buffer.concat [new Buffer(Protocol.encodeLength data.length), data]
+  static encodeData(data) {
+    if (!Buffer.isBuffer(data)) {
+      data = new Buffer(data);
+    }
+    return Buffer.concat([new Buffer(Protocol.encodeLength(data.length)), data]);
+  }
+}
+Protocol.initClass();
 
-module.exports = Protocol
+module.exports = Protocol;

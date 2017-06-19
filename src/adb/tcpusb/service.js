@@ -1,133 +1,157 @@
-{EventEmitter} = require 'events'
+const {EventEmitter} = require('events');
 
-Promise = require 'bluebird'
-debug = require('debug')('adb:tcpusb:service')
+const Promise = require('bluebird');
+const debug = require('debug')('adb:tcpusb:service');
 
-Parser = require '../parser'
-Protocol = require '../protocol'
-Packet = require './packet'
+const Parser = require('../parser');
+const Protocol = require('../protocol');
+const Packet = require('./packet');
 
-class Service extends EventEmitter
-  constructor: (client, serial, localId, remoteId, socket) ->
-    super()
-    @client = client
-    @serial = serial
-    @localId = localId
-    @remoteId = remoteId
-    @socket = socket
-    @opened = false
-    @ended = false
-    @transport = null
-    @needAck = false
+class Service extends EventEmitter {
+  constructor(client, serial, localId, remoteId, socket) {
+    super();
+    this.client = client;
+    this.serial = serial;
+    this.localId = localId;
+    this.remoteId = remoteId;
+    this.socket = socket;
+    this.opened = false;
+    this.ended = false;
+    this.transport = null;
+    this.needAck = false;
+  }
 
-  end: ->
-    @transport.end() if @transport
-    return this if @ended
-    debug 'O:A_CLSE'
-    localId = if @opened then @localId else 0 # Zero can only mean a failed open
-    try
-      # We may or may not have gotten here due to @socket ending, so write
-      # may fail.
-      @socket.write Packet.assemble(Packet.A_CLSE, localId, @remoteId, null)
-    catch err
-      # Let it go
-    @transport = null
-    @ended = true
-    this.emit 'end'
-    return this
+  end() {
+    if (this.transport) { this.transport.end(); }
+    if (this.ended) { return this; }
+    debug('O:A_CLSE');
+    const localId = this.opened ? this.localId : 0; // Zero can only mean a failed open
+    try {
+      // We may or may not have gotten here due to @socket ending, so write
+      // may fail.
+      this.socket.write(Packet.assemble(Packet.A_CLSE, localId, this.remoteId, null));
+    } catch (err) {}
+      // Let it go
+    this.transport = null;
+    this.ended = true;
+    this.emit('end');
+    return this;
+  }
 
-  handle: (packet) ->
-    Promise.try =>
-      switch packet.command
-        when Packet.A_OPEN
-          this._handleOpenPacket(packet)
-        when Packet.A_OKAY
-          this._handleOkayPacket(packet)
-        when Packet.A_WRTE
-          this._handleWritePacket(packet)
-        when Packet.A_CLSE
-          this._handleClosePacket(packet)
-        else
-          throw new Error "Unexpected packet #{packet.command}"
-    .catch (err) =>
-      this.emit 'error', err
-      this.end()
+  handle(packet) {
+    return Promise.try(() => {
+      switch (packet.command) {
+        case Packet.A_OPEN:
+          return this._handleOpenPacket(packet);
+        case Packet.A_OKAY:
+          return this._handleOkayPacket(packet);
+        case Packet.A_WRTE:
+          return this._handleWritePacket(packet);
+        case Packet.A_CLSE:
+          return this._handleClosePacket(packet);
+        default:
+          throw new Error(`Unexpected packet ${packet.command}`);
+      }
+  }).catch(err => {
+      this.emit('error', err);
+      return this.end();
+    });
+  }
 
-  _handleOpenPacket: (packet) ->
-    debug 'I:A_OPEN', packet
-    @client.transport @serial
-      .then (@transport) =>
-        throw new LateTransportError() if @ended
-        @transport.write Protocol.encodeData \
-          packet.data.slice(0, -1) # Discard null byte at end
-        @transport.parser.readAscii 4
-          .then (reply) =>
-            switch reply
-              when Protocol.OKAY
-                debug 'O:A_OKAY'
-                @socket.write \
-                  Packet.assemble(Packet.A_OKAY, @localId, @remoteId, null)
-                @opened = true
-              when Protocol.FAIL
-                @transport.parser.readError()
-              else
-                @transport.parser.unexpected reply, 'OKAY or FAIL'
-      .then =>
-        new Promise (resolve, reject) =>
-          @transport.socket
-            .on 'readable', => this._tryPush()
-            .on 'end', resolve
-            .on 'error', reject
-          this._tryPush()
-      .finally =>
-        this.end()
+  _handleOpenPacket(packet) {
+    debug('I:A_OPEN', packet);
+    return this.client.transport(this.serial)
+      .then(transport => {
+        this.transport = transport;
+        if (this.ended) { throw new LateTransportError(); }
+        this.transport.write(Protocol.encodeData( 
+          packet.data.slice(0, -1))
+        ); // Discard null byte at end
+        return this.transport.parser.readAscii(4)
+          .then(reply => {
+            switch (reply) {
+              case Protocol.OKAY:
+                debug('O:A_OKAY');
+                this.socket.write( 
+                  Packet.assemble(Packet.A_OKAY, this.localId, this.remoteId, null));
+                return this.opened = true;
+              case Protocol.FAIL:
+                return this.transport.parser.readError();
+              default:
+                return this.transport.parser.unexpected(reply, 'OKAY or FAIL');
+            }
+        });
+    }).then(() => {
+        return new Promise((resolve, reject) => {
+          this.transport.socket
+            .on('readable', () => this._tryPush())
+            .on('end', resolve)
+            .on('error', reject);
+          return this._tryPush();
+        });
+      }).finally(() => {
+        return this.end();
+    });
+  }
 
-  _handleOkayPacket: (packet) ->
-    debug 'I:A_OKAY', packet
-    return if @ended
-    throw new Service.PrematurePacketError(packet) unless @transport
-    @needAck = false
-    this._tryPush()
+  _handleOkayPacket(packet) {
+    debug('I:A_OKAY', packet);
+    if (this.ended) { return; }
+    if (!this.transport) { throw new Service.PrematurePacketError(packet); }
+    this.needAck = false;
+    return this._tryPush();
+  }
 
-  _handleWritePacket: (packet) ->
-    debug 'I:A_WRTE', packet
-    return if @ended
-    throw new Service.PrematurePacketError(packet) unless @transport
-    @transport.write packet.data if packet.data
-    debug 'O:A_OKAY'
-    @socket.write Packet.assemble(Packet.A_OKAY, @localId, @remoteId, null)
+  _handleWritePacket(packet) {
+    debug('I:A_WRTE', packet);
+    if (this.ended) { return; }
+    if (!this.transport) { throw new Service.PrematurePacketError(packet); }
+    if (packet.data) { this.transport.write(packet.data); }
+    debug('O:A_OKAY');
+    return this.socket.write(Packet.assemble(Packet.A_OKAY, this.localId, this.remoteId, null));
+  }
 
-  _handleClosePacket: (packet) ->
-    debug 'I:A_CLSE', packet
-    return if @ended
-    throw new Service.PrematurePacketError(packet) unless @transport
-    this.end()
+  _handleClosePacket(packet) {
+    debug('I:A_CLSE', packet);
+    if (this.ended) { return; }
+    if (!this.transport) { throw new Service.PrematurePacketError(packet); }
+    return this.end();
+  }
 
-  _tryPush: ->
-    return if @needAck or @ended
-    if chunk = this._readChunk(@transport.socket)
-      debug 'O:A_WRTE'
-      @socket.write Packet.assemble(Packet.A_WRTE, @localId, @remoteId, chunk)
-      @needAck = true
+  _tryPush() {
+    let chunk;
+    if (this.needAck || this.ended) { return; }
+    if (chunk = this._readChunk(this.transport.socket)) {
+      debug('O:A_WRTE');
+      this.socket.write(Packet.assemble(Packet.A_WRTE, this.localId, this.remoteId, chunk));
+      return this.needAck = true;
+    }
+  }
 
-  _readChunk: (stream) ->
-    stream.read(@socket.maxPayload) or stream.read()
+  _readChunk(stream) {
+    return stream.read(this.socket.maxPayload) || stream.read();
+  }
+}
 
-class Service.PrematurePacketError extends Error
-  constructor: (packet) ->
-    super() # TODO check sanity
-    Error.call this
-    @name = 'PrematurePacketError'
-    @message = "Premature packet"
-    @packet = packet
-    Error.captureStackTrace this, Service.PrematurePacketError
+Service.PrematurePacketError = class PrematurePacketError extends Error {
+  constructor(packet) {
+    super(); // TODO check sanity
+    Error.call(this);
+    this.name = 'PrematurePacketError';
+    this.message = "Premature packet";
+    this.packet = packet;
+    Error.captureStackTrace(this, Service.PrematurePacketError);
+  }
+};
 
-class Service.LateTransportError extends Error
-  constructor: ->
-    super() # TODO check sanity
-    Error.call this
-    @name = 'LateTransportError'
-    @message = "Late transport"
-    Error.captureStackTrace this, Service.LateTransportError
+Service.LateTransportError = class LateTransportError extends Error {
+  constructor() {
+    super(); // TODO check sanity
+    Error.call(this);
+    this.name = 'LateTransportError';
+    this.message = "Late transport";
+    Error.captureStackTrace(this, Service.LateTransportError);
+  }
+};
 
-module.exports = Service
+module.exports = Service;

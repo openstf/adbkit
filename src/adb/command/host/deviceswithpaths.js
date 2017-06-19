@@ -1,32 +1,41 @@
-Command = require '../../command'
-Protocol = require '../../protocol'
+const Command = require('../../command');
+const Protocol = require('../../protocol');
 
-class HostDevicesWithPathsCommand extends Command
-  execute: ->
-    this._send 'host:devices-l'
-    @parser.readAscii 4
-      .then (reply) =>
-        switch reply
-          when Protocol.OKAY
-            this._readDevices()
-          when Protocol.FAIL
-            @parser.readError()
-          else
-            @parser.unexpected reply, 'OKAY or FAIL'
+class HostDevicesWithPathsCommand extends Command {
+  execute() {
+    this._send('host:devices-l');
+    return this.parser.readAscii(4)
+      .then(reply => {
+        switch (reply) {
+          case Protocol.OKAY:
+            return this._readDevices();
+          case Protocol.FAIL:
+            return this.parser.readError();
+          default:
+            return this.parser.unexpected(reply, 'OKAY or FAIL');
+        }
+    });
+  }
 
-  _readDevices: ->
-    @parser.readValue()
-      .then (value) =>
-        this._parseDevices value
+  _readDevices() {
+    return this.parser.readValue()
+      .then(value => {
+        return this._parseDevices(value);
+    });
+  }
 
-  _parseDevices: (value) ->
-    devices = []
-    return devices unless value.length
-    for line in value.toString('ascii').split '\n'
-      if line
-        # For some reason, the columns are separated by spaces instead of tabs
-        [id, type, path] = line.split /\s+/
-        devices.push id: id, type: type, path: path
-    return devices
+  _parseDevices(value) {
+    const devices = [];
+    if (!value.length) { return devices; }
+    for (let line of value.toString('ascii').split('\n')) {
+      if (line) {
+        // For some reason, the columns are separated by spaces instead of tabs
+        const [id, type, path] = Array.from(line.split(/\s+/));
+        devices.push({id, type, path});
+      }
+    }
+    return devices;
+  }
+}
 
-module.exports = HostDevicesWithPathsCommand
+module.exports = HostDevicesWithPathsCommand;

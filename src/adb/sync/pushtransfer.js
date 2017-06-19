@@ -1,24 +1,30 @@
-{EventEmitter} = require 'events'
+const {EventEmitter} = require('events');
 
-class PushTransfer extends EventEmitter
-  constructor: ->
-    super()
-    @_stack = []
-    @stats =
-      bytesTransferred: 0
+class PushTransfer extends EventEmitter {
+  constructor() {
+    super();
+    this._stack = [];
+    this.stats =
+      {bytesTransferred: 0};
+  }
 
-  cancel: ->
-    this.emit 'cancel'
+  cancel() {
+    return this.emit('cancel');
+  }
 
-  push: (byteCount) ->
-    @_stack.push byteCount
+  push(byteCount) {
+    return this._stack.push(byteCount);
+  }
 
-  pop: ->
-    byteCount = @_stack.pop()
-    @stats.bytesTransferred += byteCount
-    this.emit 'progress', @stats
+  pop() {
+    const byteCount = this._stack.pop();
+    this.stats.bytesTransferred += byteCount;
+    return this.emit('progress', this.stats);
+  }
 
-  end: ->
-    this.emit 'end'
+  end() {
+    return this.emit('end');
+  }
+}
 
-module.exports = PushTransfer
+module.exports = PushTransfer;

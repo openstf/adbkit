@@ -1,27 +1,42 @@
-Command = require '../../command'
-Protocol = require '../../protocol'
+const Command = require('../../command');
+const Protocol = require('../../protocol');
 
-class GetPackagesCommand extends Command
-  RE_PACKAGE = /^package:(.*?)\r?$/gm
+var GetPackagesCommand = (function() {
+  let RE_PACKAGE = undefined;
+  GetPackagesCommand = class GetPackagesCommand extends Command {
+    static initClass() {
+      RE_PACKAGE = /^package:(.*?)\r?$/gm;
+    }
 
-  execute: ->
-    this._send 'shell:pm list packages 2>/dev/null'
-    @parser.readAscii 4
-      .then (reply) =>
-        switch reply
-          when Protocol.OKAY
-            @parser.readAll()
-              .then (data) =>
-                this._parsePackages data.toString()
-          when Protocol.FAIL
-            @parser.readError()
-          else
-            @parser.unexpected reply, 'OKAY or FAIL'
+    execute() {
+      this._send('shell:pm list packages 2>/dev/null');
+      return this.parser.readAscii(4)
+        .then(reply => {
+          switch (reply) {
+            case Protocol.OKAY:
+              return this.parser.readAll()
+                .then(data => {
+                  return this._parsePackages(data.toString());
+              });
+            case Protocol.FAIL:
+              return this.parser.readError();
+            default:
+              return this.parser.unexpected(reply, 'OKAY or FAIL');
+          }
+      });
+    }
 
-  _parsePackages: (value) ->
-    features = []
-    while match = RE_PACKAGE.exec value
-      features.push match[1]
-    return features
+    _parsePackages(value) {
+      let match;
+      const features = [];
+      while ((match = RE_PACKAGE.exec(value))) {
+        features.push(match[1]);
+      }
+      return features;
+    }
+  };
+  GetPackagesCommand.initClass();
+  return GetPackagesCommand;
+})();
 
-module.exports = GetPackagesCommand
+module.exports = GetPackagesCommand;

@@ -1,27 +1,42 @@
-Command = require '../../command'
-Protocol = require '../../protocol'
+const Command = require('../../command');
+const Protocol = require('../../protocol');
 
-class GetFeaturesCommand extends Command
-  RE_FEATURE = /^feature:(.*?)(?:=(.*?))?\r?$/gm
+var GetFeaturesCommand = (function() {
+  let RE_FEATURE = undefined;
+  GetFeaturesCommand = class GetFeaturesCommand extends Command {
+    static initClass() {
+      RE_FEATURE = /^feature:(.*?)(?:=(.*?))?\r?$/gm;
+    }
 
-  execute: ->
-    this._send 'shell:pm list features 2>/dev/null'
-    @parser.readAscii 4
-      .then (reply) =>
-        switch reply
-          when Protocol.OKAY
-            @parser.readAll()
-              .then (data) =>
-                this._parseFeatures data.toString()
-          when Protocol.FAIL
-            @parser.readError()
-          else
-            @parser.unexpected reply, 'OKAY or FAIL'
+    execute() {
+      this._send('shell:pm list features 2>/dev/null');
+      return this.parser.readAscii(4)
+        .then(reply => {
+          switch (reply) {
+            case Protocol.OKAY:
+              return this.parser.readAll()
+                .then(data => {
+                  return this._parseFeatures(data.toString());
+              });
+            case Protocol.FAIL:
+              return this.parser.readError();
+            default:
+              return this.parser.unexpected(reply, 'OKAY or FAIL');
+          }
+      });
+    }
 
-  _parseFeatures: (value) ->
-    features = {}
-    while match = RE_FEATURE.exec value
-      features[match[1]] = match[2] or true
-    return features
+    _parseFeatures(value) {
+      let match;
+      const features = {};
+      while ((match = RE_FEATURE.exec(value))) {
+        features[match[1]] = match[2] || true;
+      }
+      return features;
+    }
+  };
+  GetFeaturesCommand.initClass();
+  return GetFeaturesCommand;
+})();
 
-module.exports = GetFeaturesCommand
+module.exports = GetFeaturesCommand;

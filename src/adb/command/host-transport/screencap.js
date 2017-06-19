@@ -1,28 +1,33 @@
-Promise = require 'bluebird'
+const Promise = require('bluebird');
 
-Command = require '../../command'
-Protocol = require '../../protocol'
-Parser = require '../../parser'
-LineTransform = require '../../linetransform'
+const Command = require('../../command');
+const Protocol = require('../../protocol');
+const Parser = require('../../parser');
+const LineTransform = require('../../linetransform');
 
-class ScreencapCommand extends Command
-  execute: ->
-    this._send 'shell:echo && screencap -p 2>/dev/null'
-    @parser.readAscii 4
-      .then (reply) =>
-        switch reply
-          when Protocol.OKAY
-            transform = new LineTransform
-            @parser.readBytes 1
-              .then (chunk) =>
-                transform = new LineTransform autoDetect: true
-                transform.write chunk
-                @parser.raw().pipe transform
-              .catch Parser.PrematureEOFError, ->
-                throw new Error 'No support for the screencap command'
-          when Protocol.FAIL
-            @parser.readError()
-          else
-            @parser.unexpected reply, 'OKAY or FAIL'
+class ScreencapCommand extends Command {
+  execute() {
+    this._send('shell:echo && screencap -p 2>/dev/null');
+    return this.parser.readAscii(4)
+      .then(reply => {
+        switch (reply) {
+          case Protocol.OKAY:
+            let transform = new LineTransform;
+            return this.parser.readBytes(1)
+              .then(chunk => {
+                transform = new LineTransform({autoDetect: true});
+                transform.write(chunk);
+                return this.parser.raw().pipe(transform);
+            }).catch(Parser.PrematureEOFError, function() {
+                throw new Error('No support for the screencap command');
+            });
+          case Protocol.FAIL:
+            return this.parser.readError();
+          default:
+            return this.parser.unexpected(reply, 'OKAY or FAIL');
+        }
+    });
+  }
+}
 
-module.exports = ScreencapCommand
+module.exports = ScreencapCommand;

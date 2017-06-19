@@ -1,17 +1,21 @@
-Command = require '../../command'
-Protocol = require '../../protocol'
+const Command = require('../../command');
+const Protocol = require('../../protocol');
 
-class TcpCommand extends Command
-  execute: (port, host) ->
-    this._send "tcp:#{port}" + if host then ":#{host}" else ''
-    @parser.readAscii 4
-      .then (reply) =>
-        switch reply
-          when Protocol.OKAY
-            @parser.raw()
-          when Protocol.FAIL
-            @parser.readError()
-          else
-            @parser.unexpected reply, 'OKAY or FAIL'
+class TcpCommand extends Command {
+  execute(port, host) {
+    this._send(`tcp:${port}` + (host ? `:${host}` : ''));
+    return this.parser.readAscii(4)
+      .then(reply => {
+        switch (reply) {
+          case Protocol.OKAY:
+            return this.parser.raw();
+          case Protocol.FAIL:
+            return this.parser.readError();
+          default:
+            return this.parser.unexpected(reply, 'OKAY or FAIL');
+        }
+    });
+  }
+}
 
-module.exports = TcpCommand
+module.exports = TcpCommand;

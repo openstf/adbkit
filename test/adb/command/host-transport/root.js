@@ -1,39 +1,47 @@
-Stream = require 'stream'
-Sinon = require 'sinon'
-Chai = require 'chai'
-Chai.use require 'sinon-chai'
-{expect} = Chai
+const Stream = require('stream');
+const Sinon = require('sinon');
+const Chai = require('chai');
+Chai.use(require('sinon-chai'));
+const {expect} = Chai;
 
-MockConnection = require '../../../mock/connection'
-Protocol = require '../../../../src/adb/protocol'
-RootCommand = require '../../../../src/adb/command/host-transport/root'
+const MockConnection = require('../../../mock/connection');
+const Protocol = require('../../../../src/adb/protocol');
+const RootCommand = require('../../../../src/adb/command/host-transport/root');
 
-describe 'RootCommand', ->
+describe('RootCommand', function() {
 
-  it "should send 'root:'", (done) ->
-    conn = new MockConnection
-    cmd = new RootCommand conn
-    conn.socket.on 'write', (chunk) ->
-      expect(chunk.toString()).to.equal \
-        Protocol.encodeData('root:').toString()
-    setImmediate ->
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead "restarting adbd as root\n"
-      conn.socket.causeEnd()
-    cmd.execute()
-      .then (val) ->
-        expect(val).to.be.true
-        done()
+  it("should send 'root:'", function(done) {
+    const conn = new MockConnection;
+    const cmd = new RootCommand(conn);
+    conn.socket.on('write', chunk =>
+      expect(chunk.toString()).to.equal( 
+        Protocol.encodeData('root:').toString())
+    );
+    setImmediate(function() {
+      conn.socket.causeRead(Protocol.OKAY);
+      conn.socket.causeRead("restarting adbd as root\n");
+      return conn.socket.causeEnd();
+    });
+    return cmd.execute()
+      .then(function(val) {
+        expect(val).to.be.true;
+        return done();
+    });
+  });
 
-  it "should reject on unexpected reply", (done) ->
-    conn = new MockConnection
-    cmd = new RootCommand conn
-    setImmediate ->
-      conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead "adbd cannot run as root in production builds\n"
-      conn.socket.causeEnd()
-    cmd.execute()
-      .catch (err) ->
-        expect(err.message).to.eql \
-          'adbd cannot run as root in production builds'
-        done()
+  return it("should reject on unexpected reply", function(done) {
+    const conn = new MockConnection;
+    const cmd = new RootCommand(conn);
+    setImmediate(function() {
+      conn.socket.causeRead(Protocol.OKAY);
+      conn.socket.causeRead("adbd cannot run as root in production builds\n");
+      return conn.socket.causeEnd();
+    });
+    return cmd.execute()
+      .catch(function(err) {
+        expect(err.message).to.eql( 
+          'adbd cannot run as root in production builds');
+        return done();
+    });
+  });
+});

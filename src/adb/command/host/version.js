@@ -1,22 +1,28 @@
-Command = require '../../command'
-Protocol = require '../../protocol'
+const Command = require('../../command');
+const Protocol = require('../../protocol');
 
-class HostVersionCommand extends Command
-  execute: ->
-    this._send 'host:version'
-    @parser.readAscii 4
-      .then (reply) =>
-        switch reply
-          when Protocol.OKAY
-            @parser.readValue()
-              .then (value) =>
-                this._parseVersion value
-          when Protocol.FAIL
-            @parser.readError()
-          else
-            this._parseVersion reply
+class HostVersionCommand extends Command {
+  execute() {
+    this._send('host:version');
+    return this.parser.readAscii(4)
+      .then(reply => {
+        switch (reply) {
+          case Protocol.OKAY:
+            return this.parser.readValue()
+              .then(value => {
+                return this._parseVersion(value);
+            });
+          case Protocol.FAIL:
+            return this.parser.readError();
+          default:
+            return this._parseVersion(reply);
+        }
+    });
+  }
 
-  _parseVersion: (version) ->
-    parseInt version, 16
+  _parseVersion(version) {
+    return parseInt(version, 16);
+  }
+}
 
-module.exports = HostVersionCommand
+module.exports = HostVersionCommand;

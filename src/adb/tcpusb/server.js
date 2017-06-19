@@ -1,43 +1,54 @@
-Net = require 'net'
-{EventEmitter} = require 'events'
+const Net = require('net');
+const {EventEmitter} = require('events');
 
-Socket = require './socket'
+const Socket = require('./socket');
 
-class Server extends EventEmitter
-  constructor: (client, serial, options) ->
-    super()
-    @client = client
-    @serial = serial
-    @options = options
-    @connections = []
-    @server = Net.createServer allowHalfOpen: true
-    @server.on 'error', (err) =>
-      this.emit 'error', err
-    @server.on 'listening', =>
-      this.emit 'listening'
-    @server.on 'close', =>
-      this.emit 'close'
-    @server.on 'connection', (conn) =>
-      socket = new Socket @client, @serial, conn, @options
-      @connections.push socket
-      socket.on 'error', (err) =>
-        # 'conn' is guaranteed to get ended
-        this.emit 'error', err
-      socket.once 'end', =>
-        # 'conn' is guaranteed to get ended
-        @connections = @connections.filter (val) -> val isnt socket
-      this.emit 'connection', socket
+class Server extends EventEmitter {
+  constructor(client, serial, options) {
+    super();
+    this.client = client;
+    this.serial = serial;
+    this.options = options;
+    this.connections = [];
+    this.server = Net.createServer({allowHalfOpen: true});
+    this.server.on('error', err => {
+      return this.emit('error', err);
+    });
+    this.server.on('listening', () => {
+      return this.emit('listening');
+    });
+    this.server.on('close', () => {
+      return this.emit('close');
+    });
+    this.server.on('connection', conn => {
+      const socket = new Socket(this.client, this.serial, conn, this.options);
+      this.connections.push(socket);
+      socket.on('error', err => {
+        // 'conn' is guaranteed to get ended
+        return this.emit('error', err);
+      });
+      socket.once('end', () => {
+        // 'conn' is guaranteed to get ended
+        return this.connections = this.connections.filter(val => val !== socket);
+      });
+      return this.emit('connection', socket);
+    });
+  }
 
-  listen: ->
-    @server.listen.apply @server, arguments
-    return this
+  listen() {
+    this.server.listen.apply(this.server, arguments);
+    return this;
+  }
 
-  close: ->
-    @server.close()
-    return this
+  close() {
+    this.server.close();
+    return this;
+  }
 
-  end: ->
-    conn.end() for conn in @connections
-    return this
+  end() {
+    for (let conn of this.connections) { conn.end(); }
+    return this;
+  }
+}
 
-module.exports = Server
+module.exports = Server;

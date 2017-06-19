@@ -1,31 +1,41 @@
-class ServiceMap
-  constructor: ->
-    @remotes = Object.create null
-    @count = 0
+class ServiceMap {
+  constructor() {
+    this.remotes = Object.create(null);
+    this.count = 0;
+  }
 
-  end: ->
-    for remoteId, remote of @remotes
-      remote.end()
-    @remotes = Object.create null
-    @count = 0
-    return
+  end() {
+    for (let remoteId in this.remotes) {
+      const remote = this.remotes[remoteId];
+      remote.end();
+    }
+    this.remotes = Object.create(null);
+    this.count = 0;
+  }
 
-  insert: (remoteId, socket) ->
-    if @remotes[remoteId]
-      throw new Error "Remote ID #{remoteId} is already being used"
-    else
-      @count += 1
-      @remotes[remoteId] = socket
+  insert(remoteId, socket) {
+    if (this.remotes[remoteId]) {
+      throw new Error(`Remote ID ${remoteId} is already being used`);
+    } else {
+      this.count += 1;
+      return this.remotes[remoteId] = socket;
+    }
+  }
 
-  get: (remoteId) ->
-    @remotes[remoteId] or null
+  get(remoteId) {
+    return this.remotes[remoteId] || null;
+  }
 
-  remove: (remoteId) ->
-    if remote = @remotes[remoteId]
-      delete @remotes[remoteId]
-      @count -= 1
-      remote
-    else
-      null
+  remove(remoteId) {
+    let remote;
+    if (remote = this.remotes[remoteId]) {
+      delete this.remotes[remoteId];
+      this.count -= 1;
+      return remote;
+    } else {
+      return null;
+    }
+  }
+}
 
-module.exports = ServiceMap
+module.exports = ServiceMap;
