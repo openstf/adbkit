@@ -44,6 +44,8 @@
     "bench": "~0.3.5",
     "chai": "~2.2.0",
     "coffee-script": "~1.9.1",
+    "coffeelint": "~1.9.3",
+    "eslint": "^4.0.0",
     "grunt": "~0.4.5",
     "grunt-cli": "~0.1.13",
     "grunt-coffeelint": "0.0.13",
@@ -55,8 +57,7 @@
     "grunt-notify": "~0.4.1",
     "mocha": "~2.2.1",
     "sinon": "~1.14.1",
-    "sinon-chai": "~2.7.0",
-    "coffeelint": "~1.9.3"
+    "sinon-chai": "~2.7.0"
   },
   "engines": {
     "node": ">= 0.10.4"
