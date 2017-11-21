@@ -6,7 +6,7 @@ class DisconnectCommand extends Command
   # "No such device 192.168.2.2:5555"
   # ""
   # disconnected host:port
-  RE_OK = /^disconnected (?:[0-9]{1,3}\.){3}[0-9]{1,3}\:?([0-9]{1,5})|(^$)/
+  RE_OK = /^disconnected |(^$)/
 
   execute: (host, port) ->
     this._send "host:disconnect:#{host}:#{port}"
