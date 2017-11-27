@@ -1,7 +1,5 @@
 # adbkit
 
-[![Code Sponsor](https://app.codesponsor.io/embed/z6tQiHurXg5Wpm9rNpUtxda4/openstf/adbkit.svg)](https://app.codesponsor.io/link/z6tQiHurXg5Wpm9rNpUtxda4/openstf/adbkit)
-
 _**Interested in helping to convert the CoffeeScript codebase to plain JavaScript? [Help us](https://github.com/openstf/adbkit/issues/48)!**_
 
 **adbkit** is a pure [Node.js][nodejs] client for the [Android Debug Bridge][adb-site] server. It can be used either as a library in your own application, or simply as a convenient utility for playing with your device.
