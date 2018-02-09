@@ -753,14 +753,15 @@ Runs a shell command on the device. Note that you'll be limited to the permissio
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **command** The shell command to execute. When `String`, the command is run as-is. When `Array`, the elements will be rudimentarily escaped (for convenience, not security) and joined to form a command.
-* **callback(err, output)** Optional. Use this or the returned `Promise`.
+* **callback(err, conn)** Optional. Use this or the returned `Promise`.
     - **err** `null` when successful, `Error` otherwise.
-    - **output** A Buffer containing all the output. Call `output.toString('utf-8')` to get a readable String from it.
+    - **conn** A readable stream (`Socket` actually) containing the progressive `stdout` of the command. Use with `adb.util.readAll` to get a readable String from it.
 * Returns: `Promise`
-* Resolves with: `output` (see callback)
+* Resolves with: `conn` (see callback)
 
 ##### Example
 
+* Read the output of an instantaneous command
 ```js
 var Promise = require('bluebird')
 var adb = require('adbkit')
@@ -771,7 +772,7 @@ client.listDevices()
     return Promise.map(devices, function(device) {
       return client.shell(device.id, 'echo $RANDOM')
         // Use the readAll() utility to read all the content without
-        // having to deal with the events. `output` will be a Buffer
+        // having to deal with the readable stream. `output` will be a Buffer
         // containing all the output.
         .then(adb.util.readAll)
         .then(function(output) {
@@ -787,6 +788,41 @@ client.listDevices()
   })
 ```
 
+* Progressively read the output of a long-running command and terminate it
+```js
+var Promise = require('bluebird')
+var adb = require('adbkit')
+var client = adb.createClient()
+
+client.listDevices()
+  .then(function(devices) {
+    return Promise.map(devices, function(device) {
+      return client.shell(device.id, 'logcat') // logcat just for illustration,
+                                               // prefer client.openLogcat in real use 
+        .then(function(conn) {
+          var line = 0
+          conn.on('data', function(data) {
+            // here `ps` on the device shows the running logcat process
+            console.log(data.toString())
+            line += 1
+            // close the stream and the running process
+            // on the device will be gone, gracefully
+            if (line > 100) conn.end()
+          });
+          conn.on('close', function() {
+            // here `ps` on the device shows the logcat process is gone
+            console.log('100 lines read already, bye')
+          })
+        })
+    })
+  })
+  .then(function() {
+    console.log('Done.')
+  })
+  .catch(function(err) {
+    console.error('Something went wrong:', err.stack)
+  })
+```
 #### client.startActivity(serial, options[, callback])
 
 Starts the configured activity on the device. Roughly analogous to `adb shell am start <options>`.
