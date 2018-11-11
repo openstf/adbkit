@@ -63,7 +63,8 @@ module.exports = (grunt) ->
           '--colors'
           '--recursive'
         ],
-        cmd: './node_modules/.bin/mocha <%= exec.mocha.options.join(" ") %>'
+        cmd: 'node node_modules/mocha/bin/mocha
+              <%= exec.mocha.options.join(" ") %>'
     keycode:
       generate:
         dest: 'src/adb/keycode.coffee'
