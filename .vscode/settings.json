@@ -1,0 +1,11 @@
+{
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/lib": true,
+        "**/coverge": true,
+        "package-lock.json": true
+    },
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.referencesCodeLens.enabled": true,
+    "editor.formatOnSave": true
+}

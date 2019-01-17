@@ -1,0 +1,73 @@
+{
+    "name": "adbkit",
+    "version": "3.0.0",
+    "description": "A pure Node.js client for the Android Debug Bridge.",
+    "license": "Apache-2.0",
+    "author": {
+        "name": "The OpenSTF Project",
+        "email": "contact@openstf.io",
+        "url": "https://openstf.io"
+    },
+    "contributors": [
+        "Tiger Oakes <contact@tigeroakes.com> (https://tigeroakes.com)"
+    ],
+    "repository": "NotWoods/openstf/adbkit.git",
+    "bugs": "https://github.com/openstf/adbkit/issues",
+    "homepage": "https://github.com/NotWoods/js-library#readme",
+    "main": "./index.js",
+    "types": "./index.d.ts",
+    "scripts": {
+        "test": "jest",
+        "build": "tsc",
+        "lint": "prettier --parser typescript \"src/**/*.{ts,tsx}\" --write",
+        "lint:check": "prettier --parser typescript \"src/**/*.{ts,tsx}\" --list-different"
+    },
+    "bin": {
+        "adbkit": "./bin/adbkit"
+    },
+    "keywords": [
+        "adb",
+        "adbkit",
+        "android",
+        "logcat",
+        "monkey"
+    ],
+    "dependencies": {
+        "adbkit-logcat": "^2.0.1",
+        "adbkit-monkey": "^1.0.1",
+        "commander": "^2.19.0",
+        "debug": "^4.1.1",
+        "node-forge": "^0.7.6",
+        "tslib": "^1.9.3"
+    },
+    "devDependencies": {
+        "@types/debug": "0.0.31",
+        "@types/jest": "^23.3.13",
+        "@types/node": "^10.12.18",
+        "@types/node-forge": "^0.7.11",
+        "husky": "^1.3.1",
+        "jest": "^23.6.0",
+        "prettier": "^1.15.3",
+        "ts-jest": "^23.10.5",
+        "typescript": "^3.2.2"
+    },
+    "engines": {
+        "node": ">=10.14.2"
+    },
+    "jest": {
+        "preset": "ts-jest/presets/js-with-ts",
+        "testMatch": [
+            "**/test/**/*.ts?(x)"
+        ]
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "npm run lint"
+        }
+    },
+    "prettier": {
+        "singleQuote": true,
+        "trailingComma": "all",
+        "proseWrap": "always"
+    }
+}

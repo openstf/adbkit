@@ -1,0 +1,27 @@
+{
+    "include": ["./src/**/*"],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": { "*": ["types/*"] },
+        /* Basic Options */
+        "target": "es2017",
+        "module": "commonjs",
+        "allowJs": true,
+        "checkJs": true,
+        "jsx": "react",
+        "sourceMap": true,
+        "outDir": "lib",
+        "importHelpers": true,
+        "pretty": true,
+
+        /* Strict Type-Checking Options */
+        "strict": true,
+        "noUnusedLocals": false,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+
+        /* Module Resolution Options */
+        "moduleResolution": "node",
+        "esModuleInterop": true
+    }
+}
