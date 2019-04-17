@@ -7,7 +7,7 @@ LineTransform = require '../../linetransform'
 
 class ScreencapCommand extends Command
   execute: ->
-    this._send 'shell:screencap -p 2>/dev/null'
+    this._send 'shell:echo && screencap -p 2>/dev/null'
     @parser.readAscii 4
       .then (reply) =>
         switch reply
@@ -15,7 +15,7 @@ class ScreencapCommand extends Command
             transform = new LineTransform
             @parser.readBytes 1
               .then (chunk) =>
-                transform = new LineTransform
+                transform = new LineTransform autoDetect: true
                 transform.write chunk
                 @parser.raw().pipe transform
               .catch Parser.PrematureEOFError, ->

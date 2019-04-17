@@ -16,10 +16,10 @@ describe 'ScreencapCommand', ->
     cmd = new ScreencapCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
-        Protocol.encodeData('shell:screencap -p 2>/dev/null').toString()
+        Protocol.encodeData('shell:echo && screencap -p 2>/dev/null').toString()
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'legit image'
+      conn.socket.causeRead '\r\nlegit image'
       conn.socket.causeEnd()
     cmd.execute()
       .then (stream) ->
@@ -30,7 +30,7 @@ describe 'ScreencapCommand', ->
     cmd = new ScreencapCommand conn
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'legit image'
+      conn.socket.causeRead '\r\nlegit image'
       conn.socket.causeEnd()
     cmd.execute()
       .then (stream) ->
@@ -49,16 +49,30 @@ describe 'ScreencapCommand', ->
       .catch (err) ->
         done()
 
-  it "should perform CRLF transformation", (done) ->
+  it "should perform CRLF transformation by default", (done) ->
     conn = new MockConnection
     cmd = new ScreencapCommand conn
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
-      conn.socket.causeRead 'foo\r\n'
+      conn.socket.causeRead '\r\nfoo\r\n'
       conn.socket.causeEnd()
     cmd.execute()
       .then (stream) ->
         new Parser(stream).readAll()
       .then (out) ->
         expect(out.toString()).to.equal 'foo\n'
+        done()
+
+  it "should not perform CRLF transformation if not needed", (done) ->
+    conn = new MockConnection
+    cmd = new ScreencapCommand conn
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead '\nfoo\r\n'
+      conn.socket.causeEnd()
+    cmd.execute()
+      .then (stream) ->
+        new Parser(stream).readAll()
+      .then (out) ->
+        expect(out.toString()).to.equal 'foo\r\n'
         done()

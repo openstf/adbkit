@@ -8,20 +8,6 @@ Protocol = require '../protocol'
 Packet = require './packet'
 
 class Service extends EventEmitter
-  class @PrematurePacketError extends Error
-    constructor: (@packet) ->
-      Error.call this
-      @name = 'PrematurePacketError'
-      @message = "Premature packet"
-      Error.captureStackTrace this, Service.PrematurePacketError
-
-  class @LateTransportError extends Error
-    constructor: ->
-      Error.call this
-      @name = 'LateTransportError'
-      @message = "Late transport"
-      Error.captureStackTrace this, Service.LateTransportError
-
   constructor: (@client, @serial, @localId, @remoteId, @socket) ->
     super()
     @opened = false
@@ -121,5 +107,19 @@ class Service extends EventEmitter
 
   _readChunk: (stream) ->
     stream.read(@socket.maxPayload) or stream.read()
+
+class Service.PrematurePacketError extends Error
+  constructor: (@packet) ->
+    Error.call this
+    @name = 'PrematurePacketError'
+    @message = "Premature packet"
+    Error.captureStackTrace this, Service.PrematurePacketError
+
+class Service.LateTransportError extends Error
+  constructor: ->
+    Error.call this
+    @name = 'LateTransportError'
+    @message = "Late transport"
+    Error.captureStackTrace this, Service.LateTransportError
 
 module.exports = Service

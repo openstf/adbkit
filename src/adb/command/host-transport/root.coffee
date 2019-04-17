@@ -1,11 +1,11 @@
 Command = require '../../command'
 Protocol = require '../../protocol'
 
-class TcpIpCommand extends Command
-  RE_OK = /restarting in/
+class RootCommand extends Command
+  RE_OK = /restarting adbd as root/
 
-  execute: (port) ->
-    this._send "tcpip:#{port}"
+  execute: ->
+    this._send 'root:'
     @parser.readAscii 4
       .then (reply) =>
         switch reply
@@ -13,7 +13,7 @@ class TcpIpCommand extends Command
             @parser.readAll()
               .then (value) ->
                 if RE_OK.test(value)
-                  port
+                  true
                 else
                   throw new Error value.toString().trim()
           when Protocol.FAIL
@@ -21,4 +21,4 @@ class TcpIpCommand extends Command
           else
             @parser.unexpected reply, 'OKAY or FAIL'
 
-module.exports = TcpIpCommand
+module.exports = RootCommand

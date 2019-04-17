@@ -3,20 +3,6 @@
 Packet = require './packet'
 
 class PacketReader extends EventEmitter
-  class @ChecksumError extends Error
-    constructor: (@packet) ->
-      Error.call this
-      @name = 'ChecksumError'
-      @message = "Checksum mismatch"
-      Error.captureStackTrace this, PacketReader.ChecksumError
-
-  class @MagicError extends Error
-    constructor: (@packet) ->
-      Error.call this
-      @name = 'MagicError'
-      @message = "Magic value mismatch"
-      Error.captureStackTrace this, PacketReader.MagicError
-
   constructor: (@stream) ->
     super()
     @inBody = false
@@ -71,5 +57,19 @@ class PacketReader extends EventEmitter
     chunk = @buffer.slice(0, length)
     @buffer = if length is @buffer.length then null else @buffer.slice(length)
     chunk
+
+class PacketReader.ChecksumError extends Error
+  constructor: (@packet) ->
+    Error.call this
+    @name = 'ChecksumError'
+    @message = "Checksum mismatch"
+    Error.captureStackTrace this, PacketReader.ChecksumError
+
+class PacketReader.MagicError extends Error
+  constructor: (@packet) ->
+    Error.call this
+    @name = 'MagicError'
+    @message = "Magic value mismatch"
+    Error.captureStackTrace this, PacketReader.MagicError
 
 module.exports = PacketReader

@@ -5,11 +5,11 @@ We are happy to accept any contributions that make sense and respect the rules l
 ## How to contribute
 
 1. Fork the repo.
-2. Create a feature branch for your contribution out of the `develop` branch. We use the [git-flow][gitflow-tool] tool to implement the [successful Git branching model][gitflow-post]. Only one contribution per branch is accepted.
+2. Create a feature branch for your contribution out of the `master` branch. Only one contribution per branch is accepted.
 3. Implement your contribution while respecting our rules (see below).
-4. Run `npm test` to make sure you didn't break anything.
-5. Add tests for your contribution so that no one else will break it.
-6. Submit a pull request against our `develop` branch!
+4. If possible, add tests for your contribution to make sure it actually works.
+5. Don't forget to run `npm test` just right before submitting, it also checks for code styling issues.
+6. Submit a pull request against our `master` branch!
 
 ## Rules
 
@@ -25,6 +25,4 @@ We are happy to accept any contributions that make sense and respect the rules l
 
 By contributing your code, you agree to license your contribution under our [LICENSE](LICENSE).
 
-[gitflow-post]: <http://nvie.com/posts/a-successful-git-branching-model/>
-[gitflow-tool]: <https://github.com/nvie/gitflow>
 [editorconfig]: <http://editorconfig.org/>

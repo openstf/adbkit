@@ -1,5 +1,7 @@
 # adbkit
 
+_**Interested in helping to convert the CoffeeScript codebase to plain JavaScript? [Help us](https://github.com/openstf/adbkit/issues/48)!**_
+
 **adbkit** is a pure [Node.js][nodejs] client for the [Android Debug Bridge][adb-site] server. It can be used either as a library in your own application, or simply as a convenient utility for playing with your device.
 
 Most of the `adb` command line tool's functionality is supported (including pushing/pulling files, installing APKs and processing logs), with some added functionality such as being able to generate touch/key events and take screenshots. Some shims are provided for older devices, but we have not and will not test anything below Android 2.3.
@@ -544,6 +546,20 @@ Lists forwarded connections on the device. This is analogous to `adb forward --l
 * Returns: `Promise`
 * Resolves with: `forwards` (see callback)
 
+#### client.listReverses(serial[, callback])
+
+Lists forwarded connections on the device. This is analogous to `adb reverse --list`.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err, forwards)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+    - **reverses** An array of reverse objects with the following properties:
+        * **remote** The remote endpoint on the device. Same format as `client.reverse()`'s `remote` argument.
+        * **local** The local endpoint on the host. Same format as `client.reverse()`'s `local` argument.
+
+* Returns: `Promise`
+* Resolves with: `reverses` (see callback)
+
 #### client.openLocal(serial, path[, callback])
 
 Opens a direct connection to a unix domain socket in the given path.
@@ -683,6 +699,32 @@ Reboots the device. Similar to `adb reboot`. Note that the method resolves when 
 #### client.remount(serial[, callback])
 
 Attempts to remount the `/system` partition in read-write mode. This will usually only work on emulators and developer devices.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **callback(err)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: `Promise`
+* Resolves with: `true`
+
+#### client.reverse(serial, remote, local[, callback])
+
+Reverses socket connections from the device (remote) to the ADB server host (local). This is analogous to `adb reverse <remote> <local>`. It's important to note that if you are connected to a remote ADB server, the reverse will be created on that host.
+
+* **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
+* **remote** A string representing the remote endpoint on the device. At time of writing, can be one of:
+    - `tcp:<port>`
+    - `localabstract:<unix domain socket name>`
+    - `localreserved:<unix domain socket name>`
+    - `localfilesystem:<unix domain socket name>`
+* **local** A string representing the local endpoint on the ADB host.  At time of writing, can be any value accepted by the `remote` argument.
+* **callback(err)** Optional. Use this or the returned `Promise`.
+    - **err** `null` when successful, `Error` otherwise.
+* Returns: `Promise`
+* Resolves with: `true`
+
+#### client.root(serial[, callback])
+
+Puts the device into root mode which may be needed by certain shell commands.  A remount is generally required after a successful root call. **Note that this will only work if your device supports this feature. Production devices almost never do.**
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **callback(err)** Optional. Use this or the returned `Promise`.
@@ -1063,7 +1105,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 See [LICENSE](LICENSE).
 
-Copyright © CyberAgent, Inc. All Rights Reserved.
+Copyright © The OpenSTF Project. All Rights Reserved.
 
 [nodejs]: <http://nodejs.org/>
 [coffeescript]: <http://coffeescript.org/>

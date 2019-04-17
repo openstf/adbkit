@@ -15,19 +15,6 @@ ServiceMap = require './servicemap'
 RollingCounter = require './rollingcounter'
 
 class Socket extends EventEmitter
-  class @AuthError extends Error
-    constructor: (@message) ->
-      Error.call this
-      @name = 'AuthError'
-      Error.captureStackTrace this, Socket.AuthError
-
-  class @UnauthorizedError extends Error
-    constructor: ->
-      Error.call this
-      @name = 'UnauthorizedError'
-      @message = "Unauthorized access"
-      Error.captureStackTrace this, Socket.UnauthorizedError
-
   UINT32_MAX = 0xFFFFFFFF
   UINT16_MAX = 0xFFFF
 
@@ -106,6 +93,7 @@ class Socket extends EventEmitter
     @maxPayload = Math.min UINT16_MAX, packet.arg1
     this._createToken()
       .then (@token) =>
+        debug "Created challenge '#{@token.toString('base64')}'"
         debug 'O:A_AUTH'
         this.write Packet.assemble(Packet.A_AUTH, AUTH_TOKEN, 0, @token)
 
@@ -114,24 +102,29 @@ class Socket extends EventEmitter
     switch packet.arg0
       when AUTH_SIGNATURE
         # Store first signature, ignore the rest
+        debug "Received signature '#{packet.data.toString('base64')}'"
         @signature = packet.data unless @signature
         debug 'O:A_AUTH'
         this.write Packet.assemble(Packet.A_AUTH, AUTH_TOKEN, 0, @token)
       when AUTH_RSAPUBLICKEY
         unless @signature
-          throw new AuthError "Public key sent before signature"
+          throw new Socket.AuthError "Public key sent before signature"
         unless packet.data and packet.data.length >= 2
-          throw new AuthError "Empty RSA public key"
+          throw new Socket.AuthError "Empty RSA public key"
+        debug "Received RSA public key '#{packet.data.toString('base64')}'"
         Auth.parsePublicKey this._skipNull(packet.data)
           .then (key) =>
             digest = @token.toString 'binary'
             sig = @signature.toString 'binary'
             unless key.verify digest, sig
+              debug "Signature mismatch"
               throw new Socket.AuthError "Signature mismatch"
+            debug "Signature verified"
             key
           .then (key) =>
             @options.auth key
               .catch (err) ->
+                debug "Connection rejected by user-defined auth handler"
                 throw new Socket.AuthError "Rejected by user-defined handler"
           .then =>
             this._deviceId()
@@ -194,5 +187,18 @@ class Socket extends EventEmitter
           'ro.product.device'
         ]).join('')
         new Buffer "device::#{id}\0"
+
+class Socket.AuthError extends Error
+  constructor: (@message) ->
+    Error.call this
+    @name = 'AuthError'
+    Error.captureStackTrace this, Socket.AuthError
+
+class Socket.UnauthorizedError extends Error
+  constructor: ->
+    Error.call this
+    @name = 'UnauthorizedError'
+    @message = "Unauthorized access"
+    Error.captureStackTrace this, Socket.UnauthorizedError
 
 module.exports = Socket

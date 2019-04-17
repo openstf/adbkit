@@ -3,31 +3,6 @@ Promise = require 'bluebird'
 Protocol = require './protocol'
 
 class Parser
-  class @FailError extends Error
-    constructor: (message) ->
-      Error.call this
-      this.name = 'FailError'
-      this.message = "Failure: '#{message}'"
-      Error.captureStackTrace this, Parser.FailError
-
-  class @PrematureEOFError extends Error
-    constructor: (howManyMissing) ->
-      Error.call this
-      this.name = 'PrematureEOFError'
-      this.message = "Premature end of stream, needed #{howManyMissing}
-        more bytes"
-      this.missingBytes = howManyMissing
-      Error.captureStackTrace this, Parser.PrematureEOFError
-
-  class @UnexpectedDataError extends Error
-    constructor: (unexpected, expected) ->
-      Error.call this
-      this.name = 'UnexpectedDataError'
-      this.message = "Unexpected '#{unexpected}', was expecting #{expected}"
-      this.unexpected = unexpected
-      this.expected = expected
-      Error.captureStackTrace this, Parser.UnexpectedDataError
-
   constructor: (@stream) ->
     @ended = false
 
@@ -98,12 +73,10 @@ class Parser
       if howMany
         if chunk = @stream.read howMany
           # If the stream ends while still having unread bytes, the read call
-          # will ignore the limit and just return what it's got. There seem
-          # to be some internal reasons for that madness but in the end it
-          # means that we've got to handle it. Undocumented wonderful behavior
-          # by the way.
+          # will ignore the limit and just return what it's got.
           howMany -= chunk.length
-          resolver.resolve chunk if howMany is 0
+          return resolver.resolve chunk if howMany is 0
+        resolver.reject new Parser.PrematureEOFError howMany if @ended
       else
         resolver.resolve new Buffer 0
 
@@ -134,11 +107,9 @@ class Parser
         # whatever is available, which will be less than the needed amount.
         while chunk = @stream.read(howMany) or @stream.read()
           howMany -= chunk.length
-          if howMany is 0
-            targetStream.write chunk
-            resolver.resolve()
-            break
           targetStream.write chunk
+          return resolver.resolve() if howMany is 0
+        resolver.reject new Parser.PrematureEOFError howMany if @ended
       else
         resolver.resolve()
 
@@ -201,5 +172,30 @@ class Parser
 
   unexpected: (data, expected) ->
     Promise.reject new Parser.UnexpectedDataError data, expected
+
+class Parser.FailError extends Error
+  constructor: (message) ->
+    Error.call this
+    this.name = 'FailError'
+    this.message = "Failure: '#{message}'"
+    Error.captureStackTrace this, Parser.FailError
+
+class Parser.PrematureEOFError extends Error
+  constructor: (howManyMissing) ->
+    Error.call this
+    this.name = 'PrematureEOFError'
+    this.message = "Premature end of stream, needed #{howManyMissing}
+      more bytes"
+    this.missingBytes = howManyMissing
+    Error.captureStackTrace this, Parser.PrematureEOFError
+
+class Parser.UnexpectedDataError extends Error
+  constructor: (unexpected, expected) ->
+    Error.call this
+    this.name = 'UnexpectedDataError'
+    this.message = "Unexpected '#{unexpected}', was expecting #{expected}"
+    this.unexpected = unexpected
+    this.expected = expected
+    Error.captureStackTrace this, Parser.UnexpectedDataError
 
 module.exports = Parser

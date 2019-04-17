@@ -1,6 +1,3 @@
-`#!/usr/bin/env node
-`
-
 fs = require 'fs'
 program = require 'commander'
 Promise = require 'bluebird'

@@ -13,6 +13,85 @@ describe 'LineTransform', ->
     expect(new LineTransform).to.be.an.instanceOf Stream.Transform
     done()
 
+  describe 'with autoDetect', ->
+    it "should not modify data if first byte is 0x0a", (done) ->
+      duplex = new MockDuplex
+      transform = new LineTransform autoDetect: true
+      transform.on 'data', (data) ->
+        expect(data.toString()).to.equal 'bar\r\n'
+        done()
+      duplex.pipe transform
+      duplex.causeRead '\nbar\r\n'
+      duplex.causeEnd()
+
+    it "should not include initial 0x0a", (done) ->
+      duplex = new MockDuplex
+      transform = new LineTransform autoDetect: true
+      buffer = new Buffer ''
+      transform.on 'data', (data) ->
+        buffer = Buffer.concat [buffer, data]
+      transform.on 'end', ->
+        expect(buffer.toString()).to.equal 'bar\r\n'
+        done()
+      duplex.pipe transform
+      duplex.causeRead '\nbar\r\n'
+      duplex.causeEnd()
+
+    it "should not include initial 0x0d 0x0a", (done) ->
+      duplex = new MockDuplex
+      transform = new LineTransform autoDetect: true
+      buffer = new Buffer ''
+      transform.on 'data', (data) ->
+        buffer = Buffer.concat [buffer, data]
+      transform.on 'end', ->
+        expect(buffer.toString()).to.equal 'bar\n'
+        done()
+      duplex.pipe transform
+      duplex.causeRead '\r\nbar\r\n'
+      duplex.causeEnd()
+
+    it "should not include initial 0x0d 0x0a even if in separate
+        chunks", (done) ->
+      duplex = new MockDuplex
+      transform = new LineTransform autoDetect: true
+      buffer = new Buffer ''
+      transform.on 'data', (data) ->
+        buffer = Buffer.concat [buffer, data]
+      transform.on 'end', ->
+        expect(buffer.toString()).to.equal 'bar\n'
+        done()
+      duplex.pipe transform
+      duplex.causeRead '\r'
+      duplex.causeRead '\nbar\r\n'
+      duplex.causeEnd()
+
+    it "should transform as usual if first byte is not 0x0a", (done) ->
+      duplex = new MockDuplex
+      transform = new LineTransform autoDetect: true
+      buffer = new Buffer ''
+      transform.on 'data', (data) ->
+        buffer = Buffer.concat [buffer, data]
+      transform.on 'end', ->
+        expect(buffer.toString()).to.equal 'bar\nfoo'
+        done()
+      duplex.pipe transform
+      duplex.causeRead '\r\nbar\r\nfoo'
+      duplex.causeEnd()
+
+  describe 'without autoDetect', ->
+    it "should transform as usual even if first byte is 0x0a", (done) ->
+      duplex = new MockDuplex
+      transform = new LineTransform
+      buffer = new Buffer ''
+      transform.on 'data', (data) ->
+        buffer = Buffer.concat [buffer, data]
+      transform.on 'end', ->
+        expect(buffer.toString()).to.equal '\n\nbar\nfoo'
+        done()
+      duplex.pipe transform
+      duplex.causeRead '\n\r\nbar\r\nfoo'
+      duplex.causeEnd()
+
   it "should not modify data that does not have 0x0d 0x0a in it", (done) ->
     duplex = new MockDuplex
     transform = new LineTransform
