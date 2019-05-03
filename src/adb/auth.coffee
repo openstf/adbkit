@@ -19,7 +19,7 @@ The stucture of an ADB RSAPublicKey is as follows:
 ###
 class Auth
   # coffeelint: disable=max_line_length
-  RE = /^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)\0? (.*)\s*$/
+  RE = /^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)\0?( .*|)\s*$/
   # coffeelint: enable=max_line_length
 
   readPublicKeyFromStruct = (struct, comment) ->
@@ -74,7 +74,7 @@ class Auth
     new Promise (resolve, reject) ->
       if match = RE.exec(buffer)
         struct = new Buffer(match[1], 'base64')
-        comment = match[2]
+        comment = match[2].trim()
         resolve readPublicKeyFromStruct struct, comment
       else
         reject new Error "Unrecognizable public key format"
