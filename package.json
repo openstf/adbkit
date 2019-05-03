@@ -1,6 +1,6 @@
 {
   "name": "adbkit",
-  "version": "2.11.0",
+  "version": "2.11.1",
   "description": "A pure Node.js client for the Android Debug Bridge.",
   "keywords": [
     "adb",
