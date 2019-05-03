@@ -134,15 +134,12 @@ describe 'Parser', ->
       stream = new Stream.PassThrough
       parser = new Parser stream
       target = new Stream.PassThrough
-      spy = Sinon.spy()
-      target.on 'data', spy
       parser.readByteFlow 4, target
         .then ->
+          expect(target.read()).to.eql new Buffer('OKAY')
           parser.readByteFlow 2, target
             .then ->
-              expect(spy).to.have.been.calledTwice
-              expect(spy.firstCall.args).to.eql [new Buffer('OKAY')]
-              expect(spy.secondCall.args).to.eql [new Buffer('FA')]
+              expect(target.read()).to.eql new Buffer('FA')
               done()
         .catch done
       stream.write 'OKAYFAIL'
@@ -151,43 +148,15 @@ describe 'Parser', ->
       stream = new Stream.PassThrough
       parser = new Parser stream
       target = new Stream.PassThrough
-      spy = Sinon.spy()
-      target.on 'data', spy
       parser.readByteFlow 3, target
         .then ->
-          expect(spy).to.have.been.calledThrice
-          expect(spy).to.have.been.calledWith b1
-          expect(spy).to.have.been.calledWith b2
-          expect(spy.thirdCall.args).to.eql [new Buffer('E')]
+          expect(target.read()).to.eql new Buffer('PIE')
           done()
         .catch done
       b1 = new Buffer 'P'
       b2 = new Buffer 'I'
       b3 = new Buffer 'ES'
       b4 = new Buffer 'R'
-      stream.write b1
-      stream.write b2
-      stream.write b3
-      stream.write b4
-
-    it "should resolve on last chunk", (done) ->
-      stream = new Stream.PassThrough
-      parser = new Parser stream
-      target = new Stream.PassThrough
-      spy = Sinon.spy()
-      target.on 'data', spy
-      parser.readByteFlow 3, target
-        .then ->
-          expect(spy).to.have.been.calledThrice
-          expect(spy).to.have.been.calledWith b1
-          expect(spy).to.have.been.calledWith b2
-          expect(spy).to.have.been.calledWith b3
-          done()
-        .catch done
-      b1 = new Buffer 'P'
-      b2 = new Buffer 'I'
-      b3 = new Buffer 'E'
-      b4 = new Buffer 'S'
       stream.write b1
       stream.write b2
       stream.write b3

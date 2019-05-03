@@ -129,7 +129,7 @@ describe 'Tracker', ->
       c\toffline
       d\toffline
       """
-    setImmediate ->
+    setTimeout ->
       expect(spy).to.have.been.calledTwice
       expect(spy).to.have.been.calledWith
         added: [device1, device2, device3]
@@ -140,6 +140,7 @@ describe 'Tracker', ->
         changed: [device3New]
         removed: [device2]
       done()
+    , 10
 
   describe 'end()', ->
 
