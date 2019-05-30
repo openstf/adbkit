@@ -34,6 +34,7 @@ RemountCommand = require './command/host-transport/remount'
 RootCommand = require './command/host-transport/root'
 ReverseCommand = require './command/host-transport/reverse'
 ScreencapCommand = require './command/host-transport/screencap'
+ScreenrecordCommand = require './command/host-transport/screenrecord'
 ShellCommand = require './command/host-transport/shell'
 StartActivityCommand = require './command/host-transport/startactivity'
 StartServiceCommand = require './command/host-transport/startservice'
@@ -240,7 +241,7 @@ class Client
         new RemountCommand transport
           .execute()
       .nodeify callback
-      
+
    root: (serial, callback) ->
     this.transport serial
       .then (transport) ->
@@ -272,6 +273,16 @@ class Client
           .execute()
           .catch (err) =>
             debug "Emulating screencap command due to '#{err}'"
+            this.framebuffer serial, 'png'
+      .nodeify callback
+
+  screenrecord: (serial, callback) ->
+    this.transport serial
+      .then (transport) =>
+        new ScreenrecordCommand transport
+          .execute()
+          .catch (err) =>
+            debug "Emulating screenrecord command due to '#{err}'"
             this.framebuffer serial, 'png'
       .nodeify callback
 
