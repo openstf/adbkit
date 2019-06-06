@@ -3,7 +3,7 @@ Protocol = require '../../protocol'
 
 class WaitForDeviceCommand extends Command
   execute: (serial) ->
-    this._send "host-serial:#{serial}:wait-for-any"
+    this._send "host-serial:#{serial}:wait-for-any-device"
     @parser.readAscii 4
       .then (reply) =>
         switch reply
