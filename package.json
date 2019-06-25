@@ -27,6 +27,7 @@
     "url": "https://github.com/openstf/adbkit.git"
   },
   "scripts": {
+    "build": "coffee -c -o lib src",
     "postpublish": "grunt clean",
     "prepublish": "grunt test coffee",
     "test": "grunt test"
