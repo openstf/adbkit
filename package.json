@@ -1,6 +1,7 @@
 {
   "name": "adbkit",
-  "version": "2.11.1",
+  "version": "2.11.2",
+  "versionComment": "This is a custom version of the library",
   "description": "A pure Node.js client for the Android Debug Bridge.",
   "keywords": [
     "adb",
@@ -27,7 +28,7 @@
     "url": "https://github.com/openstf/adbkit.git"
   },
   "scripts": {
-    "build": "coffee -c -o lib src",
+    "build": "coffee -c --no-header -b -o lib src",
     "postpublish": "grunt clean",
     "prepublish": "grunt test coffee",
     "test": "grunt test"
