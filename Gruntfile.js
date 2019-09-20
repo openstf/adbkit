@@ -10,6 +10,31 @@
           src: 'index.js'
         }
       },
+      jshint: {
+        options: {
+          indentation: {
+            level: 'ignore'
+          },
+          no_backticks: {
+            level: 'ignore'
+          }
+        },
+        src: {
+          src: '<%= coffee.src.cwd %>/<%= coffee.src.src %>'
+        },
+        index: {
+          src: '<%= coffee.index.src %>'
+        },
+        test: {
+          src: 'test/**/*.js'
+        },
+        tasks: {
+          src: 'tasks/**/*.js'
+        },
+        gruntfile: {
+          src: 'Gruntfile.js'
+        }
+      },
       jsonlint: {
         packagejson: {
           src: 'package.json'
@@ -50,12 +75,13 @@
       }
     });
     grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-jsonlint');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-notify');
     grunt.loadNpmTasks('grunt-exec');
     grunt.loadTasks('./tasks');
-    grunt.registerTask('test', ['jsonlint', 'exec:mocha']);
+    grunt.registerTask('test', ['jsonlint', 'jshint', 'exec:mocha']);
     // grunt.registerTask('build', ['coffee']);
     return grunt.registerTask('default', ['test']);
   };
