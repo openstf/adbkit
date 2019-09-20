@@ -32,6 +32,17 @@
           src: '**/*.coffee',
           dest: 'tests',
           ext: '.js'
+        },
+        bench: {
+          options: {
+            bare: true,
+            noHeader: true
+          },
+          expand: true,
+          cwd: 'bench',
+          src: '**/*.coffee',
+          dest: 'benches',
+          ext: '.js'
         }
       },
       clean: {
