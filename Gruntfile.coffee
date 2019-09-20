@@ -57,13 +57,7 @@ module.exports = (grunt) ->
         tasks: ['jsonlint:packagejson']
     exec:
       mocha:
-        options: [
-          '--compilers coffee:coffee-script/register'
-          '--reporter spec'
-          '--colors'
-          '--recursive'
-        ],
-        cmd: './node_modules/.bin/mocha <%= exec.mocha.options.join(" ") %>'
+        cmd: 'npm run mocha'
     keycode:
       generate:
         dest: 'src/adb/keycode.coffee'
