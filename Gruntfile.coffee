@@ -15,6 +15,18 @@ module.exports = (grunt) ->
       index:
         src: 'index.coffee'
         dest: 'index.js'
+      grunt:
+        src: 'Gruntfile.coffee'
+        dest: 'Gruntfile.js'
+      test:
+        options:
+          bare: true
+          noHeader: true
+        expand: true
+        cwd: 'test'
+        src: '**/*.coffee'
+        dest: 'tests'
+        ext: '.js'
     clean:
       lib:
         src: 'lib'
