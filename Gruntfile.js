@@ -43,6 +43,17 @@
           src: '**/*.coffee',
           dest: 'benches',
           ext: '.js'
+        },
+        task: {
+          options: {
+            bare: true,
+            noHeader: true
+          },
+          expand: true,
+          cwd: 'tasks',
+          src: '**/*.coffee',
+          dest: 'task',
+          ext: '.js'
         }
       },
       clean: {
