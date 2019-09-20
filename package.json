@@ -28,7 +28,7 @@
   },
   "scripts": {
     "postpublish": "grunt clean",
-    "prepublish": "grunt test coffee",
+    "prepublish": "grunt test",
     "test": "grunt test"
   },
   "dependencies": {

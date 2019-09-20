@@ -2,91 +2,12 @@
   module.exports = function(grunt) {
     grunt.initConfig({
       pkg: require('./package'),
-      coffee: {
-        src: {
-          options: {
-            bare: true,
-            noHeader: true
-          },
-          expand: true,
-          cwd: 'src',
-          src: '**/*.coffee',
-          dest: 'lib',
-          ext: '.js'
-        },
-        index: {
-          src: 'index.coffee',
-          dest: 'index.js'
-        },
-        grunt: {
-          src: 'Gruntfile.coffee',
-          dest: 'Gruntfile.js'
-        },
-        test: {
-          options: {
-            bare: true,
-            noHeader: true
-          },
-          expand: true,
-          cwd: 'test',
-          src: '**/*.coffee',
-          dest: 'tests',
-          ext: '.js'
-        },
-        bench: {
-          options: {
-            bare: true,
-            noHeader: true
-          },
-          expand: true,
-          cwd: 'bench',
-          src: '**/*.coffee',
-          dest: 'benches',
-          ext: '.js'
-        },
-        task: {
-          options: {
-            bare: true,
-            noHeader: true
-          },
-          expand: true,
-          cwd: 'tasks',
-          src: '**/*.coffee',
-          dest: 'task',
-          ext: '.js'
-        }
-      },
       clean: {
         lib: {
           src: 'lib'
         },
         index: {
           src: 'index.js'
-        }
-      },
-      coffeelint: {
-        options: {
-          indentation: {
-            level: 'ignore'
-          },
-          no_backticks: {
-            level: 'ignore'
-          }
-        },
-        src: {
-          src: '<%= coffee.src.cwd %>/<%= coffee.src.src %>'
-        },
-        index: {
-          src: '<%= coffee.index.src %>'
-        },
-        test: {
-          src: 'test/**/*.coffee'
-        },
-        tasks: {
-          src: 'tasks/**/*.coffee'
-        },
-        gruntfile: {
-          src: 'Gruntfile.coffee'
         }
       },
       jsonlint: {
@@ -129,15 +50,13 @@
       }
     });
     grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks('grunt-contrib-coffee');
-    grunt.loadNpmTasks('grunt-coffeelint');
     grunt.loadNpmTasks('grunt-jsonlint');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-notify');
     grunt.loadNpmTasks('grunt-exec');
     grunt.loadTasks('./tasks');
-    grunt.registerTask('test', ['jsonlint', 'coffeelint', 'exec:mocha']);
-    grunt.registerTask('build', ['coffee']);
+    grunt.registerTask('test', ['jsonlint', 'exec:mocha']);
+    // grunt.registerTask('build', ['coffee']);
     return grunt.registerTask('default', ['test']);
   };
 
