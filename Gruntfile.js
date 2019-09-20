@@ -11,29 +11,7 @@
         }
       },
       jshint: {
-        options: {
-          indentation: {
-            level: 'ignore'
-          },
-          no_backticks: {
-            level: 'ignore'
-          }
-        },
-        src: {
-          src: '<%= coffee.src.cwd %>/<%= coffee.src.src %>'
-        },
-        index: {
-          src: '<%= coffee.index.src %>'
-        },
-        test: {
-          src: 'test/**/*.js'
-        },
-        tasks: {
-          src: 'tasks/**/*.js'
-        },
-        gruntfile: {
-          src: 'Gruntfile.js'
-        }
+        all: ['Gruntfile.js', 'index.js', 'src/**/*.js', 'test/**/*.js', 'tasks/**/*.js', 'bench/**/*.js']
       },
       jsonlint: {
         packagejson: {
