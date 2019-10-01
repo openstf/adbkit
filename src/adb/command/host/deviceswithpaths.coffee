@@ -25,8 +25,8 @@ class HostDevicesWithPathsCommand extends Command
     for line in value.toString('ascii').split '\n'
       if line
         # For some reason, the columns are separated by spaces instead of tabs
-        [id, type, path] = line.split /\s+/
-        devices.push id: id, type: type, path: path
+        [id, type, path, product, model, device, transportId] = line.split /\s+/
+        devices.push id: id, type: type, path: path, product: product, model: model, device: device, transportId: transportId
     return devices
 
 module.exports = HostDevicesWithPathsCommand
