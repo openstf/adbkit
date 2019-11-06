@@ -378,7 +378,7 @@ class Client
         new InstallCommand transport
           .execute apk, options
           .then =>
-            this.shell serial, ['rm', '-r', apk]
+            this.shell serial, ['rm', '-f', apk]
           .then (stream) ->
             new Parser stream
               .readAll()
