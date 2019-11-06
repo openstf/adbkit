@@ -444,14 +444,15 @@ Gets the state of the device identified by the given serial number.
 * Returns: `Promise`
 * Resolves with: `state` (see callback)
 
-#### client.install(serial, apk[, callback])
+#### client.install(serial, apk, options[, callback])
 
-Installs the APK on the device, replacing any previously installed version. This is roughly analogous to `adb install -r <apk>`.
+Installs the APK on the device, replacing any previously installed version. This is roughly analogous to `adb install <options> <apk>`.
 
 Note that if the call seems to stall, you may have to accept a dialog on the phone first.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **apk** When `String`, interpreted as a path to an APK file. When [`Stream`][node-stream], installs directly from the stream, which must be a valid APK.
+* **options** The options as `String` for [`pm install`](https://developer.android.com/studio/command-line/adb#pm). Defaults to `-r`.
 * **callback(err)** Optional. Use this or the returned `Promise`.
     - **err** `null` when successful, `Error` otherwise. It may have a `.code` property containing the error code reported by the device.
 * Returns: `Promise`
@@ -473,14 +474,15 @@ client.install('<serial>', new Readable().wrap(request('http://example.org/app.a
   })
 ```
 
-#### client.installRemote(serial, apk[, callback])
+#### client.installRemote(serial, apk, options[, callback])
 
-Installs an APK file which must already be located on the device file system, and replaces any previously installed version. Useful if you've previously pushed the file to the device for some reason (perhaps to have direct access to `client.push()`'s transfer stats). This is roughly analogous to `adb shell pm install -r <apk>` followed by `adb shell rm -f <apk>`.
+Installs an APK file which must already be located on the device file system, and replaces any previously installed version. Useful if you've previously pushed the file to the device for some reason (perhaps to have direct access to `client.push()`'s transfer stats). This is roughly analogous to `adb shell pm install <options> <apk>` followed by `adb shell rm -f <apk>`.
 
 Note that if the call seems to stall, you may have to accept a dialog on the phone first.
 
 * **serial** The serial number of the device. Corresponds to the device ID in `client.listDevices()`.
 * **apk** The path to the APK file on the device. The file will be removed when the command completes.
+* **options** The options as `String` for [`pm install`](https://developer.android.com/studio/command-line/adb#pm). Defaults to `-r`.
 * **callback(err)** Optional. Use this or the returned `Promise`.
     - **err** `null` when successful, `Error` otherwise.
 * Returns: `Promise`

@@ -240,7 +240,7 @@ class Client
         new RemountCommand transport
           .execute()
       .nodeify callback
-      
+
    root: (serial, callback) ->
     this.transport serial
       .then (transport) ->
@@ -354,7 +354,7 @@ class Client
           .execute pkg
       .nodeify callback
 
-  install: (serial, apk, callback) ->
+  install: (serial, apk, options='-r', callback) ->
     temp = Sync.temp if typeof apk is 'string' then apk else '_stream.apk'
     this.push serial, apk, temp
       .then (transfer) =>
@@ -364,7 +364,7 @@ class Client
           resolver.reject err
 
         transfer.on 'end', endListener = =>
-          resolver.resolve this.installRemote serial, temp
+          resolver.resolve this.installRemote serial, temp, options
 
         resolver.promise.finally ->
           transfer.removeListener 'error', errorListener
@@ -372,13 +372,13 @@ class Client
 
       .nodeify callback
 
-  installRemote: (serial, apk, callback) ->
+  installRemote: (serial, apk, options='-r', callback) ->
     this.transport serial
       .then (transport) =>
         new InstallCommand transport
           .execute apk
           .then =>
-            this.shell serial, ['rm', '-f', apk]
+            this.shell serial, ['rm', options, apk]
           .then (stream) ->
             new Parser stream
               .readAll()
