@@ -25,6 +25,20 @@ describe 'InstallCommand', ->
       .then ->
         done()
 
+  it "should send 'pm install -r -g <apk>' with options", (done) ->
+    conn = new MockConnection
+    cmd = new InstallCommand conn
+    conn.socket.on 'write', (chunk) ->
+      expect(chunk.toString()).to.equal \
+        Protocol.encodeData('shell:pm install -r -g "foo"').toString()
+    setImmediate ->
+      conn.socket.causeRead Protocol.OKAY
+      conn.socket.causeRead 'Success\r\n'
+      conn.socket.causeEnd()
+    cmd.execute 'foo', '-r -g'
+      .then ->
+        done()
+
   it "should succeed when command responds with 'Success'", (done) ->
     conn = new MockConnection
     cmd = new InstallCommand conn
