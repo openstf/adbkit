@@ -250,11 +250,12 @@ class Sync extends EventEmitter
 
   _sendCommandWithArg: (cmd, arg) ->
     debug "#{cmd} #{arg}"
-    payload = new Buffer cmd.length + 4 + arg.length
+    arglen = Buffer.byteLength arg, 'utf-8'
+    payload = new Buffer cmd.length + 4 + arglen
     pos = 0
     payload.write cmd, pos, cmd.length
     pos += cmd.length
-    payload.writeUInt32LE arg.length, pos
+    payload.writeUInt32LE arglen, pos
     pos += 4
     payload.write arg, pos
     @connection.write payload
