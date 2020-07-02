@@ -14,4 +14,6 @@ class MockConnection
     @socket.write.apply @socket, arguments
     return this
 
+  on: ->
+
 module.exports = MockConnection

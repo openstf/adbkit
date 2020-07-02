@@ -147,10 +147,16 @@ class Sync extends EventEmitter
       stream.on 'error', errorListener = (err) ->
         resolver.reject err
 
-      resolver.promise.finally ->
+      @connection.on 'error', connErrorListener = (err) =>
+        stream.destroy(err)
+        @connection.end()
+        resolver.reject err
+
+      resolver.promise.finally =>
         stream.removeListener 'end', endListener
         stream.removeListener 'readable', readableListener
         stream.removeListener 'error', errorListener
+        @connection.removeListener 'error', connErrorListener
         writer.cancel()
 
     readReply = =>
