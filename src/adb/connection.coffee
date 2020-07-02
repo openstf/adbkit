@@ -1,4 +1,5 @@
 Net = require 'net'
+Promise = require 'bluebird'
 debug = require('debug')('adb:connection')
 {EventEmitter} = require 'events'
 {execFile} = require 'child_process'
@@ -24,11 +25,27 @@ class Connection extends EventEmitter
       this.emit 'drain'
     @socket.on 'timeout', =>
       this.emit 'timeout'
-    @socket.on 'error', (err) =>
-      this._handleError err
+    @socket.on 'error', (err) ->
+      # We log but ignore all socket errors. These are also listened to
+      # by parser though during all send/receive operations, and will
+      # trigger errors there, if there's anything in progress.
+      debug "ADB connection error: #{err.message}"
     @socket.on 'close', (hadError) =>
       this.emit 'close', hadError
-    return this
+
+    return new Promise (resolve, reject) =>
+      @socket.once 'connect', resolve
+      @socket.once 'error', reject
+    .catch (err) =>
+      if err.code is 'ECONNREFUSED' and not @triedStarting
+        debug "Connection was refused, let's try starting the server once"
+        @triedStarting = true
+        return this.startServer().then =>
+          this.connect()
+      else
+        this.end()
+        throw err
+    .then => this
 
   end: ->
     @socket.end()
@@ -38,26 +55,15 @@ class Connection extends EventEmitter
     @socket.write dump(data), callback
     return this
 
-  startServer: (callback) ->
+  startServer: () ->
     debug "Starting ADB server via '#{@options.bin} start-server'"
-    return this._exec ['start-server'], {}, callback
+    return this._exec ['start-server'], {}
 
   _exec: (args, options, callback) ->
     debug "CLI: #{@options.bin} #{args.join ' '}"
-    execFile @options.bin, args, options, callback
-    return this
+    return Promise.promisify(execFile)(@options.bin, args, options)
 
   _handleError: (err) ->
-    if err.code is 'ECONNREFUSED' and not @triedStarting
-      debug "Connection was refused, let's try starting the server once"
-      @triedStarting = true
-      this.startServer (err) =>
-        return this._handleError err if err
-        this.connect()
-    else
-      debug "Connection had an error: #{err.message}"
-      this.emit 'error', err
-      this.end()
     return
 
 module.exports = Connection

@@ -63,16 +63,7 @@ class Client
     new TcpUsbServer this, serial, options
 
   connection: ->
-    resolver = Promise.defer()
-    conn = new Connection(@options)
-      .on 'error', errorListener = (err) ->
-        resolver.reject err
-      .on 'connect', connectListener = ->
-        resolver.resolve conn
-      .connect()
-    resolver.promise.finally ->
-      conn.removeListener 'error', errorListener
-      conn.removeListener 'connect', connectListener
+    new Connection(@options).connect()
 
   version: (callback) ->
     this.connection()
