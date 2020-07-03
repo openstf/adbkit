@@ -25,11 +25,6 @@ class Connection extends EventEmitter
       this.emit 'drain'
     @socket.on 'timeout', =>
       this.emit 'timeout'
-    @socket.on 'error', (err) ->
-      # We log but ignore all socket errors. These are also listened to
-      # by parser though during all send/receive operations, and will
-      # trigger errors there, if there's anything in progress.
-      debug "ADB connection error: #{err.message}"
     @socket.on 'close', (hadError) =>
       this.emit 'close', hadError
 
@@ -45,7 +40,13 @@ class Connection extends EventEmitter
       else
         this.end()
         throw err
-    .then => this
+    .then =>
+      # Emit unhandled error events, so that they can be handled on the client.
+      # Without this, they would just crash node unavoidably.
+      @socket.on 'error', (err) =>
+        if @socket.listenerCount('error') == 1
+          this.emit('error', err)
+      return this
 
   end: ->
     @socket.end()
