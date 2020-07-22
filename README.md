@@ -1,5 +1,9 @@
 # adbkit
 
+# Warning
+
+This repository is superseded by https://github.com/DeviceFarmer/adbkit
+
 _**Interested in helping to convert the CoffeeScript codebase to plain JavaScript? [Help us](https://github.com/openstf/adbkit/issues/48)!**_
 
 **adbkit** is a pure [Node.js][nodejs] client for the [Android Debug Bridge][adb-site] server. It can be used either as a library in your own application, or simply as a convenient utility for playing with your device.
