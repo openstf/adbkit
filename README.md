@@ -2,7 +2,9 @@
 
 # Warning
 
-This repository is superseded by https://github.com/DeviceFarmer/adbkit
+# This project along with other ones in [OpenSTF](https://github.com/openstf) organisation is provided as is for community, without active development.
+# You can check any other forks that may be actively developed and offer new/different features [here](https://github.com/openstf/stf/network).
+# Active development has been moved to [DeviceFarmer](https://github.com/DeviceFarmer) organisation.
 
 _**Interested in helping to convert the CoffeeScript codebase to plain JavaScript? [Help us](https://github.com/openstf/adbkit/issues/48)!**_
 
