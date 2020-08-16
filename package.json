@@ -22,6 +22,7 @@
     "url": "https://openstf.io"
   },
   "main": "./index",
+  "module": "./lib/adb",
   "repository": {
     "type": "git",
     "url": "https://github.com/openstf/adbkit.git"
