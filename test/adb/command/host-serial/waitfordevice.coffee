@@ -11,12 +11,12 @@ WaitForDeviceCommand = \
 
 describe 'WaitForDeviceCommand', ->
 
-  it "should send 'host-serial:<serial>:wait-for-any'", (done) ->
+  it "should send 'host-serial:<serial>:wait-for-any-device'", (done) ->
     conn = new MockConnection
     cmd = new WaitForDeviceCommand conn
     conn.socket.on 'write', (chunk) ->
       expect(chunk.toString()).to.equal \
-        Protocol.encodeData('host-serial:abba:wait-for-any').toString()
+        Protocol.encodeData('host-serial:abba:wait-for-any-device').toString()
     setImmediate ->
       conn.socket.causeRead Protocol.OKAY
       conn.socket.causeRead Protocol.OKAY
