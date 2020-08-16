@@ -27,6 +27,7 @@
     "url": "https://github.com/openstf/adbkit.git"
   },
   "scripts": {
+    "mocha": "mocha --compilers coffee:coffee-script/register --reporter spec --colors --recursive",
     "postpublish": "grunt clean",
     "prepublish": "grunt test coffee",
     "test": "grunt test"
