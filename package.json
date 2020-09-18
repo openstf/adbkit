@@ -37,7 +37,7 @@
     "bluebird": "~2.9.24",
     "commander": "^2.3.0",
     "debug": "~2.6.3",
-    "node-forge": "^0.7.1",
+    "node-forge": "^0.10.0",
     "split": "~0.3.3"
   },
   "devDependencies": {
