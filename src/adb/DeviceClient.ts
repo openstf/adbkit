@@ -159,7 +159,7 @@ function abortable<T>(
 /**
  * Keeps `signal` in charge of a stream that outlives the call that opened
  * it: an abort destroys the stream with `signal.reason`. The listener goes
- * away as soon as the stream ends, finishes or closes, so a long-lived signal
+ * away as soon as the stream ends or closes, so a long-lived signal
  * doesn't collect one per call. A stream nobody reads to the end or destroys
  * keeps it, like it keeps its socket.
  */
@@ -176,7 +176,9 @@ function destroyOnAbort(signal: AbortSignal, stream: Duplex): void {
     return;
   }
   signal.addEventListener('abort', onAbort, { once: true });
-  const events = ['end', 'finish', 'close'];
+  // Not 'finish': that only means the caller ended its side, and the command
+  // can still run and send output, so the signal must still be able to stop it.
+  const events = ['end', 'close'];
   const release = () => {
     signal.removeEventListener('abort', onAbort);
     for (const event of events) {

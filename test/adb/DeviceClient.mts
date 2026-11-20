@@ -275,12 +275,17 @@ describe('DeviceClient', function () {
       expect(getEventListeners(controller.signal, 'abort')).to.have.length(0);
       expect(warnings.filter((w) => w.name === 'MaxListenersExceededWarning')).to.have.length(0);
     });
-    it('should drop the abort listener once the caller ends its side', async function () {
+    it('should still abort the command after the caller ends its side', async function () {
       const ctx = setup();
       const controller = new AbortController();
+      const reason = new Error('aborted');
       okay(ctx);
       const stream = await ctx.device.shell('cat', { signal: controller.signal });
+      stream.on('error', () => undefined);
       await new Promise((resolve) => stream.end(resolve));
+      expect(getEventListeners(controller.signal, 'abort')).to.have.length(1);
+      controller.abort(reason);
+      expect(stream.destroyed).to.be.true;
       expect(getEventListeners(controller.signal, 'abort')).to.have.length(0);
     });
     for (const [label, options] of [
