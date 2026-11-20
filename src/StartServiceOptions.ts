@@ -25,9 +25,9 @@ export type ExtraValue = number | string | boolean | ExtraObject;
 
 export default interface StartServiceOptions {
   /**
-   * The user to run as. Not set by default. If the option is unsupported by the device, an attempt will be made to run the same command again without the user option.
+   * The user to run as. `startService()` defaults to `0`; `startActivity()` doesn't set it by default. Set it to `null` to leave `--user` out. If the option is unsupported by the device, an attempt will be made to run the same command again without the user option.
    */
-  user?: number;
+  user?: number | null;
   /**
    * The action.
    */

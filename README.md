@@ -457,23 +457,24 @@ Attemps to retrieve the IP address of the device. Roughly analogous to `adb shel
 
 Retrieves the features of the device identified by the given serial number. This is analogous to `adb shell pm list features`. Useful for checking whether hardware features such as NFC are available (you'd check for `'android.hardware.nfc'`).
 
-**flags** Flags to pass to the `pm list packages` command to filter the list
-  ```
-  -d: filter to only show disabled packages
-  -e: filter to only show enabled packages
-  -s: filter to only show system packages
-  -3: filter to only show third party packages
-  ```
 -   **callback(err, features)** Optional. Use this or the returned `Promise`.
     -   **err** `null` when successful, `Error` otherwise.
     -   **features** An object of device features. Each key corresponds to a device feature, with the value being either `true` for a boolean feature, or the feature value as a string (e.g. `'0x20000'` for `reqGlEsVersion`).
 -   Returns: `Promise`
 -   Resolves with: `features` (see callback)
 
-#### device.getPackages()
+#### device.getPackages([flags])
 
-Retrieves the list of packages present on the device. This is analogous to `adb shell pm list packages`. If you just want to see if something's installed, consider using `client.isInstalled()` instead.
+Retrieves the list of packages present on the device. This is analogous to `adb shell pm list packages`. If you just want to see if something's installed, consider using `device.isInstalled()` instead.
 
+-   **flags** Optional. Flags to pass to the `pm list packages` command to filter the list
+    ```
+    -d: filter to only show disabled packages
+    -e: filter to only show enabled packages
+    -s: filter to only show system packages
+    -3: filter to only show third party packages
+    ```
+    The string is passed to the device shell as is, not escaped, so don't build it from untrusted input.
 -   **callback(err, packages)** Optional. Use this or the returned `Promise`.
     -   **err** `null` when successful, `Error` otherwise.
     -   **packages** An array of package names.
@@ -548,7 +549,7 @@ const test = async () => {
 
 #### device.installRemote(apk)
 
-Installs an APK file which must already be located on the device file system, and replaces any previously installed version. Useful if you've previously pushed the file to the device for some reason (perhaps to have direct access to `client.push()`'s transfer stats). This is roughly analogous to `adb shell pm install -r <apk>` followed by `adb shell rm -f <apk>`.
+Installs an APK file which must already be located on the device file system, and replaces any previously installed version. Useful if you've previously pushed the file to the device for some reason (perhaps to have direct access to `device.push()`'s transfer stats). This is roughly analogous to `adb shell pm install -r <apk>` followed by `adb shell rm -f <apk>`.
 
 Note that if the call seems to stall, you may have to accept a dialog on the phone first.
 
@@ -584,9 +585,9 @@ Lists forwarded connections on the device. This is analogous to `adb forward --l
 
 #### device.listReverses()
 
-Lists forwarded connections on the device. This is analogous to `adb reverse --list`.
+Lists reversed connections on the device. This is analogous to `adb reverse --list`.
 
--   **callback(err, forwards)** Optional. Use this or the returned `Promise`.
+-   **callback(err, reverses)** Optional. Use this or the returned `Promise`.
 
     -   **err** `null` when successful, `Error` otherwise.
     -   **reverses** An array of reverse objects with the following properties:
@@ -715,7 +716,7 @@ A convenience shortcut for `sync.readdir()`, mainly for one-off use cases. The c
 
 #### device.reboot([target])
 
-Reboots the device. Similar to `adb reboot [target]`. Note that the method resolves when ADB reports that the device has been rebooted (i.e. the reboot command was successful), not when the device becomes available again.
+Reboots the device. Similar to `adb reboot [target]`. The method resolves when adbd closes the connection, which it does as the device goes down, not when the device becomes available again.
 
 -   **target** Optional. What to reboot into, for example `'bootloader'`, `'recovery'`, `'sideload'` or `'fastboot'`. It's passed to the device as is (`reboot:<target>`), so what each target does depends on the device. Omit it for a normal reboot. If the device refuses the target, adbd keeps the connection open and the promise doesn't settle, just like `adb reboot <target>` doesn't return. On an Android emulator, for example, `'bootloader'` simply reboots back into Android, while `'recovery'` doesn't reboot at all, because the emulator has no `/misc` partition.
 -   Returns: `Promise`
@@ -773,11 +774,11 @@ Puts the device into root mode which may be needed by certain shell commands. A 
 
 #### device.screencap()
 
-Takes a screenshot in PNG format using the built-in `screencap` utility. This is analogous to `adb shell screencap -p`. Sadly, the utility is not available on most Android `<=2.3` devices, but a silent fallback to the `client.framebuffer()` command in PNG mode is attempted, so you should have its dependencies installed just in case.
+Takes a screenshot in PNG format using the built-in `screencap` utility. This is analogous to `adb shell screencap -p`. Sadly, the utility is not available on most Android `<=2.3` devices, but a silent fallback to the `device.framebuffer()` command in PNG mode is attempted, so you should have its dependencies installed just in case.
 
 Generating the PNG on the device naturally requires considerably more processing time on that side. However, as the data transferred over USB easily decreases by ~95%, and no conversion being required on the host, this method is usually several times faster than using the framebuffer. Naturally, this benefit does not apply if we're forced to fall back to the framebuffer.
 
-For convenience purposes, if the screencap command fails (e.g. because it doesn't exist on older Androids), we fall back to `client.framebuffer(serial, 'png')`, which is slower and has additional installation requirements.
+For convenience purposes, if the screencap command fails (e.g. because it doesn't exist on older Androids), we fall back to `device.framebuffer('png')`, which is slower and has additional installation requirements.
 
 -   **callback(err, screencap)** Optional. Use this or the returned `Promise`.
     -   **err** `null` when successful, `Error` otherwise.
@@ -913,7 +914,7 @@ Starts the configured activity on the device. Roughly analogous to `adb shell am
 Starts the configured service on the device. Roughly analogous to `adb shell am startservice <options>`.
 
 -   **options** The service configuration. The following options are available:
-    -   **user** The user to run as. Defaults to `0`. If the option is unsupported by the device, an attempt will be made to run the same command again without the user option.
+    -   **user** The user to run as. Defaults to `0`. Set it to `null` to leave `--user` out. If the option is unsupported by the device, an attempt will be made to run the same command again without the user option.
     -   **action** See `client.startActivity()` for details.
     -   **data** See `client.startActivity()` for details.
     -   **mimeType** See `client.startActivity()` for details.
@@ -935,7 +936,7 @@ A convenience shortcut for `sync.stat()`, mainly for one-off use cases. The conn
 
 #### device.syncService()
 
-Establishes a new Sync connection that can be used to push and pull files. This method provides the most freedom and the best performance for repeated use, but can be a bit cumbersome to use. For simple use cases, consider using `client.stat()`, `client.push()` and `client.pull()`.
+Establishes a new Sync connection that can be used to push and pull files. This method provides the most freedom and the best performance for repeated use, but can be a bit cumbersome to use. For simple use cases, consider using `device.stat()`, `device.push()` and `device.pull()`.
 
 -   **callback(err, sync)** Optional. Use this or the returned `Promise`.
     -   **err** `null` when successful, `Error` otherwise.

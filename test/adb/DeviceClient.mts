@@ -329,6 +329,35 @@ describe('DeviceClient', function () {
     }
   });
 
+  describe('startService(options)', function () {
+    it('should retry once without --user when the device rejects the option', async function () {
+      const device = new DeviceClient({ connection: Sinon.stub() }, 'abba');
+      const writes: string[] = [];
+      const conns = [0, 1, 2].map(() => {
+        const conn = new MockConnection();
+        conn.getSocket().on('write', (chunk) => writes.push(chunk.toString()));
+        return conn;
+      });
+      const transport = Sinon.stub(device, 'transport');
+      conns.forEach((conn, i) => transport.onCall(i).resolves(conn));
+      const answer = (conn: MockConnection, output: string) =>
+        setImmediate(() => {
+          conn.getSocket().causeRead(Protocol.OKAY);
+          conn.getSocket().causeRead(output);
+          conn.getSocket().causeEnd();
+        });
+      answer(conns[0], 'Error: Unknown option: --user\n');
+      transport.onCall(1).callsFake(() => {
+        answer(conns[1], 'Starting service: Intent { cmp=a/.B }\n');
+        return Promise.resolve(conns[1]);
+      });
+      expect(await device.startService({ component: 'a/.B' })).to.be.true;
+      expect(transport).to.have.been.calledTwice;
+      expect(writes[0]).to.contain('--user 0');
+      expect(writes[1]).to.not.contain('--user');
+    });
+  });
+
   describe('removeAllForwards()', function () {
     const forwards = [
       { serial: 'abba', local: 'tcp:1', remote: 'tcp:2' },
