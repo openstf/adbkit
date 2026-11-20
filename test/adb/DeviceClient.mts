@@ -334,6 +334,62 @@ describe('DeviceClient', function () {
     }
   });
 
+  describe('install(apk[, options])', function () {
+    for (const args of [[], [{ allowDowngrade: true, grantPermissions: true }], [() => undefined]]) {
+      it(`should hand ${args.length ? typeof args[0] : 'no options'} to installRemote()`, async function () {
+        const { device } = setup();
+        const transfer = new Stream.PassThrough();
+        Sinon.stub(device, 'push').resolves(transfer);
+        const installRemote = Sinon.stub(device, 'installRemote').resolves(true);
+        setImmediate(() => transfer.emit('end'));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(await device.install('foo.apk', ...(args as any[]))).to.be.true;
+        expect(installRemote).to.have.been.calledOnceWithExactly(Sync.temp('foo.apk'), args[0]);
+      });
+    }
+  });
+
+  describe('installRemote(apk[, options])', function () {
+    for (const [args, service] of [
+      [[], 'shell:pm install -r "/data/local/tmp/foo.apk"'],
+      [[{ allowDowngrade: true, grantPermissions: true }], 'shell:pm install -r -d -g "/data/local/tmp/foo.apk"'],
+      // A callback, as the README used to document, isn't options.
+      [[() => undefined], 'shell:pm install -r "/data/local/tmp/foo.apk"'],
+    ] as const) {
+      it(`should send '${service}' and remove the apk`, async function () {
+        const { conn, device } = setup();
+        const writes: string[] = [];
+        conn.getSocket().on('write', (chunk) => writes.push(chunk.toString()));
+        const rm = new Stream.PassThrough();
+        rm.end();
+        const shell = Sinon.stub(device, 'shell').resolves(rm);
+        answer(conn, Protocol.OKAY, 'Success\r\n');
+        setImmediate(() => setImmediate(() => setImmediate(() => conn.getSocket().causeEnd())));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(await device.installRemote('/data/local/tmp/foo.apk', ...(args as any[]))).to.be.true;
+        expect(writes).to.eql([Protocol.encodeData(service).toString()]);
+        expect(shell).to.have.been.calledOnceWithExactly(['rm', '-f', '/data/local/tmp/foo.apk']);
+      });
+    }
+  });
+
+  describe('installRemote(apk, bad options)', function () {
+    it('should reject with a TypeError, still remove the apk and end the connection', async function () {
+      const { conn, device } = setup();
+      const writes: string[] = [];
+      conn.getSocket().on('write', (chunk) => writes.push(chunk.toString()));
+      const rm = new Stream.PassThrough();
+      rm.end();
+      const shell = Sinon.stub(device, 'shell').resolves(rm);
+      const bad = { args: ['--user', undefined] } as never;
+      const err = await rejected(device.installRemote('/data/local/tmp/foo.apk', bad));
+      expect(err).to.be.an.instanceOf(TypeError);
+      expect(writes).to.eql([]);
+      expect(conn.end).to.have.been.called;
+      expect(shell).to.have.been.calledOnceWithExactly(['rm', '-f', '/data/local/tmp/foo.apk']);
+    });
+  });
+
   describe('startService(options)', function () {
     it('should retry once without --user when the device rejects the option', async function () {
       const device = new DeviceClient({ connection: Sinon.stub() }, 'abba');

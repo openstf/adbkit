@@ -11,6 +11,7 @@ export { Features } from './Features';
 export { default as Forward } from './Forward';
 export { default as FramebufferMeta } from './FramebufferMeta';
 export { default as FramebufferStreamWithMeta } from './FramebufferStreamWithMeta';
+export { default as InstallOptions } from './InstallOptions';
 export { Properties } from './Properties';
 export { default as Reverse } from './Reverse';
 export { default as SocketOptions } from './SocketOptions';

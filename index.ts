@@ -21,6 +21,7 @@ export { Features } from './src/Features';
 export { default as Forward } from './src/Forward';
 export { default as FramebufferMeta } from './src/FramebufferMeta';
 export { default as FramebufferStreamWithMeta } from './src/FramebufferStreamWithMeta';
+export { default as InstallOptions } from './src/InstallOptions';
 export { default as PairResult } from './src/PairResult';
 export { Properties } from './src/Properties';
 export { default as Reverse } from './src/Reverse';
