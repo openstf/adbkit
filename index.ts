@@ -29,6 +29,6 @@ export { default as StartServiceOptions, ExtraValue, ExtraObject, Extra } from '
 export { default as TrackerChangeSet } from './src/TrackerChangeSet';
 export { default as WithToString } from './src/WithToString';
 
-export { MonkeyClient, WaitOptions } from './src/adb/DeviceClient';
+export { MonkeyClient, ShellOptions, WaitOptions } from './src/adb/DeviceClient';
 
 export { KeyCodes } from './src/adb/keycode';

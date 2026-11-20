@@ -77,6 +77,17 @@ export default class Connection extends EventEmitter {
     return this;
   }
 
+  /**
+   * Closes the socket at once, without waiting for the remote to close its
+   * side, as `end()` does.
+   */
+  public destroy(): this {
+    if (this.socket) {
+      this.socket.destroy();
+    }
+    return this;
+  }
+
   public write(data: Buffer, callback?: (err?: Error) => void): this {
     this.socket.write(dump(data), callback);
     return this;
