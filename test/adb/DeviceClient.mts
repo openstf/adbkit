@@ -351,10 +351,10 @@ describe('DeviceClient', function () {
 
   describe('installRemote(apk[, options])', function () {
     for (const [args, service] of [
-      [[], 'shell:pm install -r "/data/local/tmp/foo.apk"'],
-      [[{ allowDowngrade: true, grantPermissions: true }], 'shell:pm install -r -d -g "/data/local/tmp/foo.apk"'],
+      [[], "shell:pm install -r '/data/local/tmp/foo.apk'"],
+      [[{ allowDowngrade: true, grantPermissions: true }], "shell:pm install -r -d -g '/data/local/tmp/foo.apk'"],
       // A callback, as the README used to document, isn't options.
-      [[() => undefined], 'shell:pm install -r "/data/local/tmp/foo.apk"'],
+      [[() => undefined], "shell:pm install -r '/data/local/tmp/foo.apk'"],
     ] as const) {
       it(`should send '${service}' and remove the apk`, async function () {
         const { conn, device } = setup();

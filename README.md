@@ -569,7 +569,7 @@ Note that if the call seems to stall, you may have to accept a dialog on the pho
     -   **args** An `Array` of more arguments for `pm install`, such as `['--user', '10']`. They come after the flags above. Each one is single-quoted, so the shell passes it on unchanged as one argument, spaces and special characters included.
 -   Returns: `Promise`
 -   Resolves with: `true`
--   Rejects with an `Error` if the device refuses the APK. Its `.code` property holds the reason the device reported. It starts with the reason code, such as `INSTALL_FAILED_VERSION_DOWNGRADE`, and newer Android versions add a description after it, as in `INSTALL_FAILED_VERSION_DOWNGRADE: Downgrade detected: ...`. If `pm` doesn't know a flag, as older Android versions don't know `-g` or `-t`, it prints a usage error instead, and the rejection has no `.code`.
+-   Rejects with an `Error` if the device refuses the APK. Its `.code` property holds the reason code the device reported, such as `INSTALL_FAILED_VERSION_DOWNGRADE`. Newer Android versions add a description after the code, as in `INSTALL_FAILED_VERSION_DOWNGRADE: Downgrade detected: ...`; `.code` leaves it out, and the error's message keeps it. If `pm` doesn't know a flag, as older Android versions don't know `-g` or `-t`, it prints a usage error instead, and the rejection has no `.code`.
 -   Rejects with a `TypeError`, before anything is sent, if `options` is an array or `args` isn't an array of strings.
 
 ##### Example - install an APK from a URL
@@ -610,7 +610,7 @@ const test = async () => {
     await device.install('app-older.apk', { allowDowngrade: true, grantPermissions: true });
     console.log('Installed')
   } catch (err) {
-    // Without allowDowngrade, err.code starts with INSTALL_FAILED_VERSION_DOWNGRADE.
+    // Without allowDowngrade, err.code is INSTALL_FAILED_VERSION_DOWNGRADE.
     console.error('Install failed:', err.code)
   }
 }
