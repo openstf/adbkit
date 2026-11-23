@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.2.0 (2026-11-23)
+
+* Ship the full Apache-2.0 text in LICENSE and move notices to NOTICE by @koral-- in https://github.com/DeviceFarmer/adbkit/pull/591
+* feat(shell): let shell() take an AbortSignal by @koral-- in https://github.com/DeviceFarmer/adbkit/pull/590
+* docs: fix JSDoc descriptions copied from other methods by @koral-- in https://github.com/DeviceFarmer/adbkit/pull/592
+* feat(client): add client.pair() for wireless debugging by @koral-- in https://github.com/DeviceFarmer/adbkit/pull/593
+* fix(shell): keep the abort listener after the caller ends its side by @koral-- in https://github.com/DeviceFarmer/adbkit/pull/594
+* feat(install): let install() and installRemote() take pm install flags by @koral-- in https://github.com/DeviceFarmer/adbkit/pull/595
+* Bump the dev-dependencies group with 3 updates by @dependabot[bot] in https://github.com/DeviceFarmer/adbkit/pull/596
+* Bump commander from 15.0.0 to 15.1.0 by @dependabot[bot] in https://github.com/DeviceFarmer/adbkit/pull/597
+* fix(install): make InstallError.code the reason code alone, and quote the apk path with '!' by @koral-- in https://github.com/DeviceFarmer/adbkit/pull/598
+
+**Full Changelog**: https://github.com/DeviceFarmer/adbkit/compare/v4.1.0...v4.2.0
+
 ## 4.1.0 (2026-11-07)
 
 * Bump the dev-dependencies group with 2 updates by @dependabot[bot] in https://github.com/DeviceFarmer/adbkit/pull/577
