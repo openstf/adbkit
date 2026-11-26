@@ -8,6 +8,7 @@ import Socket from './socket';
 import ReadableStream = NodeJS.ReadableStream;
 import Connection from '../connection';
 import SendWindow, { INITIAL_WINDOW } from './sendwindow';
+import ReceiveWindow from './receivewindow';
 const debug = d('adb:tcpusb:service');
 
 class PrematurePacketError extends Error {
@@ -38,6 +39,7 @@ export default class Service extends EventEmitter {
   private ended = false;
   private transport?: Connection;
   private window: SendWindow;
+  private receive: ReceiveWindow;
 
   constructor(
     private client: Client,
@@ -48,6 +50,7 @@ export default class Service extends EventEmitter {
   ) {
     super();
     this.window = new SendWindow(socket.delayedAck);
+    this.receive = new ReceiveWindow(this.window.delayed, socket.maxPayload);
   }
 
   public end(): Service {
@@ -100,6 +103,7 @@ export default class Service extends EventEmitter {
     debug('I:A_OPEN', packet);
     // With delayed acks, arg1 is how much the client lets us send before its first A_OKAY; 0 means it has them off.
     this.window = new SendWindow(this.socket.delayedAck && packet.arg1 > 0, packet.arg1);
+    this.receive = new ReceiveWindow(this.window.delayed, this.socket.maxPayload);
     return this.client
       .getDevice(this.serial)
       .transport()
@@ -162,9 +166,15 @@ export default class Service extends EventEmitter {
       throw new Service.PrematurePacketError(packet);
     }
     const data = packet.data || Buffer.alloc(0);
+    if (!this.receive.take(data.length)) {
+      debug('A_WRTE past what the client was allowed to send');
+      this.end();
+      return;
+    }
     // Ack or credit the client only once the bytes are written, so a slow device pushes back.
     // Without delayed_ack the client waits for each A_OKAY, so this holds back its next packet.
     this.transport.write(data, (err?: Error | null) => {
+      this.receive.release(data.length);
       if (err) {
         debug('transport write failed', err);
         this.end();

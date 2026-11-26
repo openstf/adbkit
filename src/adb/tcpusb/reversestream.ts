@@ -3,6 +3,7 @@ import d from 'debug';
 import Packet from './packet';
 import Socket from './socket';
 import SendWindow, { INITIAL_WINDOW } from './sendwindow';
+import ReceiveWindow from './receivewindow';
 
 const debug = d('adb:tcpusb:reversestream');
 
@@ -12,6 +13,7 @@ const debug = d('adb:tcpusb:reversestream');
 export default class ReverseStream {
   private remoteId = 0;
   private window: SendWindow;
+  private receive: ReceiveWindow;
   private opened = false;
   private drained = false;
   private ended = false;
@@ -22,6 +24,7 @@ export default class ReverseStream {
     private conn: Net.Socket,
   ) {
     this.window = new SendWindow(socket.delayedAck);
+    this.receive = new ReceiveWindow(this.window.delayed, socket.maxPayload);
     conn.on('readable', () => this._tryPush());
     // Flush a half-closed conn before A_CLSE: the client's A_OKAY can arrive after the device side ended.
     conn.on('end', () => {
@@ -54,6 +57,12 @@ export default class ReverseStream {
         break;
       case Packet.A_WRTE:
         debug('I:A_WRTE', packet);
+        if (!this.opened) {
+          // The client must accept our A_OPEN before it writes; we would have no remote id to ack to.
+          debug('A_WRTE before the stream was open');
+          this.end();
+          break;
+        }
         this._write(packet.data || Buffer.alloc(0));
         break;
       case Packet.A_CLSE:
@@ -77,21 +86,24 @@ export default class ReverseStream {
   }
 
   private _write(data: Buffer): void {
-    const ack = () =>
-      this.socket.write(Packet.assemble(Packet.A_OKAY, this.localId, this.remoteId, this.window.ack(data.length)));
-    if (!this.window.delayed) {
-      this.conn.write(data);
-      ack();
+    if (!this.receive.take(data.length)) {
+      debug('A_WRTE past what the client was allowed to send');
+      this.end();
       return;
     }
-    // Credit the client only once the bytes are written, so a slow reader pushes back.
+    // Ack or credit the client only once the bytes are written, so a slow reader pushes back.
+    // Without delayed_ack the client waits for each A_OKAY, so this holds back its next packet.
     this.conn.write(data, (err?: Error | null) => {
+      this.receive.release(data.length);
       if (err) {
         debug('conn write failed', err);
         this.end();
         return;
       }
-      if (!this.ended) ack();
+      if (!this.ended) {
+        debug('O:A_OKAY');
+        this.socket.write(Packet.assemble(Packet.A_OKAY, this.localId, this.remoteId, this.window.ack(data.length)));
+      }
     });
   }
 
