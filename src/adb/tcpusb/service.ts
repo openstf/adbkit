@@ -162,12 +162,8 @@ export default class Service extends EventEmitter {
       throw new Service.PrematurePacketError(packet);
     }
     const data = packet.data || Buffer.alloc(0);
-    if (!this.window.delayed) {
-      this.transport.write(data);
-      debug('O:A_OKAY');
-      return this.socket.write(Packet.assemble(Packet.A_OKAY, this.localId, this.remoteId, null));
-    }
-    // Credit the client only once the bytes are written, so a slow device pushes back.
+    // Ack or credit the client only once the bytes are written, so a slow device pushes back.
+    // Without delayed_ack the client waits for each A_OKAY, so this holds back its next packet.
     this.transport.write(data, (err?: Error | null) => {
       if (err) {
         debug('transport write failed', err);
