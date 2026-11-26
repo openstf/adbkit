@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.2.1 (2026-11-26)
+
+* fix(tcpusb): ack A_WRTE only after the device side took the bytes by @dlstjd0237 in https://github.com/DeviceFarmer/adbkit/pull/600
+* fix(tcpusb): flow control on client writes (reverse acks, write limit, early writes) by @koral-- in https://github.com/DeviceFarmer/adbkit/pull/601
+
+### New Contributors
+
+* @dlstjd0237 made their first contribution in https://github.com/DeviceFarmer/adbkit/pull/600
+
+**Full Changelog**: https://github.com/DeviceFarmer/adbkit/compare/v4.2.0...v4.2.1
+
 ## 4.2.0 (2026-11-23)
 
 * Ship the full Apache-2.0 text in LICENSE and move notices to NOTICE by @koral-- in https://github.com/DeviceFarmer/adbkit/pull/591
